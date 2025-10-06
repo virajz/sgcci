@@ -28,6 +28,7 @@ class StoreBookingRequest extends FormRequest
             'phoneNumber' => ['required', 'string', 'max:20'],
             'email' => ['required', 'email', 'max:255'],
             'city' => ['required', 'string', 'max:255'],
+            'gstNumber' => ['nullable', 'string', 'max:15'],
             'productProfile' => ['required', 'array', 'min:1'],
             'productProfile.*' => ['string'],
             'hasExhibitedBefore' => ['boolean'],

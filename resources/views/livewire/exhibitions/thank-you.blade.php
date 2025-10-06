@@ -62,6 +62,13 @@
                             <flux:subheading class="text-sm">City</flux:subheading>
                             <flux:text class="font-semibold text-black dark:text-white">{{ $booking->city }}</flux:text>
                         </div>
+                        @if ($booking->gst_number)
+                            <div>
+                                <flux:subheading class="text-sm">GST Number</flux:subheading>
+                                <flux:text class="font-semibold text-black dark:text-white">{{ $booking->gst_number }}
+                                </flux:text>
+                            </div>
+                        @endif
                         <div>
                             <flux:subheading class="text-sm">Exhibition</flux:subheading>
                             <flux:text class="font-semibold text-black dark:text-white">
@@ -78,6 +85,28 @@
                                 <flux:badge size="lg" variant="solid" color="sky">{{ $stall }}
                                 </flux:badge>
                             @endforeach
+                        </div>
+                    </div>
+
+                    <flux:separator />
+
+                    <div>
+                        <flux:subheading class="mb-2 text-sm">Pricing Details</flux:subheading>
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-zinc-600 dark:text-zinc-400">Total Area:</span>
+                                <span class="font-medium">{{ $booking->total_area }} sq m</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-zinc-600 dark:text-zinc-400">Price per sq m:</span>
+                                <span class="font-medium">₹{{ number_format($booking->price_per_sqm, 2) }}</span>
+                            </div>
+                            <div class="flex justify-between pt-2 border-t dark:border-zinc-700">
+                                <span class="text-lg font-semibold">Total Price:</span>
+                                <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                                    ₹{{ number_format($booking->total_price, 2) }}
+                                </span>
+                            </div>
                         </div>
                     </div>
 

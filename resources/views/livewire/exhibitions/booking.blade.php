@@ -75,6 +75,13 @@
                                 <flux:input wire:model="brandName" label="Brand / Dealership Name"
                                     placeholder="Your company name" error="{{ $errors->first('brandName') }}" />
 
+                                <flux:field>
+                                    <flux:label badge="Optional">GST Number</flux:label>
+                                    <flux:input wire:model="gstNumber" type="text" mask="99AAAAA9999A9A9"
+                                        placeholder="22AAAAA0000A1Z5" />
+                                    <flux:error name="gstNumber" />
+                                </flux:field>
+
                                 <div class="grid gap-6 lg:grid-cols-2">
 
                                     <flux:input wire:model="contactPerson" label="Contact Person"
@@ -209,6 +216,40 @@
                         </flux:fieldset>
 
                         <flux:separator class="my-4" />
+
+                        {{-- Pricing Estimate --}}
+                        @if (count($selectedStalls) > 0)
+                            <flux:card class="mb-6">
+                                <flux:heading size="lg" class="mb-4">Booking Estimate</flux:heading>
+
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-zinc-600 dark:text-zinc-400">Selected Stalls:</span>
+                                        <span class="font-medium">{{ count($selectedStalls) }}</span>
+                                    </div>
+
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-zinc-600 dark:text-zinc-400">Total Area:</span>
+                                        <span class="font-medium">{{ $this->pricing['total_area'] }} sq m</span>
+                                    </div>
+
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-zinc-600 dark:text-zinc-400">Price per sq m:</span>
+                                        <span
+                                            class="font-medium">₹{{ number_format($this->pricing['price_per_sqm'], 2) }}</span>
+                                    </div>
+
+                                    <flux:separator />
+
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-lg font-semibold">Total Price:</span>
+                                        <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                                            ₹{{ number_format($this->pricing['total_price'], 2) }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </flux:card>
+                        @endif
                     </div>
 
                     {{-- Sticky submit button --}}

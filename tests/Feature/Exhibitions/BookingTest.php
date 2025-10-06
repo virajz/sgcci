@@ -168,3 +168,101 @@ test('booking code is unique', function () {
     expect($bookings->count())->toBe(2)
         ->and($bookings->pluck('booking_code')->unique()->count())->toBe(2);
 });
+
+test('booking accepts optional GST number', function () {
+    $exhibition = Exhibition::factory()->create();
+
+    \Livewire\Livewire::test(Booking::class, ['exhibition' => $exhibition])
+        ->set('brandName', 'Test Motors')
+        ->set('contactPerson', 'John Doe')
+        ->set('phoneNumber', '98765 43210')
+        ->set('email', 'john@testmotors.com')
+        ->set('gstNumber', '22AAAAA0000A1Z5')
+        ->set('productProfile', ['4-wheelers'])
+        ->set('selectedStalls', ['A1'])
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('bookings', [
+        'gst_number' => '22AAAAA0000A1Z5',
+    ]);
+});
+
+test('booking defaults to booked status', function () {
+    $exhibition = Exhibition::factory()->create();
+
+    \Livewire\Livewire::test(Booking::class, ['exhibition' => $exhibition])
+        ->set('brandName', 'Test Motors')
+        ->set('contactPerson', 'John Doe')
+        ->set('phoneNumber', '98765 43210')
+        ->set('email', 'john@testmotors.com')
+        ->set('productProfile', ['4-wheelers'])
+        ->set('selectedStalls', ['A1'])
+        ->call('save');
+
+    $booking = BookingModel::first();
+
+    expect($booking->status)->toBe('booked');
+});
+
+test('booking calculates pricing based on stall sizes', function () {
+    $exhibition = Exhibition::factory()->create();
+
+    // Assuming stall '35' has size 7x22 = 154 sq m from the SVG
+    \Livewire\Livewire::test(Booking::class, ['exhibition' => $exhibition])
+        ->set('brandName', 'Test Motors')
+        ->set('contactPerson', 'John Doe')
+        ->set('phoneNumber', '98765 43210')
+        ->set('email', 'john@testmotors.com')
+        ->set('productProfile', ['4-wheelers'])
+        ->set('selectedStalls', ['35'])
+        ->call('save');
+
+    $booking = BookingModel::first();
+
+    expect($booking->total_area)->toBe('154.00')
+        ->and($booking->price_per_sqm)->toBe('750.00')
+        ->and($booking->total_price)->toBe('115500.00');
+});
+
+test('booking calculates pricing for multiple stalls', function () {
+    $exhibition = Exhibition::factory()->create();
+
+    // '35' = 7x22 = 154 sq m
+    // '47' = 7x18 = 126 sq m
+    // Total = 280 sq m
+    \Livewire\Livewire::test(Booking::class, ['exhibition' => $exhibition])
+        ->set('brandName', 'Test Motors')
+        ->set('contactPerson', 'John Doe')
+        ->set('phoneNumber', '98765 43210')
+        ->set('email', 'john@testmotors.com')
+        ->set('productProfile', ['4-wheelers'])
+        ->set('selectedStalls', ['35', '47'])
+        ->call('save');
+
+    $booking = BookingModel::first();
+
+    expect($booking->total_area)->toBe('280.00')
+        ->and($booking->price_per_sqm)->toBe('750.00')
+        ->and($booking->total_price)->toBe('210000.00');
+});
+
+test('booking uses default 3x3 size for unknown stalls', function () {
+    $exhibition = Exhibition::factory()->create();
+
+    // 'UNKNOWN' stall should default to 3x3 = 9 sq m
+    \Livewire\Livewire::test(Booking::class, ['exhibition' => $exhibition])
+        ->set('brandName', 'Test Motors')
+        ->set('contactPerson', 'John Doe')
+        ->set('phoneNumber', '98765 43210')
+        ->set('email', 'john@testmotors.com')
+        ->set('productProfile', ['4-wheelers'])
+        ->set('selectedStalls', ['UNKNOWN'])
+        ->call('save');
+
+    $booking = BookingModel::first();
+
+    expect($booking->total_area)->toBe('9.00')
+        ->and($booking->price_per_sqm)->toBe('750.00')
+        ->and($booking->total_price)->toBe('6750.00');
+});

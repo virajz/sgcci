@@ -86,3 +86,46 @@ test('thank you page shows product profiles', function () {
         ->assertSee('2 Wheelers')
         ->assertSee('Automobile Ancillaries');
 });
+
+test('thank you page displays pricing information', function () {
+    $exhibition = Exhibition::factory()->create();
+
+    $booking = Booking::create([
+        'exhibition_id' => $exhibition->id,
+        'brand_name' => 'Test Motors',
+        'contact_person' => 'John Doe',
+        'phone_code' => '+91',
+        'phone_number' => '98765 43210',
+        'email' => 'john@testmotors.com',
+        'city' => 'Surat',
+        'product_profile' => ['4-wheelers'],
+        'selected_stalls' => ['35'], // 7x22 = 154 sq m
+    ]);
+
+    \Livewire\Livewire::test(ThankYou::class, ['exhibition' => $exhibition, 'bookingCode' => $booking->booking_code])
+        ->assertSee('Pricing Details')
+        ->assertSee('154.00 sq m')
+        ->assertSee('₹750.00')
+        ->assertSee('₹115,500.00');
+});
+
+test('thank you page displays GST number when provided', function () {
+    $exhibition = Exhibition::factory()->create();
+
+    $booking = Booking::create([
+        'exhibition_id' => $exhibition->id,
+        'brand_name' => 'Test Motors',
+        'contact_person' => 'John Doe',
+        'phone_code' => '+91',
+        'phone_number' => '98765 43210',
+        'email' => 'john@testmotors.com',
+        'city' => 'Surat',
+        'gst_number' => '22AAAAA0000A1Z5',
+        'product_profile' => ['4-wheelers'],
+        'selected_stalls' => ['A1'],
+    ]);
+
+    \Livewire\Livewire::test(ThankYou::class, ['exhibition' => $exhibition, 'bookingCode' => $booking->booking_code])
+        ->assertSee('GST Number')
+        ->assertSee('22AAAAA0000A1Z5');
+});

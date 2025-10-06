@@ -26,6 +26,8 @@ class Booking extends Component
 
     public string $city = 'Surat';
 
+    public ?string $gstNumber = null;
+
     public array $productProfile = [];
 
     public bool $hasExhibitedBefore = false;
@@ -37,6 +39,19 @@ class Booking extends Component
     public string $membershipType = '';
 
     public array $selectedStalls = [];
+
+    public function getPricingProperty(): array
+    {
+        if (empty($this->selectedStalls)) {
+            return [
+                'total_area' => 0,
+                'price_per_sqm' => 750,
+                'total_price' => 0,
+            ];
+        }
+
+        return BookingModel::calculatePricing($this->selectedStalls);
+    }
 
     #[On('stalls-selected')]
     public function updateSelectedStalls(array $selectedStalls): void
@@ -62,6 +77,7 @@ class Booking extends Component
             'phone_number' => $this->phoneNumber,
             'email' => $this->email,
             'city' => $this->city,
+            'gst_number' => $this->gstNumber,
             'product_profile' => $this->productProfile,
             'has_exhibited_before' => $this->hasExhibitedBefore,
             'participation_years' => $this->participationYears,

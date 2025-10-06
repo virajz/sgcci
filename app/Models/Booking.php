@@ -20,12 +20,17 @@ class Booking extends Model
         'phone_number',
         'email',
         'city',
+        'gst_number',
         'product_profile',
         'has_exhibited_before',
         'participation_years',
         'is_sgcci_member',
         'membership_type',
         'selected_stalls',
+        'total_area',
+        'price_per_sqm',
+        'total_price',
+        'status',
     ];
 
     protected function casts(): array
@@ -36,6 +41,9 @@ class Booking extends Model
             'selected_stalls' => 'array',
             'has_exhibited_before' => 'boolean',
             'is_sgcci_member' => 'boolean',
+            'total_area' => 'decimal:2',
+            'price_per_sqm' => 'decimal:2',
+            'total_price' => 'decimal:2',
         ];
     }
 
@@ -45,6 +53,12 @@ class Booking extends Model
 
         static::creating(function ($booking) {
             $booking->booking_code = static::generateUniqueBookingCode();
+
+            // Calculate pricing based on selected stalls
+            $pricing = static::calculatePricing($booking->selected_stalls);
+            $booking->total_area = $pricing['total_area'];
+            $booking->price_per_sqm = $pricing['price_per_sqm'];
+            $booking->total_price = $pricing['total_price'];
         });
     }
 
@@ -55,6 +69,62 @@ class Booking extends Model
         } while (static::where('booking_code', $code)->exists());
 
         return $code;
+    }
+
+    public static function calculatePricing(array $selectedStalls): array
+    {
+        $stallSizes = static::getStallSizes();
+        $totalArea = 0;
+        $pricePerSqm = 750; // ₹750 per square meter for 3x3 stalls
+
+        foreach ($selectedStalls as $stallNumber) {
+            if (isset($stallSizes[$stallNumber])) {
+                $size = $stallSizes[$stallNumber];
+                $totalArea += $size['area'];
+            } else {
+                // Default to 3x3 if stall size not found
+                $totalArea += 9; // 3x3 = 9 sq m
+            }
+        }
+
+        $totalPrice = $totalArea * $pricePerSqm;
+
+        return [
+            'total_area' => $totalArea,
+            'price_per_sqm' => $pricePerSqm,
+            'total_price' => $totalPrice,
+        ];
+    }
+
+    public static function getStallSizes(): array
+    {
+        $svgPath = public_path('maps/Main.svg');
+
+        if (! file_exists($svgPath)) {
+            return [];
+        }
+
+        $svgContent = file_get_contents($svgPath);
+        $stallSizes = [];
+
+        // Extract stall numbers and their sizes from SVG
+        // Pattern: <g class="stall" data-stall="NUMBER"> ... class="(WIDTH x HEIGHT)"
+        preg_match_all('/<g class="stall" data-stall="(\d+)"[^>]*>.*?class="\((\d+) x (\d+)\)"/s', $svgContent, $matches, PREG_SET_ORDER);
+
+        foreach ($matches as $match) {
+            $stallNumber = $match[1];
+            $width = (int) $match[2];
+            $height = (int) $match[3];
+            $area = $width * $height;
+
+            $stallSizes[$stallNumber] = [
+                'width' => $width,
+                'height' => $height,
+                'area' => $area,
+            ];
+        }
+
+        return $stallSizes;
     }
 
     public function exhibition(): BelongsTo

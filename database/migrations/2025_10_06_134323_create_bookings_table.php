@@ -21,12 +21,17 @@ return new class extends Migration
             $table->string('phone_number', 20);
             $table->string('email');
             $table->string('city');
+            $table->string('gst_number')->nullable();
             $table->json('product_profile');
             $table->boolean('has_exhibited_before')->default(false);
             $table->json('participation_years')->nullable();
             $table->boolean('is_sgcci_member')->default(false);
             $table->string('membership_type')->nullable();
             $table->json('selected_stalls');
+            $table->decimal('total_area', 10, 2);
+            $table->decimal('price_per_sqm', 10, 2);
+            $table->decimal('total_price', 10, 2);
+            $table->enum('status', ['booked', 'reserved', 'allotted'])->default('booked');
             $table->timestamps();
         });
     }
