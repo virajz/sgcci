@@ -10,7 +10,7 @@
             {{-- Map Section (Left) --}}
             <section class="lg:col-span-2 lg:overflow-y-auto lg:pr-4">
                 <div class="lg:sticky lg:top-0">
-                    @livewire('stall-selector')
+                    @livewire('stall-selector', ['selectedStalls' => $selectedStalls])
                 </div>
             </section>
 
@@ -77,8 +77,9 @@
 
                                 <flux:field>
                                     <flux:label badge="Optional">GST Number</flux:label>
-                                    <flux:input wire:model="gstNumber" type="text" mask="99AAAAA9999A9A9"
-                                        placeholder="22AAAAA0000A1Z5" />
+                                    <flux:input wire:model="gstNumber" type="text" mask="99aaaaa9999a9a9"
+                                        x-mask:dynamic="$uppercase($input)" placeholder="22AAAAA0000A1Z5"
+                                        class="uppercase" />
                                     <flux:error name="gstNumber" />
                                 </flux:field>
 
@@ -239,12 +240,24 @@
                                             class="font-medium">₹{{ number_format($this->pricing['price_per_sqm'], 2) }}</span>
                                     </div>
 
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-zinc-600 dark:text-zinc-400">Subtotal:</span>
+                                        <span
+                                            class="font-medium">₹{{ number_format($this->pricing['total_price'], 2) }}</span>
+                                    </div>
+
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-zinc-600 dark:text-zinc-400">GST (18%):</span>
+                                        <span
+                                            class="font-medium">₹{{ number_format($this->pricing['gst_amount'], 2) }}</span>
+                                    </div>
+
                                     <flux:separator />
 
                                     <div class="flex items-center justify-between">
-                                        <span class="text-lg font-semibold">Total Price:</span>
+                                        <span class="text-lg font-semibold">Total Amount:</span>
                                         <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                                            ₹{{ number_format($this->pricing['total_price'], 2) }}
+                                            ₹{{ number_format($this->pricing['total_with_gst'], 2) }}
                                         </span>
                                     </div>
                                 </div>
@@ -256,7 +269,7 @@
                     <div class="flex justify-end pt-4 mt-6 lg:flex-shrink-0 lg:sticky lg:bottom-0">
                         <flux:button type="submit" variant="primary" class="w-full lg:w-fit"
                             wire:loading.attr="disabled">
-                            <span wire:loading.remove wire:target="save">Submit Booking</span>
+                            <span wire:loading.remove wire:target="save">Continue</span>
                             <span wire:loading wire:target="save">Submitting...</span>
                         </flux:button>
                     </div>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Exhibitions\Booking;
+use App\Livewire\Exhibitions\Confirmation;
 use App\Livewire\Exhibitions\ThankYou;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
@@ -17,6 +18,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('exhibitions/{exhibition}/booking', Booking::class)->name('exhibitions.booking.show');
+Route::get('exhibitions/{exhibition}/booking/confirmation', Confirmation::class)->name('exhibitions.booking.confirmation');
 Route::get('exhibitions/{exhibition}/booking/thank-you/{bookingCode}', ThankYou::class)->name('exhibitions.booking.thank-you');
 
 Route::view('dashboard', 'dashboard')
@@ -42,4 +44,4 @@ Route::middleware(['auth'])->group(function () {
         ->name('two-factor.show');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

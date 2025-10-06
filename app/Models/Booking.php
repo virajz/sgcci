@@ -30,7 +30,13 @@ class Booking extends Model
         'total_area',
         'price_per_sqm',
         'total_price',
+        'gst_amount',
+        'total_with_gst',
         'status',
+    ];
+
+    protected $attributes = [
+        'status' => 'booked',
     ];
 
     protected function casts(): array
@@ -44,6 +50,8 @@ class Booking extends Model
             'total_area' => 'decimal:2',
             'price_per_sqm' => 'decimal:2',
             'total_price' => 'decimal:2',
+            'gst_amount' => 'decimal:2',
+            'total_with_gst' => 'decimal:2',
         ];
     }
 
@@ -59,6 +67,8 @@ class Booking extends Model
             $booking->total_area = $pricing['total_area'];
             $booking->price_per_sqm = $pricing['price_per_sqm'];
             $booking->total_price = $pricing['total_price'];
+            $booking->gst_amount = $pricing['gst_amount'];
+            $booking->total_with_gst = $pricing['total_with_gst'];
         });
     }
 
@@ -88,11 +98,15 @@ class Booking extends Model
         }
 
         $totalPrice = $totalArea * $pricePerSqm;
+        $gstAmount = $totalPrice * 0.18; // 18% GST
+        $totalWithGst = $totalPrice + $gstAmount;
 
         return [
             'total_area' => $totalArea,
             'price_per_sqm' => $pricePerSqm,
             'total_price' => $totalPrice,
+            'gst_amount' => $gstAmount,
+            'total_with_gst' => $totalWithGst,
         ];
     }
 
@@ -125,6 +139,39 @@ class Booking extends Model
         }
 
         return $stallSizes;
+    }
+
+    public static function getStallLineItems(array $selectedStalls): array
+    {
+        $stallSizes = static::getStallSizes();
+        $pricePerSqm = 750;
+        $lineItems = [];
+
+        foreach ($selectedStalls as $stallNumber) {
+            if (isset($stallSizes[$stallNumber])) {
+                $size = $stallSizes[$stallNumber];
+                $lineItems[] = [
+                    'stall_number' => $stallNumber,
+                    'width' => $size['width'],
+                    'height' => $size['height'],
+                    'area' => $size['area'],
+                    'size_display' => $size['width'].' x '.$size['height'],
+                    'price' => $size['area'] * $pricePerSqm,
+                ];
+            } else {
+                // Default to 3x3 if stall size not found
+                $lineItems[] = [
+                    'stall_number' => $stallNumber,
+                    'width' => 3,
+                    'height' => 3,
+                    'area' => 9,
+                    'size_display' => '3 x 3',
+                    'price' => 9 * $pricePerSqm,
+                ];
+            }
+        }
+
+        return $lineItems;
     }
 
     public function exhibition(): BelongsTo

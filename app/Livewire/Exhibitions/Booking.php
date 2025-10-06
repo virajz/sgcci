@@ -47,6 +47,8 @@ class Booking extends Component
                 'total_area' => 0,
                 'price_per_sqm' => 750,
                 'total_price' => 0,
+                'gst_amount' => 0,
+                'total_with_gst' => 0,
             ];
         }
 
@@ -69,29 +71,49 @@ class Booking extends Component
     {
         $validated = $this->validate((new StoreBookingRequest)->rules());
 
-        $booking = BookingModel::create([
-            'exhibition_id' => $this->exhibition->id,
-            'brand_name' => $this->brandName,
-            'contact_person' => $this->contactPerson,
-            'phone_code' => $this->phoneCode,
-            'phone_number' => $this->phoneNumber,
+        // Store booking data in session for confirmation page
+        session(['booking_data' => [
+            'exhibitionId' => $this->exhibition->id,
+            'brandName' => $this->brandName,
+            'contactPerson' => $this->contactPerson,
+            'phoneCode' => $this->phoneCode,
+            'phoneNumber' => $this->phoneNumber,
             'email' => $this->email,
             'city' => $this->city,
-            'gst_number' => $this->gstNumber,
-            'product_profile' => $this->productProfile,
-            'has_exhibited_before' => $this->hasExhibitedBefore,
-            'participation_years' => $this->participationYears,
-            'is_sgcci_member' => $this->isSgcciMember,
-            'membership_type' => $this->membershipType,
-            'selected_stalls' => $this->selectedStalls,
-        ]);
+            'gstNumber' => $this->gstNumber,
+            'productProfile' => $this->productProfile,
+            'hasExhibitedBefore' => $this->hasExhibitedBefore,
+            'participationYears' => $this->participationYears,
+            'isSgcciMember' => $this->isSgcciMember,
+            'membershipType' => $this->membershipType,
+            'selectedStalls' => $this->selectedStalls,
+        ]]);
 
-        $this->redirect(route('exhibitions.booking.thank-you', ['exhibition' => $this->exhibition, 'bookingCode' => $booking->booking_code]), navigate: true);
+        // Redirect to confirmation page
+        $this->redirect(route('exhibitions.booking.confirmation', ['exhibition' => $this->exhibition]), navigate: true);
     }
 
     public function mount(Exhibition $exhibition): void
     {
         $this->exhibition = $exhibition;
+
+        // Restore data from session if available (user went back from confirmation)
+        $sessionData = session('booking_data', []);
+        if (! empty($sessionData)) {
+            $this->brandName = $sessionData['brandName'] ?? '';
+            $this->contactPerson = $sessionData['contactPerson'] ?? '';
+            $this->phoneCode = $sessionData['phoneCode'] ?? '+91';
+            $this->phoneNumber = $sessionData['phoneNumber'] ?? '';
+            $this->email = $sessionData['email'] ?? '';
+            $this->city = $sessionData['city'] ?? 'Surat';
+            $this->gstNumber = $sessionData['gstNumber'] ?? null;
+            $this->productProfile = $sessionData['productProfile'] ?? [];
+            $this->hasExhibitedBefore = $sessionData['hasExhibitedBefore'] ?? false;
+            $this->participationYears = $sessionData['participationYears'] ?? [];
+            $this->isSgcciMember = $sessionData['isSgcciMember'] ?? false;
+            $this->membershipType = $sessionData['membershipType'] ?? '';
+            $this->selectedStalls = $sessionData['selectedStalls'] ?? [];
+        }
     }
 
     public function render()

@@ -39,23 +39,10 @@ test('booking creates a record in database', function () {
         ->set('selectedStalls', $bookingData['selectedStalls'])
         ->call('save')
         ->assertHasNoErrors()
-        ->assertRedirect();
+        ->assertRedirect(route('exhibitions.booking.confirmation', ['exhibition' => $exhibition]));
 
-    $this->assertDatabaseHas('bookings', [
-        'exhibition_id' => $exhibition->id,
-        'brand_name' => 'Test Motors',
-        'contact_person' => 'John Doe',
-        'email' => 'john@testmotors.com',
-    ]);
-
-    expect(BookingModel::count())->toBe(1);
-
-    $booking = BookingModel::first();
-    expect($booking->product_profile)->toBeArray()
-        ->and($booking->selected_stalls)->toBeArray()
-        ->and($booking->participation_years)->toBeArray()
-        ->and($booking->booking_code)->toBeString()
-        ->and(strlen($booking->booking_code))->toBe(8);
+    expect(session('booking_data'))->toBeArray()
+        ->and(session('booking_data')['brandName'])->toBe('Test Motors');
 });
 
 test('booking validation requires brand name', function () {
@@ -115,24 +102,25 @@ test('booking resets form after successful submission', function () {
         ->set('productProfile', ['4-wheelers'])
         ->set('selectedStalls', ['A1'])
         ->call('save')
-        ->assertRedirect();
+        ->assertRedirect(route('exhibitions.booking.confirmation', ['exhibition' => $exhibition]));
 
-    expect(BookingModel::count())->toBe(1);
+    expect(session('booking_data'))->toBeArray();
 });
 
 test('booking generates unique 8 character alphanumeric code', function () {
     $exhibition = Exhibition::factory()->create();
 
-    \Livewire\Livewire::test(Booking::class, ['exhibition' => $exhibition])
-        ->set('brandName', 'Test Motors')
-        ->set('contactPerson', 'John Doe')
-        ->set('phoneNumber', '98765 43210')
-        ->set('email', 'john@testmotors.com')
-        ->set('productProfile', ['4-wheelers'])
-        ->set('selectedStalls', ['A1'])
-        ->call('save');
-
-    $booking = BookingModel::first();
+    $booking = BookingModel::create([
+        'exhibition_id' => $exhibition->id,
+        'brand_name' => 'Test Motors',
+        'contact_person' => 'John Doe',
+        'phone_code' => '+91',
+        'phone_number' => '98765 43210',
+        'email' => 'john@testmotors.com',
+        'city' => 'Surat',
+        'product_profile' => ['4-wheelers'],
+        'selected_stalls' => ['35'],
+    ]);
 
     expect($booking->booking_code)
         ->toBeString()
@@ -144,29 +132,32 @@ test('booking code is unique', function () {
     $exhibition = Exhibition::factory()->create();
 
     // Create first booking
-    \Livewire\Livewire::test(Booking::class, ['exhibition' => $exhibition])
-        ->set('brandName', 'Test Motors 1')
-        ->set('contactPerson', 'John Doe')
-        ->set('phoneNumber', '98765 43210')
-        ->set('email', 'john@testmotors.com')
-        ->set('productProfile', ['4-wheelers'])
-        ->set('selectedStalls', ['A1'])
-        ->call('save');
+    $booking1 = BookingModel::create([
+        'exhibition_id' => $exhibition->id,
+        'brand_name' => 'Test Motors 1',
+        'contact_person' => 'John Doe',
+        'phone_code' => '+91',
+        'phone_number' => '98765 43210',
+        'email' => 'john@testmotors.com',
+        'city' => 'Surat',
+        'product_profile' => ['4-wheelers'],
+        'selected_stalls' => ['35'],
+    ]);
 
     // Create second booking
-    \Livewire\Livewire::test(Booking::class, ['exhibition' => $exhibition])
-        ->set('brandName', 'Test Motors 2')
-        ->set('contactPerson', 'Jane Doe')
-        ->set('phoneNumber', '98765 43211')
-        ->set('email', 'jane@testmotors.com')
-        ->set('productProfile', ['4-wheelers'])
-        ->set('selectedStalls', ['A2'])
-        ->call('save');
+    $booking2 = BookingModel::create([
+        'exhibition_id' => $exhibition->id,
+        'brand_name' => 'Test Motors 2',
+        'contact_person' => 'Jane Doe',
+        'phone_code' => '+91',
+        'phone_number' => '98765 43211',
+        'email' => 'jane@testmotors.com',
+        'city' => 'Surat',
+        'product_profile' => ['4-wheelers'],
+        'selected_stalls' => ['47'],
+    ]);
 
-    $bookings = BookingModel::all();
-
-    expect($bookings->count())->toBe(2)
-        ->and($bookings->pluck('booking_code')->unique()->count())->toBe(2);
+    expect($booking1->booking_code)->not->toBe($booking2->booking_code);
 });
 
 test('booking accepts optional GST number', function () {
@@ -183,25 +174,26 @@ test('booking accepts optional GST number', function () {
         ->call('save')
         ->assertHasNoErrors();
 
-    $this->assertDatabaseHas('bookings', [
-        'gst_number' => '22AAAAA0000A1Z5',
-    ]);
+    $sessionData = session('booking_data');
+    expect($sessionData['gstNumber'])->toBe('22AAAAA0000A1Z5');
 });
 
 test('booking defaults to booked status', function () {
     $exhibition = Exhibition::factory()->create();
 
-    \Livewire\Livewire::test(Booking::class, ['exhibition' => $exhibition])
-        ->set('brandName', 'Test Motors')
-        ->set('contactPerson', 'John Doe')
-        ->set('phoneNumber', '98765 43210')
-        ->set('email', 'john@testmotors.com')
-        ->set('productProfile', ['4-wheelers'])
-        ->set('selectedStalls', ['A1'])
-        ->call('save');
+    $booking = BookingModel::create([
+        'exhibition_id' => $exhibition->id,
+        'brand_name' => 'Test Motors',
+        'contact_person' => 'John Doe',
+        'phone_code' => '+91',
+        'phone_number' => '98765 43210',
+        'email' => 'john@testmotors.com',
+        'city' => 'Surat',
+        'product_profile' => ['4-wheelers'],
+        'selected_stalls' => ['35'],
+    ]);
 
-    $booking = BookingModel::first();
-
+    $booking->refresh();
     expect($booking->status)->toBe('booked');
 });
 
@@ -218,11 +210,16 @@ test('booking calculates pricing based on stall sizes', function () {
         ->set('selectedStalls', ['35'])
         ->call('save');
 
-    $booking = BookingModel::first();
+    $bookingData = session('booking_data');
+    expect($bookingData['selectedStalls'])->toBe(['35']);
 
-    expect($booking->total_area)->toBe('154.00')
-        ->and($booking->price_per_sqm)->toBe('750.00')
-        ->and($booking->total_price)->toBe('115500.00');
+    // Calculate expected pricing
+    $pricing = \App\Models\Booking::calculatePricing(['35']);
+    expect($pricing['total_area'])->toBe(154)
+        ->and($pricing['price_per_sqm'])->toBe(750)
+        ->and($pricing['total_price'])->toBe(115500)
+        ->and($pricing['gst_amount'])->toBe(20790.0) // 18% of 115500
+        ->and($pricing['total_with_gst'])->toBe(136290.0);
 });
 
 test('booking calculates pricing for multiple stalls', function () {
@@ -240,11 +237,12 @@ test('booking calculates pricing for multiple stalls', function () {
         ->set('selectedStalls', ['35', '47'])
         ->call('save');
 
-    $booking = BookingModel::first();
-
-    expect($booking->total_area)->toBe('280.00')
-        ->and($booking->price_per_sqm)->toBe('750.00')
-        ->and($booking->total_price)->toBe('210000.00');
+    $pricing = \App\Models\Booking::calculatePricing(['35', '47']);
+    expect($pricing['total_area'])->toBe(280)
+        ->and($pricing['price_per_sqm'])->toBe(750)
+        ->and($pricing['total_price'])->toBe(210000)
+        ->and($pricing['gst_amount'])->toBe(37800.0) // 18% of 210000
+        ->and($pricing['total_with_gst'])->toBe(247800.0);
 });
 
 test('booking uses default 3x3 size for unknown stalls', function () {
@@ -260,9 +258,10 @@ test('booking uses default 3x3 size for unknown stalls', function () {
         ->set('selectedStalls', ['UNKNOWN'])
         ->call('save');
 
-    $booking = BookingModel::first();
-
-    expect($booking->total_area)->toBe('9.00')
-        ->and($booking->price_per_sqm)->toBe('750.00')
-        ->and($booking->total_price)->toBe('6750.00');
+    $pricing = \App\Models\Booking::calculatePricing(['UNKNOWN']);
+    expect($pricing['total_area'])->toBe(9)
+        ->and($pricing['price_per_sqm'])->toBe(750)
+        ->and($pricing['total_price'])->toBe(6750)
+        ->and($pricing['gst_amount'])->toBe(1215.0) // 18% of 6750
+        ->and($pricing['total_with_gst'])->toBe(7965.0);
 });

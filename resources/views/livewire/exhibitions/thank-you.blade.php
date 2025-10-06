@@ -7,8 +7,8 @@
 
         <div class="text-center">
             <div
-                class="flex items-center justify-center w-20 h-20 mx-auto mb-6 bg-green-100 rounded-full dark:bg-green-900">
-                <flux:icon.check class="w-12 h-12 text-green-600 dark:text-green-400" />
+                class="flex items-center justify-center w-20 h-20 mx-auto mb-6 ring-[12px] bg-green-600 rounded-full ring-green-200 dark:ring-green-800">
+                <flux:icon.check class="w-12 h-12 text-white" />
             </div>
 
             <flux:heading size="xl" class="mb-4 text-3xl">Booking Confirmed!</flux:heading>
@@ -80,11 +80,26 @@
 
                     <div>
                         <flux:subheading class="mb-2 text-sm">Selected Stalls</flux:subheading>
-                        <div class="flex flex-wrap gap-2">
-                            @foreach ($booking->selected_stalls as $stall)
-                                <flux:badge size="lg" variant="solid" color="sky">{{ $stall }}
-                                </flux:badge>
-                            @endforeach
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b dark:border-zinc-700">
+                                        <th class="px-4 py-3 font-semibold text-left">Stall Number</th>
+                                        <th class="px-4 py-3 font-semibold text-left">Size</th>
+                                        <th class="px-4 py-3 font-semibold text-right">Area (sq m)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (\App\Models\Booking::getStallLineItems($booking->selected_stalls) as $item)
+                                        <tr class="border-b dark:border-zinc-700">
+                                            <td class="px-4 py-3 font-medium">{{ $item['stall_number'] }}</td>
+                                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                                                {{ $item['size_display'] }}</td>
+                                            <td class="px-4 py-3 text-right">{{ $item['area'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
@@ -101,10 +116,18 @@
                                 <span class="text-zinc-600 dark:text-zinc-400">Price per sq m:</span>
                                 <span class="font-medium">₹{{ number_format($booking->price_per_sqm, 2) }}</span>
                             </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-zinc-600 dark:text-zinc-400">Subtotal:</span>
+                                <span class="font-medium">₹{{ number_format($booking->total_price, 2) }}</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-zinc-600 dark:text-zinc-400">GST (18%):</span>
+                                <span class="font-medium">₹{{ number_format($booking->gst_amount, 2) }}</span>
+                            </div>
                             <div class="flex justify-between pt-2 border-t dark:border-zinc-700">
-                                <span class="text-lg font-semibold">Total Price:</span>
+                                <span class="text-lg font-semibold">Total Amount:</span>
                                 <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                                    ₹{{ number_format($booking->total_price, 2) }}
+                                    ₹{{ number_format($booking->total_with_gst, 2) }}
                                 </span>
                             </div>
                         </div>

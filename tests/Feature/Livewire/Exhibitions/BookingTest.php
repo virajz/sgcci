@@ -64,3 +64,26 @@ it('can clear selected stalls from booking form', function () {
         ->assertDispatched('clear-stalls')
         ->assertDontSee('Selected Stalls');
 });
+
+it('restores selected stalls from session when returning from confirmation', function () {
+    $exhibition = Exhibition::factory()->create();
+
+    session()->put('booking_data', [
+        'exhibitionId' => $exhibition->id,
+        'brandName' => 'Test Motors',
+        'contactPerson' => 'John Doe',
+        'phoneCode' => '+91',
+        'phoneNumber' => '98765 43210',
+        'email' => 'john@testmotors.com',
+        'city' => 'Surat',
+        'productProfile' => ['4-wheelers'],
+        'selectedStalls' => ['35', '47'],
+    ]);
+
+    Livewire::test(Booking::class, ['exhibition' => $exhibition])
+        ->assertSet('selectedStalls', ['35', '47'])
+        ->assertSee('Selected Stalls (2)')
+        ->assertSee('35')
+        ->assertSee('47')
+        ->assertSeeLivewire('stall-selector');
+});

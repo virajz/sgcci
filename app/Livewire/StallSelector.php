@@ -9,11 +9,23 @@ class StallSelector extends Component
 {
     public array $selectedStalls = [];
 
+    public function mount(array $selectedStalls = []): void
+    {
+        $this->selectedStalls = $selectedStalls;
+    }
+
     #[On('clear-stalls')]
     public function clearStalls(): void
     {
         $this->selectedStalls = [];
         $this->dispatch('stalls-selected', selectedStalls: $this->selectedStalls);
+    }
+
+    #[On('restore-stalls')]
+    public function restoreStalls(array $selectedStalls): void
+    {
+        $this->selectedStalls = $selectedStalls;
+        $this->dispatch('stalls-restored');
     }
 
     public function toggleStall(string $stallNumber): void

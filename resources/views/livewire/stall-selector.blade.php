@@ -1,6 +1,7 @@
 <div x-data="{
     selectedStalls: @entangle('selectedStalls'),
     svgElement: null,
+    stallElements: [],
     viewBox: { x: 0, y: 0, width: 0, height: 0 },
     originalViewBox: { x: 0, y: 0, width: 0, height: 0 },
     isPanning: false,
@@ -15,6 +16,47 @@
     },
     isSelected(stallNumber) {
         return this.selectedStalls.includes(stallNumber);
+    },
+    updateStallHighlights() {
+        this.stallElements.forEach(({ stall, stallNumber, bgPath, textPaths }) => {
+            const isSelected = this.selectedStalls.includes(stallNumber);
+
+            if (isSelected) {
+                // Change background color
+                if (bgPath && !bgPath.hasAttribute('data-original-fill')) {
+                    bgPath.setAttribute('data-original-fill', bgPath.getAttribute('fill'));
+                }
+                if (bgPath) {
+                    bgPath.setAttribute('fill', '#0ea5e9');
+                }
+
+                // Change text color
+                textPaths.forEach(textPath => {
+                    if (!textPath.hasAttribute('data-original-fill')) {
+                        textPath.setAttribute('data-original-fill', textPath.getAttribute('fill'));
+                    }
+                    if (textPath.getAttribute('data-original-fill') === '#000') {
+                        textPath.setAttribute('fill', '#fff');
+                    }
+                });
+            } else {
+                // Restore background color
+                if (bgPath && bgPath.hasAttribute('data-original-fill')) {
+                    const original = bgPath.getAttribute('data-original-fill');
+                    bgPath.setAttribute('fill', original);
+                    bgPath.removeAttribute('data-original-fill');
+                }
+
+                // Restore text color
+                textPaths.forEach(textPath => {
+                    if (textPath.hasAttribute('data-original-fill')) {
+                        const original = textPath.getAttribute('data-original-fill');
+                        textPath.setAttribute('fill', original);
+                        textPath.removeAttribute('data-original-fill');
+                    }
+                });
+            }
+        });
     },
     initViewBox() {
         if (!this.svgElement) return;
@@ -238,6 +280,16 @@
 
                     stalls.forEach(stall => {
                         const stallNumber = stall.getAttribute('data-stall');
+                        const bgPath = stall.querySelector('path[fill]:not([class]):not([stroke])');
+                        const textPaths = Array.from(stall.querySelectorAll('path[class][fill]'));
+
+                        // Store stall elements for later updates
+                        component.stallElements.push({
+                            stall,
+                            stallNumber,
+                            bgPath,
+                            textPaths
+                        });
 
                         stall.style.cursor = 'pointer';
 
@@ -246,51 +298,17 @@
                                 component.toggleStall(stallNumber);
                             }
                         });
-
-                        $watch('selectedStalls', value => {
-                            const isSelected = value.includes(stallNumber);
-
-                            // Get elements
-                            const bgPath = stall.querySelector('path[fill]:not([class]):not([stroke])');
-                            const textPaths = stall.querySelectorAll('path[class][fill]');
-
-                            if (isSelected) {
-                                // Change background color
-                                if (bgPath && !bgPath.hasAttribute('data-original-fill')) {
-                                    bgPath.setAttribute('data-original-fill', bgPath.getAttribute('fill'));
-                                }
-                                if (bgPath) {
-                                    bgPath.setAttribute('fill', '#0ea5e9');
-                                }
-
-                                // Change text color
-                                textPaths.forEach(textPath => {
-                                    if (!textPath.hasAttribute('data-original-fill')) {
-                                        textPath.setAttribute('data-original-fill', textPath.getAttribute('fill'));
-                                    }
-                                    if (textPath.getAttribute('data-original-fill') === '#000') {
-                                        textPath.setAttribute('fill', '#fff');
-                                    }
-                                });
-                            } else {
-                                // Restore background color
-                                if (bgPath && bgPath.hasAttribute('data-original-fill')) {
-                                    const original = bgPath.getAttribute('data-original-fill');
-                                    bgPath.setAttribute('fill', original);
-                                    bgPath.removeAttribute('data-original-fill');
-                                }
-
-                                // Restore text color
-                                textPaths.forEach(textPath => {
-                                    if (textPath.hasAttribute('data-original-fill')) {
-                                        const original = textPath.getAttribute('data-original-fill');
-                                        textPath.setAttribute('fill', original);
-                                        textPath.removeAttribute('data-original-fill');
-                                    }
-                                });
-                            }
-                        });
                     });
+
+                    // Watch for changes and update highlights
+                    $watch('selectedStalls', () => {
+                        component.updateStallHighlights();
+                    });
+
+                    // Initial highlight update - use nextTick to ensure entangle sync is complete
+                    setTimeout(() => {
+                        component.updateStallHighlights();
+                    }, 100);
                 ">
             </object>
         </div>

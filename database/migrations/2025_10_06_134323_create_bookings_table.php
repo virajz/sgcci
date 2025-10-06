@@ -31,6 +31,8 @@ return new class extends Migration
             $table->decimal('total_area', 10, 2);
             $table->decimal('price_per_sqm', 10, 2);
             $table->decimal('total_price', 10, 2);
+            $table->decimal('gst_amount', 10, 2);
+            $table->decimal('total_with_gst', 10, 2);
             $table->enum('status', ['booked', 'reserved', 'allotted'])->default('booked');
             $table->timestamps();
         });

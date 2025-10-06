@@ -57,3 +57,15 @@ it('can clear stalls via event', function () {
         ->assertSet('selectedStalls', [])
         ->assertDispatched('stalls-selected', selectedStalls: []);
 });
+
+it('can restore stalls via event', function () {
+    Livewire::test(StallSelector::class)
+        ->assertSet('selectedStalls', [])
+        ->dispatch('restore-stalls', selectedStalls: ['35', '47', '59'])
+        ->assertSet('selectedStalls', ['35', '47', '59']);
+});
+
+it('can be initialized with selected stalls', function () {
+    Livewire::test(StallSelector::class, ['selectedStalls' => ['35', '47']])
+        ->assertSet('selectedStalls', ['35', '47']);
+});
