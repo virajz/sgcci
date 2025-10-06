@@ -22,5 +22,7 @@ class DatabaseSeeder extends Seeder
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
         ]);
+
+        $this->call(ExhibitionSeeder::class);
     }
 }

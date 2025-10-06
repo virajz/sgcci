@@ -1,15 +1,20 @@
 <?php
 
+use App\Livewire\Exhibitions\Booking;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\TwoFactor;
+use App\Models\Exhibition;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
 Route::get('/', function () {
-    return view('welcome');
+    $exhibition = Exhibition::first();
+    return view('welcome', compact('exhibition'));
 })->name('home');
+
+Route::get('exhibitions/{exhibition}/booking', Booking::class)->name('exhibitions.booking.show');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
@@ -34,4 +39,4 @@ Route::middleware(['auth'])->group(function () {
         ->name('two-factor.show');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
