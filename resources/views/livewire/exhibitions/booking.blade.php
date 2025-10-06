@@ -20,9 +20,10 @@
             <section class="lg:order-2 lg:flex lg:flex-col lg:overflow-hidden">
                 <form action="" class="flex flex-col lg:h-full lg:overflow-hidden">
                     {{-- Scrollable content area --}}
-                    <div class="flex flex-col gap-6 lg:flex-1 lg:overflow-y-auto lg:pr-4">
+                    <div x-ref="scrollContainer"
+                        class="flex flex-col gap-6 rounded-xl lg:flex-1 lg:overflow-y-auto lg:pr-4">
                         @if (count($selectedStalls) > 0)
-                            <flux:callout variant="info">
+                            <flux:callout variant="info" class="sticky top-0 z-50 bg-white dark:bg-zinc-900">
                                 <div class="flex items-center justify-between">
                                     <flux:heading size="lg">Selected Stalls ({{ count($selectedStalls) }})
                                     </flux:heading>
@@ -100,11 +101,24 @@
                             <div class="space-y-6">
                                 <div class="flex items-center justify-between">
                                     <flux:heading size="lg">Have you exhibited before?</flux:heading>
-                                    <flux:switch wire:model.live="hasExhibitedBefore" />
+                                    <flux:switch wire:model.live="hasExhibitedBefore"
+                                        x-on:change="$nextTick(() => {
+                                            if ($wire.hasExhibitedBefore) {
+                                                setTimeout(() => {
+                                                    const container = $refs.scrollContainer;
+                                                    const element = $refs.participationSection;
+                                                    if (container && element) {
+                                                        const elementBottom = element.offsetTop + element.offsetHeight;
+                                                        const containerHeight = container.clientHeight;
+                                                        container.scrollTo({ top: elementBottom - containerHeight, behavior: 'smooth' });
+                                                    }
+                                                }, 100);
+                                            }
+                                        })" />
                                 </div>
 
                                 @if ($hasExhibitedBefore)
-                                    <div>
+                                    <div x-ref="participationSection">
                                         <flux:subheading class="mb-4">Select year(s)</flux:subheading>
                                         <flux:checkbox.group wire:model="participationYears" variant="cards"
                                             class="grid grid-cols-2 gap-4 lg:grid-cols-3">
@@ -128,11 +142,24 @@
                             <div class="space-y-6">
                                 <div class="flex items-center justify-between">
                                     <flux:heading size="lg">Are you an SGCCI member?</flux:heading>
-                                    <flux:switch wire:model.live="isSgcciMember" />
+                                    <flux:switch wire:model.live="isSgcciMember"
+                                        x-on:change="$nextTick(() => {
+                                            if ($wire.isSgcciMember) {
+                                                setTimeout(() => {
+                                                    const container = $refs.scrollContainer;
+                                                    const element = $refs.membershipSection;
+                                                    if (container && element) {
+                                                        const elementBottom = element.offsetTop + element.offsetHeight;
+                                                        const containerHeight = container.clientHeight;
+                                                        container.scrollTo({ top: elementBottom - containerHeight, behavior: 'smooth' });
+                                                    }
+                                                }, 100);
+                                            }
+                                        })" />
                                 </div>
 
                                 @if ($isSgcciMember)
-                                    <div>
+                                    <div x-ref="membershipSection">
                                         <flux:subheading class="mb-4">Select membership type</flux:subheading>
                                         <flux:radio.group wire:model="membershipType" variant="cards"
                                             class="grid gap-4">
