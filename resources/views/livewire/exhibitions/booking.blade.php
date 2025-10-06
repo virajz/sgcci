@@ -10,7 +10,7 @@
             {{-- Map Section (Left) --}}
             <section class="lg:col-span-2">
                 <div class="sticky top-6">
-                    <img src="{{ asset('maps/Main.svg') }}" alt="Exhibition Map" class="w-full h-auto">
+                    @livewire('stall-selector')
                 </div>
             </section>
 
@@ -19,6 +19,25 @@
             {{-- Form Section (Right) --}}
             <section class="lg:order-2">
                 <form action="" class="flex flex-col gap-6">
+                    @if (count($selectedStalls) > 0)
+                        <flux:callout variant="info">
+                            <div class="flex items-center justify-between">
+                                <flux:heading size="lg">Selected Stalls ({{ count($selectedStalls) }})
+                                </flux:heading>
+                                <flux:button wire:click="clearSelectedStalls" variant="ghost" size="sm"
+                                    icon="x-mark">
+                                    Clear
+                                </flux:button>
+                            </div>
+                            <div class="flex flex-wrap gap-2 mt-2">
+                                @foreach ($selectedStalls as $stall)
+                                    <flux:badge size="lg" variant="solid" color="sky">{{ $stall }}
+                                    </flux:badge>
+                                @endforeach
+                            </div>
+                        </flux:callout>
+                    @endif
+
                     <flux:fieldset>
                         <flux:legend>Company & Contact</flux:legend>
 

@@ -4,6 +4,7 @@ namespace App\Livewire\Exhibitions;
 
 use App\Models\Exhibition;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 #[Layout('components.layouts.front')]
@@ -32,6 +33,20 @@ class Booking extends Component
     public bool $isSgcciMember = false;
 
     public string $membershipType = '';
+
+    public array $selectedStalls = [];
+
+    #[On('stalls-selected')]
+    public function updateSelectedStalls(array $selectedStalls): void
+    {
+        $this->selectedStalls = $selectedStalls;
+    }
+
+    public function clearSelectedStalls(): void
+    {
+        $this->selectedStalls = [];
+        $this->dispatch('clear-stalls');
+    }
 
     public function mount(Exhibition $exhibition)
     {
