@@ -18,10 +18,27 @@
 
             {{-- Form Section (Right) --}}
             <section class="lg:order-2 lg:flex lg:flex-col lg:overflow-hidden">
-                <form action="" class="flex flex-col lg:h-full lg:overflow-hidden">
+                <form wire:submit="save" class="flex flex-col lg:h-full lg:overflow-hidden">
                     {{-- Scrollable content area --}}
                     <div x-ref="scrollContainer"
-                        class="flex flex-col gap-6 rounded-xl lg:flex-1 lg:overflow-y-auto lg:pr-4">
+                        class="flex flex-col gap-6 px-2 rounded-xl lg:flex-1 lg:overflow-y-auto">
+                        @if (session('success'))
+                            <flux:callout variant="success" class="sticky top-0 z-50">
+                                {{ session('success') }}
+                            </flux:callout>
+                        @endif
+
+                        @if ($errors->any())
+                            <flux:callout variant="danger">
+                                <flux:heading size="lg">Please fix the following errors:</flux:heading>
+                                <ul class="mt-2 space-y-1 list-disc list-inside">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </flux:callout>
+                        @endif
+
                         @if (count($selectedStalls) > 0)
                             <flux:callout variant="info" class="sticky top-0 z-50 bg-white dark:bg-zinc-900">
                                 <div class="flex items-center justify-between">
@@ -38,7 +55,16 @@
                                         </flux:badge>
                                     @endforeach
                                 </div>
+                                @error('selectedStalls')
+                                    <flux:error class="mt-2">{{ $message }}</flux:error>
+                                @enderror
                             </flux:callout>
+                        @else
+                            @error('selectedStalls')
+                                <flux:callout variant="danger">
+                                    <flux:heading size="lg">{{ $message }}</flux:heading>
+                                </flux:callout>
+                            @enderror
                         @endif
 
                         <flux:fieldset>
@@ -47,12 +73,12 @@
                             <div class="space-y-6">
 
                                 <flux:input wire:model="brandName" label="Brand / Dealership Name"
-                                    placeholder="Your company name" />
+                                    placeholder="Your company name" error="{{ $errors->first('brandName') }}" />
 
                                 <div class="grid gap-6 lg:grid-cols-2">
 
                                     <flux:input wire:model="contactPerson" label="Contact Person"
-                                        placeholder="Full name" />
+                                        placeholder="Full name" error="{{ $errors->first('contactPerson') }}" />
 
                                     <flux:field>
                                         <flux:label>Phone Number</flux:label>
@@ -63,10 +89,13 @@
                                             <flux:input wire:model="phoneNumber" mask="99999 99999"
                                                 placeholder="98765 43210" />
                                         </flux:input.group>
+                                        @error('phoneNumber')
+                                            <flux:error>{{ $message }}</flux:error>
+                                        @enderror
                                     </flux:field>
 
                                     <flux:input wire:model="email" type="email" label="Email"
-                                        placeholder="you@example.com" />
+                                        placeholder="you@example.com" error="{{ $errors->first('email') }}" />
 
                                     <flux:select wire:model="city" variant="listbox" searchable label="Select City">
                                         <flux:select.option>Ahmedabad</flux:select.option>
@@ -86,6 +115,9 @@
 
                             <flux:checkbox.group wire:model="productProfile" variant="cards"
                                 class="grid gap-4 md:grid-cols-2">
+                                @error('productProfile')
+                                    <flux:error class="col-span-2">{{ $message }}</flux:error>
+                                @enderror
                                 <flux:checkbox checked value="4-wheelers" label="4-Wheelers" />
                                 <flux:checkbox value="2-wheelers" label="2-Wheelers" />
                                 <flux:checkbox value="commercial-3-wheelers" label="Commercial / 3-Wheelers" />
@@ -181,7 +213,10 @@
 
                     {{-- Sticky submit button --}}
                     <div class="flex justify-end pt-4 mt-6 lg:flex-shrink-0 lg:sticky lg:bottom-0">
-                        <flux:button type="submit" variant="primary" class="w-full lg:w-fit">Submit Booking
+                        <flux:button type="submit" variant="primary" class="w-full lg:w-fit"
+                            wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="save">Submit Booking</span>
+                            <span wire:loading wire:target="save">Submitting...</span>
                         </flux:button>
                     </div>
                 </form>

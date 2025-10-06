@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Exhibitions\Booking;
+use App\Livewire\Exhibitions\ThankYou;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -11,10 +12,12 @@ use Laravel\Fortify\Features;
 
 Route::get('/', function () {
     $exhibition = Exhibition::first();
+
     return view('welcome', compact('exhibition'));
 })->name('home');
 
 Route::get('exhibitions/{exhibition}/booking', Booking::class)->name('exhibitions.booking.show');
+Route::get('exhibitions/{exhibition}/booking/thank-you/{bookingCode}', ThankYou::class)->name('exhibitions.booking.thank-you');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
