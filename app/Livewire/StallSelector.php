@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\Booking;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -9,9 +10,12 @@ class StallSelector extends Component
 {
     public array $selectedStalls = [];
 
-    public function mount(array $selectedStalls = []): void
+    public ?int $exhibitionId = null;
+
+    public function mount(array $selectedStalls = [], ?int $exhibitionId = null): void
     {
         $this->selectedStalls = $selectedStalls;
+        $this->exhibitionId = $exhibitionId;
     }
 
     #[On('clear-stalls')]
@@ -41,8 +45,31 @@ class StallSelector extends Component
         $this->dispatch('stalls-selected', selectedStalls: $this->selectedStalls);
     }
 
+    public function getBookedStallsProperty(): array
+    {
+        if (! $this->exhibitionId) {
+            return [];
+        }
+
+        return Booking::where('exhibition_id', $this->exhibitionId)
+            ->get()
+            ->flatMap(function ($booking) {
+                return collect($booking->selected_stalls)->map(function ($stall) use ($booking) {
+                    return [
+                        'stall_number' => $stall,
+                        'status' => $booking->status,
+                    ];
+                });
+            })
+            ->groupBy('stall_number')
+            ->map(fn ($stalls) => $stalls->first()['status'])
+            ->toArray();
+    }
+
     public function render()
     {
-        return view('livewire.stall-selector');
+        return view('livewire.stall-selector', [
+            'bookedStalls' => $this->bookedStalls,
+        ]);
     }
 }

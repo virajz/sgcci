@@ -1,5 +1,6 @@
 <div x-data="{
     selectedStalls: @entangle('selectedStalls'),
+    bookedStalls: @js($bookedStalls),
     svgElement: null,
     stallElements: [],
     viewBox: { x: 0, y: 0, width: 0, height: 0 },
@@ -12,49 +13,79 @@
     lastTouchCenter: { x: 0, y: 0 },
     pendingUpdate: false,
     toggleStall(stallNumber) {
+        // Don't allow selecting booked stalls
+        if (this.bookedStalls[stallNumber]) {
+            return;
+        }
         $wire.toggleStall(stallNumber);
     },
     isSelected(stallNumber) {
         return this.selectedStalls.includes(stallNumber);
     },
+    isBooked(stallNumber) {
+        return this.bookedStalls[stallNumber] === 'booked';
+    },
+    isReserved(stallNumber) {
+        return this.bookedStalls[stallNumber] === 'reserved';
+    },
+    isAllotted(stallNumber) {
+        return this.bookedStalls[stallNumber] === 'allotted';
+    },
+    getStallColor(stallNumber) {
+        if (this.isSelected(stallNumber)) return '#0ea5e9'; // sky-500
+        if (this.isBooked(stallNumber)) return '#ef4444'; // red-500
+        if (this.isReserved(stallNumber)) return '#f59e0b'; // amber-500
+        if (this.isAllotted(stallNumber)) return '#71717a'; // zinc-500
+        return null; // original color
+    },
     updateStallHighlights() {
         this.stallElements.forEach(({ stall, stallNumber, bgPath, textPaths }) => {
-            const isSelected = this.selectedStalls.includes(stallNumber);
+            const color = this.getStallColor(stallNumber);
+            const shouldColor = color !== null;
 
-            if (isSelected) {
-                // Change background color
-                if (bgPath && !bgPath.hasAttribute('data-original-fill')) {
-                    bgPath.setAttribute('data-original-fill', bgPath.getAttribute('fill'));
-                }
+            // Store original color if not already stored
+            if (bgPath && !bgPath.hasAttribute('data-original-fill')) {
+                bgPath.setAttribute('data-original-fill', bgPath.getAttribute('fill'));
+            }
+
+            if (shouldColor) {
+                // Apply color based on status
                 if (bgPath) {
-                    bgPath.setAttribute('fill', '#0ea5e9');
+                    bgPath.setAttribute('fill', color);
                 }
 
-                // Change text color
+                // Update text color for contrast
                 textPaths.forEach(textPath => {
                     if (!textPath.hasAttribute('data-original-fill')) {
                         textPath.setAttribute('data-original-fill', textPath.getAttribute('fill'));
                     }
+                    // For dark backgrounds (selected, booked, reserved, allotted), use white text
                     if (textPath.getAttribute('data-original-fill') === '#000') {
                         textPath.setAttribute('fill', '#fff');
                     }
                 });
+
+                // Change cursor for booked stalls
+                if (this.bookedStalls[stallNumber]) {
+                    stall.style.cursor = 'not-allowed';
+                } else {
+                    stall.style.cursor = 'pointer';
+                }
             } else {
-                // Restore background color
+                // Restore original colors
                 if (bgPath && bgPath.hasAttribute('data-original-fill')) {
                     const original = bgPath.getAttribute('data-original-fill');
                     bgPath.setAttribute('fill', original);
-                    bgPath.removeAttribute('data-original-fill');
                 }
 
-                // Restore text color
                 textPaths.forEach(textPath => {
                     if (textPath.hasAttribute('data-original-fill')) {
                         const original = textPath.getAttribute('data-original-fill');
                         textPath.setAttribute('fill', original);
-                        textPath.removeAttribute('data-original-fill');
                     }
                 });
+
+                stall.style.cursor = 'pointer';
             }
         });
     },
@@ -319,5 +350,25 @@
         <flux:button icon="plus" x-on:click="zoomIn" size="sm" class="shadow-lg" />
         <flux:button icon="minus" x-on:click="zoomOut" size="sm" class="shadow-lg" />
         <flux:button icon="arrow-path" x-on:click="resetZoom" size="sm" class="shadow-lg" />
+    </div>
+
+    <!-- Legend -->
+    <div class="flex flex-wrap justify-center gap-4 px-4">
+        <div class="flex items-center gap-2">
+            <div class="w-4 h-4 rounded bg-sky-500"></div>
+            <flux:text class="text-sm">Selected</flux:text>
+        </div>
+        <div class="flex items-center gap-2">
+            <div class="w-4 h-4 bg-red-500 rounded"></div>
+            <flux:text class="text-sm">Booked</flux:text>
+        </div>
+        <div class="flex items-center gap-2">
+            <div class="w-4 h-4 rounded bg-amber-500"></div>
+            <flux:text class="text-sm">Reserved</flux:text>
+        </div>
+        <div class="flex items-center gap-2">
+            <div class="w-4 h-4 rounded bg-zinc-500"></div>
+            <flux:text class="text-sm">Allotted</flux:text>
+        </div>
     </div>
 </div>

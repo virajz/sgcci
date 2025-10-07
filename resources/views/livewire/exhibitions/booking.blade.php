@@ -10,7 +10,7 @@
             {{-- Map Section (Left) --}}
             <section class="lg:col-span-2 lg:overflow-y-auto lg:pr-4">
                 <div class="lg:sticky lg:top-0">
-                    @livewire('stall-selector', ['selectedStalls' => $selectedStalls])
+                    @livewire('stall-selector', ['selectedStalls' => $selectedStalls, 'exhibitionId' => $exhibition->id])
                 </div>
             </section>
 

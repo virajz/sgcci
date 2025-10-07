@@ -4,6 +4,7 @@ namespace App\Livewire\Exhibitions;
 
 use App\Models\Booking as BookingModel;
 use App\Models\Exhibition;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -50,6 +51,18 @@ class Confirmation extends Component
             'is_sgcci_member' => $this->bookingData['isSgcciMember'],
             'membership_type' => $this->bookingData['membershipType'],
             'selected_stalls' => $this->bookingData['selectedStalls'],
+        ]);
+
+        // Log WhatsApp message template
+        Log::channel('whatsapp')->info('WhatsApp message to be sent', [
+            'booking_code' => $booking->booking_code,
+            'recipient' => $booking->phone_code.$booking->phone_number,
+            'contact_person' => $booking->contact_person,
+            'brand_name' => $booking->brand_name,
+            'exhibition' => $this->exhibition->name,
+            'selected_stalls' => $booking->selected_stalls,
+            'total_amount' => $booking->total_with_gst,
+            'template' => 'booking_confirmation',
         ]);
 
         // Clear session data
