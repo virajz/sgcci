@@ -20,8 +20,7 @@
             <section class="lg:order-2 lg:flex lg:flex-col lg:overflow-hidden">
                 <form wire:submit="save" class="flex flex-col lg:h-full lg:overflow-hidden">
                     {{-- Scrollable content area --}}
-                    <div x-ref="scrollContainer"
-                        class="flex flex-col gap-6 px-2 rounded-xl lg:flex-1 lg:overflow-y-auto">
+                    <div x-ref="scrollContainer" class="px-2 space-y-6 rounded-xl lg:flex-1 lg:overflow-y-auto">
                         @if (session('success'))
                             <flux:callout variant="success" class="sticky top-0 z-50">
                                 {{ session('success') }}
@@ -116,7 +115,7 @@
                             </div>
                         </flux:fieldset>
 
-                        <flux:separator class="my-4" />
+                        <flux:separator />
 
                         <flux:fieldset>
                             <flux:legend>Product Profile</flux:legend>
@@ -133,7 +132,7 @@
                             </flux:checkbox.group>
                         </flux:fieldset>
 
-                        <flux:separator class="my-4" />
+                        <flux:separator />
 
                         <flux:fieldset>
                             <flux:legend>Past Participation</flux:legend>
@@ -174,7 +173,7 @@
                             </div>
                         </flux:fieldset>
 
-                        <flux:separator class="my-4" />
+                        <flux:separator />
 
                         <flux:fieldset>
                             <flux:legend>SGCCI Membership</flux:legend>
@@ -216,7 +215,7 @@
                             </div>
                         </flux:fieldset>
 
-                        <flux:separator class="my-4" />
+                        <flux:separator />
 
                         {{-- Pricing Estimate --}}
                         @if (count($selectedStalls) > 0)
