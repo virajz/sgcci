@@ -55,12 +55,21 @@ class StallSelector extends Component
             ->get()
             ->flatMap(function ($booking) {
                 return collect($booking->selected_stalls)->map(function ($stall) use ($booking) {
+                    // Map statuses for UI display
+                    $uiStatus = match ($booking->status->value) {
+                        'allotted' => 'allotted',
+                        'pending_approval', 'approved_by_admin', 'payment_pending', 'payment_completed' => 'reserved',
+                        'rejected', 'expired', 'cancelled' => null, // These stalls are available again
+                        default => null,
+                    };
+
                     return [
                         'stall_number' => $stall,
-                        'status' => $booking->status,
+                        'status' => $uiStatus,
                     ];
                 });
             })
+            ->filter(fn ($stall) => $stall['status'] !== null) // Remove stalls with null status
             ->groupBy('stall_number')
             ->map(fn ($stalls) => $stalls->first()['status'])
             ->toArray();

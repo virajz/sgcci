@@ -13,7 +13,7 @@
     lastTouchCenter: { x: 0, y: 0 },
     pendingUpdate: false,
     toggleStall(stallNumber) {
-        // Don't allow selecting booked stalls
+        // Don't allow selecting reserved or allotted stalls
         if (this.bookedStalls[stallNumber]) {
             return;
         }
@@ -21,9 +21,6 @@
     },
     isSelected(stallNumber) {
         return this.selectedStalls.includes(stallNumber);
-    },
-    isBooked(stallNumber) {
-        return this.bookedStalls[stallNumber] === 'booked';
     },
     isReserved(stallNumber) {
         return this.bookedStalls[stallNumber] === 'reserved';
@@ -33,8 +30,7 @@
     },
     getStallColor(stallNumber) {
         if (this.isSelected(stallNumber)) return '#0ea5e9'; // sky-500
-        if (this.isBooked(stallNumber)) return '#ef4444'; // red-500
-        if (this.isReserved(stallNumber)) return '#f59e0b'; // amber-500
+        if (this.isReserved(stallNumber)) return '#ef4444'; // red-500
         if (this.isAllotted(stallNumber)) return '#71717a'; // zinc-500
         return null; // original color
     },
@@ -59,13 +55,13 @@
                     if (!textPath.hasAttribute('data-original-fill')) {
                         textPath.setAttribute('data-original-fill', textPath.getAttribute('fill'));
                     }
-                    // For dark backgrounds (selected, booked, reserved, allotted), use white text
+                    // For dark backgrounds (selected, reserved, allotted), use white text
                     if (textPath.getAttribute('data-original-fill') === '#000') {
                         textPath.setAttribute('fill', '#fff');
                     }
                 });
 
-                // Change cursor for booked stalls
+                // Change cursor for reserved/allotted stalls
                 if (this.bookedStalls[stallNumber]) {
                     stall.style.cursor = 'not-allowed';
                 } else {
@@ -360,10 +356,6 @@
         </div>
         <div class="flex items-center gap-2">
             <div class="w-4 h-4 bg-red-500 rounded"></div>
-            <flux:text class="text-sm">Booked</flux:text>
-        </div>
-        <div class="flex items-center gap-2">
-            <div class="w-4 h-4 rounded bg-amber-500"></div>
             <flux:text class="text-sm">Reserved</flux:text>
         </div>
         <div class="flex items-center gap-2">

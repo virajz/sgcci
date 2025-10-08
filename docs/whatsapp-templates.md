@@ -1,0 +1,210 @@
+# WhatsApp Business Templates for Booking System
+
+## Template 1: Booking Received (Acknowledgment)
+
+**Template Name:** `booking_received`
+**Category:** UTILITY
+**Language:** English
+
+### Message:
+
+```
+Hello {{1}},
+
+Thank you for your booking inquiry for *{{2}}*!
+
+We have received your request for the following stalls:
+{{3}}
+
+*Booking Details:*
+📋 Booking Code: *{{4}}*
+📍 Total Area: {{5}} sq m
+💰 Amount: ₹{{6}}
+
+Your booking is currently under review by our admin team. You will receive a confirmation message once it has been processed.
+
+For any queries, please contact us or reply to this message.
+
+Thank you,
+*SGCCI Team*
+```
+
+### Variables:
+
+1. `{{1}}` - Contact Person Name
+2. `{{2}}` - Exhibition Title
+3. `{{3}}` - Selected Stalls (comma-separated list)
+4. `{{4}}` - Booking Code
+5. `{{5}}` - Total Area
+6. `{{6}}` - Total Amount with GST
+
+---
+
+## Template 2: Booking Confirmation with Payment Link
+
+**Template Name:** `booking_confirmation_payment`
+**Category:** UTILITY
+**Language:** English
+
+### Message:
+
+```
+🎉 Congratulations {{1}}!
+
+Your booking for *{{2}}* has been *CONFIRMED*!
+
+*Allotted Stalls:*
+{{3}}
+
+*Booking Summary:*
+📋 Booking Code: *{{4}}*
+📍 Total Area: {{5}} sq m
+💰 Total Amount: ₹{{6}}
+📅 Payment Due: {{7}}
+
+*Next Step - Complete Payment:*
+Please complete your payment using the link below:
+{{8}}
+
+⚠️ *Important:* Payment must be completed by {{7}} to secure your stalls.
+
+For assistance, contact us or reply to this message.
+
+Best regards,
+*SGCCI Team*
+```
+
+### Variables:
+
+1. `{{1}}` - Contact Person Name
+2. `{{2}}` - Exhibition Title
+3. `{{3}}` - Allotted Stalls (formatted list)
+4. `{{4}}` - Booking Code
+5. `{{5}}` - Total Area
+6. `{{6}}` - Total Amount with GST
+7. `{{7}}` - Payment Due Date
+8. `{{8}}` - Payment Link URL
+
+---
+
+## Template 3: Booking Rejected
+
+**Template Name:** `booking_rejected`
+**Category:** UTILITY
+**Language:** English
+
+### Message:
+
+```
+Hello {{1}},
+
+We regret to inform you that your booking inquiry for *{{2}}* could not be approved.
+
+*Booking Details:*
+📋 Booking Code: *{{3}}*
+🗓️ Requested Stalls: {{4}}
+
+*Reason:*
+{{5}}
+
+We appreciate your interest and encourage you to:
+• Contact us for alternative options
+• Submit a new inquiry with different requirements
+
+For further assistance, please reach out to our team.
+
+Thank you for your understanding.
+
+Best regards,
+*SGCCI Team*
+```
+
+### Variables:
+
+1. `{{1}}` - Contact Person Name
+2. `{{2}}` - Exhibition Title
+3. `{{3}}` - Booking Code
+4. `{{4}}` - Requested Stalls
+5. `{{5}}` - Rejection Reason
+
+---
+
+## Implementation Notes
+
+### WhatsApp Business API Format
+
+When submitting to Meta/WhatsApp for approval, use this structure:
+
+```json
+{
+	"name": "booking_received",
+	"language": "en",
+	"category": "TRANSACTIONAL",
+	"components": [
+		{
+			"type": "BODY",
+			"text": "Hello {{1}}, Thank you for your booking inquiry for *{{2}}*! We have received your request for the following stalls: {{3}}...",
+			"example": {
+				"body_text": [
+					[
+						"John Doe",
+						"Auto Expo 2025",
+						"A1, A2, B3",
+						"ABC12345",
+						"45",
+						"67,500.00"
+					]
+				]
+			}
+		}
+	]
+}
+```
+
+### Usage in Laravel
+
+```php
+// Example: Send booking received notification
+Log::channel('whatsapp')->info('WhatsApp booking received notification', [
+    'template' => 'booking_received',
+    'recipient' => $booking->phone_code . $booking->phone_number,
+    'variables' => [
+        $booking->contact_person,
+        $booking->exhibition->title,
+        implode(', ', $booking->selected_stalls),
+        $booking->booking_code,
+        $booking->total_area,
+        number_format($booking->total_with_gst, 2),
+    ],
+]);
+```
+
+### Character Limits
+
+-   Template names: 512 characters max
+-   Template content: 1024 characters max
+-   Variables: Keep concise for better delivery
+
+### Formatting Rules
+
+-   Use `*bold*` for emphasis
+-   Use `_italic_` for secondary emphasis
+-   Use emojis sparingly for better readability
+-   Keep messages clear and concise
+-   Include call-to-action when needed
+
+### Testing Variables
+
+Before submitting templates, test with sample data:
+
+**Booking Received:**
+
+-   John Doe, Auto Expo 2025, A1-A2-B3, XYZ12345, 45, 67,500.00
+
+**Booking Confirmation:**
+
+-   John Doe, Auto Expo 2025, A1, A2, B3, XYZ12345, 45, 67,500.00, Oct 15, 2025, https://sgcci.test/payment/XYZ12345
+
+**Booking Rejected:**
+
+-   John Doe, Auto Expo 2025, XYZ12345, A1, A2, B3, The requested stalls are already allotted to another exhibitor.

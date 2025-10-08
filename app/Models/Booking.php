@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\BookingStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,10 +34,21 @@ class Booking extends Model
         'gst_amount',
         'total_with_gst',
         'status',
+        'admin_approved_by',
+        'admin_approved_at',
+        'super_admin_approved_by',
+        'super_admin_approved_at',
+        'rejection_reason',
+        'rejected_by',
+        'rejected_at',
+        'payment_link',
+        'payment_link_sent_at',
+        'payment_due_at',
+        'payment_completed_at',
     ];
 
     protected $attributes = [
-        'status' => 'booked',
+        'status' => 'pending_approval',
     ];
 
     protected function casts(): array
@@ -52,6 +64,13 @@ class Booking extends Model
             'total_price' => 'decimal:2',
             'gst_amount' => 'decimal:2',
             'total_with_gst' => 'decimal:2',
+            'status' => BookingStatus::class,
+            'admin_approved_at' => 'datetime',
+            'super_admin_approved_at' => 'datetime',
+            'rejected_at' => 'datetime',
+            'payment_link_sent_at' => 'datetime',
+            'payment_due_at' => 'datetime',
+            'payment_completed_at' => 'datetime',
         ];
     }
 
@@ -177,5 +196,20 @@ class Booking extends Model
     public function exhibition(): BelongsTo
     {
         return $this->belongsTo(Exhibition::class);
+    }
+
+    public function adminApprovedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'admin_approved_by');
+    }
+
+    public function superAdminApprovedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'super_admin_approved_by');
+    }
+
+    public function rejectedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
     }
 }

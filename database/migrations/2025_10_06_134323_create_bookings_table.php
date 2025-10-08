@@ -33,7 +33,23 @@ return new class extends Migration
             $table->decimal('total_price', 10, 2);
             $table->decimal('gst_amount', 10, 2);
             $table->decimal('total_with_gst', 10, 2);
-            $table->enum('status', ['booked', 'reserved', 'allotted'])->default('booked');
+            $table->string('status')->default('pending_approval');
+
+            // Approval fields
+            $table->foreignId('admin_approved_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('admin_approved_at')->nullable();
+            $table->foreignId('super_admin_approved_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('super_admin_approved_at')->nullable();
+            $table->text('rejection_reason')->nullable();
+            $table->foreignId('rejected_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('rejected_at')->nullable();
+
+            // Payment fields
+            $table->string('payment_link')->nullable();
+            $table->timestamp('payment_link_sent_at')->nullable();
+            $table->timestamp('payment_due_at')->nullable();
+            $table->timestamp('payment_completed_at')->nullable();
+
             $table->timestamps();
         });
     }

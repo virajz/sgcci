@@ -1,5 +1,7 @@
 <?php
 
+use App\Livewire\Admin\Inquiries\Index as InquiriesIndex;
+use App\Livewire\Admin\Inquiries\Show as InquiriesShow;
 use App\Livewire\Exhibitions\Booking;
 use App\Livewire\Exhibitions\Confirmation;
 use App\Livewire\Exhibitions\ThankYou;
@@ -42,6 +44,12 @@ Route::middleware(['auth'])->group(function () {
             ),
         )
         ->name('two-factor.show');
+
+    // Admin routes
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('inquiries', InquiriesIndex::class)->name('inquiries.index');
+        Route::get('inquiries/{booking}', InquiriesShow::class)->name('inquiries.show');
+    });
 });
 
 require __DIR__.'/auth.php';

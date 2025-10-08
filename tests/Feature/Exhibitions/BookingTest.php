@@ -194,7 +194,7 @@ test('booking defaults to booked status', function () {
     ]);
 
     $booking->refresh();
-    expect($booking->status)->toBe('booked');
+    expect($booking->status)->toBe(\App\BookingStatus::PendingApproval);
 });
 
 test('booking calculates pricing based on stall sizes', function () {

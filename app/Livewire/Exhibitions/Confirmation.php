@@ -71,8 +71,8 @@ class Confirmation extends Component
             'selected_stalls' => $this->bookingData['selectedStalls'],
         ]);
 
-        // Log WhatsApp message template
-        Log::channel('whatsapp')->info('WhatsApp message to be sent', [
+        // Log WhatsApp message for inquiry submission
+        Log::channel('whatsapp')->info('WhatsApp inquiry submitted message to be sent', [
             'booking_code' => $booking->booking_code,
             'recipient' => $booking->phone_code.$booking->phone_number,
             'contact_person' => $booking->contact_person,
@@ -80,7 +80,7 @@ class Confirmation extends Component
             'exhibition' => $this->exhibition->title,
             'selected_stalls' => $booking->selected_stalls,
             'total_amount' => $booking->total_with_gst,
-            'template' => 'booking_confirmation',
+            'template' => 'inquiry_submitted',
         ]);
 
         // Mark token as used

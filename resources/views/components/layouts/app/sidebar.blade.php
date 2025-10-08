@@ -15,6 +15,10 @@
                 <flux:navlist.group :heading="__('Platform')" class="grid">
                     <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
                 </flux:navlist.group>
+
+                <flux:navlist.group :heading="__('Management')" class="grid">
+                    <flux:navlist.item icon="inbox" :href="route('admin.inquiries.index')" :current="request()->routeIs('admin.inquiries.*')" wire:navigate>{{ __('Inquiries') }}</flux:navlist.item>
+                </flux:navlist.group>
             </flux:navlist>
 
             <flux:spacer />
