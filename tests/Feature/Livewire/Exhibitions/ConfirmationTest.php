@@ -79,6 +79,7 @@ it('can confirm booking', function () {
     $exhibition = Exhibition::factory()->create();
 
     session()->put('booking_data', [
+        'token' => \Illuminate\Support\Str::uuid()->toString(),
         'exhibitionId' => $exhibition->id,
         'brandName' => 'Test Motors',
         'contactPerson' => 'John Doe',
@@ -99,4 +100,58 @@ it('can confirm booking', function () {
         ->assertHasNoErrors();
 
     expect(\App\Models\Booking::where('email', 'john@testmotors.com')->exists())->toBeTrue();
+});
+
+it('prevents duplicate booking with same token', function () {
+    $exhibition = Exhibition::factory()->create();
+    $token = \Illuminate\Support\Str::uuid()->toString();
+
+    session()->put('booking_data', [
+        'token' => $token,
+        'exhibitionId' => $exhibition->id,
+        'brandName' => 'Test Motors',
+        'contactPerson' => 'John Doe',
+        'phoneCode' => '+91',
+        'phoneNumber' => '98765 43210',
+        'email' => 'john@testmotors.com',
+        'city' => 'Surat',
+        'productProfile' => ['4-wheelers'],
+        'hasExhibitedBefore' => false,
+        'participationYears' => [],
+        'isSgcciMember' => false,
+        'membershipType' => '',
+        'selectedStalls' => ['35'],
+    ]);
+
+    // First booking succeeds
+    Livewire::test(Confirmation::class, ['exhibition' => $exhibition])
+        ->call('confirm');
+
+    expect(\App\Models\Booking::where('email', 'john@testmotors.com')->count())->toBe(1);
+
+    // Restore the same token to simulate browser back button
+    session()->put('booking_data', [
+        'token' => $token,
+        'exhibitionId' => $exhibition->id,
+        'brandName' => 'Test Motors',
+        'contactPerson' => 'John Doe',
+        'phoneCode' => '+91',
+        'phoneNumber' => '98765 43210',
+        'email' => 'john@testmotors.com',
+        'city' => 'Surat',
+        'productProfile' => ['4-wheelers'],
+        'hasExhibitedBefore' => false,
+        'participationYears' => [],
+        'isSgcciMember' => false,
+        'membershipType' => '',
+        'selectedStalls' => ['35'],
+    ]);
+
+    // Second booking with same token should be prevented
+    Livewire::test(Confirmation::class, ['exhibition' => $exhibition])
+        ->call('confirm')
+        ->assertRedirect(route('exhibitions.booking.show', $exhibition));
+
+    // Should still only have one booking
+    expect(\App\Models\Booking::where('email', 'john@testmotors.com')->count())->toBe(1);
 });

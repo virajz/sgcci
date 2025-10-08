@@ -27,6 +27,12 @@
                             </flux:callout>
                         @endif
 
+                        @if (session('error'))
+                            <flux:callout variant="danger" class="sticky top-0 z-50">
+                                {{ session('error') }}
+                            </flux:callout>
+                        @endif
+
                         @if ($errors->any())
                             <flux:callout variant="danger">
                                 <flux:heading size="lg">Please fix the following errors:</flux:heading>

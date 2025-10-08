@@ -71,8 +71,12 @@ class Booking extends Component
     {
         $validated = $this->validate((new StoreBookingRequest)->rules());
 
+        // Generate a unique token to prevent duplicate submissions
+        $bookingToken = \Illuminate\Support\Str::uuid()->toString();
+
         // Store booking data in session for confirmation page
         session(['booking_data' => [
+            'token' => $bookingToken,
             'exhibitionId' => $this->exhibition->id,
             'brandName' => $this->brandName,
             'contactPerson' => $this->contactPerson,

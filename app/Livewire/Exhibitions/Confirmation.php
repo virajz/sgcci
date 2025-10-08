@@ -35,6 +35,24 @@ class Confirmation extends Component
 
     public function confirm(): void
     {
+        // Check if booking token exists and hasn't been used
+        $token = $this->bookingData['token'] ?? null;
+        if (! $token) {
+            session()->flash('error', 'Invalid booking session. Please try again.');
+            $this->redirect(route('exhibitions.booking.show', $this->exhibition), navigate: true);
+
+            return;
+        }
+
+        // Check if this token has already been used
+        $usedTokens = session('used_booking_tokens', []);
+        if (in_array($token, $usedTokens)) {
+            session()->flash('error', 'This booking has already been submitted.');
+            $this->redirect(route('exhibitions.booking.show', $this->exhibition), navigate: true);
+
+            return;
+        }
+
         // Create the booking
         $booking = BookingModel::create([
             'exhibition_id' => $this->exhibition->id,
@@ -59,13 +77,17 @@ class Confirmation extends Component
             'recipient' => $booking->phone_code.$booking->phone_number,
             'contact_person' => $booking->contact_person,
             'brand_name' => $booking->brand_name,
-            'exhibition' => $this->exhibition->name,
+            'exhibition' => $this->exhibition->title,
             'selected_stalls' => $booking->selected_stalls,
             'total_amount' => $booking->total_with_gst,
             'template' => 'booking_confirmation',
         ]);
 
-        // Clear session data
+        // Mark token as used
+        $usedTokens[] = $token;
+        session(['used_booking_tokens' => $usedTokens]);
+
+        // Clear booking data
         session()->forget('booking_data');
 
         // Redirect to thank you page
