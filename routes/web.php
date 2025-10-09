@@ -54,10 +54,10 @@ Route::middleware(['auth'])->group(function () {
         ->name('two-factor.show');
 
     // Admin routes
-    Route::prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         Route::get('inquiries', InquiriesIndex::class)->name('inquiries.index');
         Route::get('inquiries/{booking}', InquiriesShow::class)->name('inquiries.show');
     });
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

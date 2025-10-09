@@ -76,7 +76,7 @@
                                             Manual Block
                                         </flux:badge>
                                     @else
-                                        <flux:badge :color="$booking->status->color()" variant="solid">
+                                        <flux:badge :color="$booking->status->color()" size="sm" variant="solid">
                                             {{ $booking->status->label() }}
                                         </flux:badge>
                                     @endif
@@ -96,10 +96,33 @@
                                             Release
                                         </flux:button>
                                     @else
-                                        <flux:button size="sm" variant="ghost" icon="eye" iconVariant="outline"
-                                            href="{{ route('admin.inquiries.show', $booking) }}" wire:navigate>
-                                            View
-                                        </flux:button>
+                                        <div class="flex items-center gap-2">
+                                            <flux:button size="sm" variant="ghost" icon="eye"
+                                                iconVariant="outline"
+                                                href="{{ route('admin.inquiries.show', $booking) }}" wire:navigate>
+                                                View
+                                            </flux:button>
+
+                                            @if ($booking->status === \App\BookingStatus::PaymentPending && $booking->payment_link)
+                                                <flux:dropdown position="bottom" align="end">
+                                                    <flux:button size="sm" variant="ghost"
+                                                        icon="ellipsis-horizontal" iconVariant="outline" />
+
+                                                    <flux:menu>
+                                                        <flux:menu.item icon="link" x-data
+                                                            x-on:click="navigator.clipboard.writeText('{{ $booking->payment_link }}').then(() => {
+                                                                $flux.toast({
+                                                                    variant: 'success',
+                                                                    heading: 'Copied!',
+                                                                    text: 'Payment link copied to clipboard'
+                                                                });
+                                                            })">
+                                                            Copy Payment Link
+                                                        </flux:menu.item>
+                                                    </flux:menu>
+                                                </flux:dropdown>
+                                            @endif
+                                        </div>
                                     @endif
                                 </flux:table.cell>
                             </flux:table.row>

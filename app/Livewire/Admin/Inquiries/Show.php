@@ -21,6 +21,11 @@ class Show extends Component
 
     public function mount(Booking $booking): void
     {
+        // Ensure user has admin privileges
+        if (! Auth::user()->isAdmin()) {
+            abort(403, 'Unauthorized access.');
+        }
+
         $this->booking = $booking;
     }
 
@@ -37,6 +42,7 @@ class Show extends Component
             ]);
 
             Flux::toast(
+                heading: 'Booking Verified!',
                 variant: 'success',
                 text: 'Booking verified successfully. Awaiting super admin approval for stall allotment.'
             );
@@ -77,8 +83,9 @@ class Show extends Component
             );
 
             Flux::toast(
+                heading: 'Booking Approved!',
                 variant: 'success',
-                text: 'Booking approved! Payment link sent to customer. Stalls will be allotted once payment is received.'
+                text: 'Payment link sent to customer. Stalls will be allotted once payment is received.'
             );
             $this->dispatch('booking-updated');
 
@@ -86,8 +93,9 @@ class Show extends Component
         }
 
         Flux::toast(
+            heading: 'Unable to Proceed',
             variant: 'danger',
-            text: 'Unable to approve booking at this stage.'
+            text: 'Unable to approve booking at this stage. Please check the booking status.'
         );
     }
 
@@ -102,6 +110,7 @@ class Show extends Component
         // Only super admin can reject bookings
         if (! Auth::user()->isSuperAdmin()) {
             Flux::toast(
+                heading: 'Unauthorized',
                 variant: 'danger',
                 text: 'Only super admin can reject bookings.'
             );
@@ -111,7 +120,10 @@ class Show extends Component
         }
 
         $this->validate([
-            'rejectionReason' => 'required|string|min:10',
+            'rejectionReason' => ['required', 'string', 'min:10'],
+        ], [
+            'rejectionReason.required' => 'Please provide a reason for rejection.',
+            'rejectionReason.min' => 'Please provide a detailed reason (minimum 10 characters).',
         ]);
 
         $this->booking->update([
@@ -137,8 +149,9 @@ class Show extends Component
 
         $this->showRejectModal = false;
         Flux::toast(
+            heading: 'Booking Rejected',
             variant: 'success',
-            text: 'Booking has been rejected.'
+            text: 'The booking has been rejected and the customer has been notified.'
         );
         $this->dispatch('booking-updated');
     }
@@ -149,6 +162,7 @@ class Show extends Component
         // Only payment pending bookings can have payment link resent
         if ($this->booking->status !== BookingStatus::PaymentPending) {
             Flux::toast(
+                heading: 'Cannot Resend Link',
                 variant: 'danger',
                 text: 'Payment link can only be resent for bookings with payment pending status.'
             );
@@ -182,6 +196,7 @@ class Show extends Component
         );
 
         Flux::toast(
+            heading: 'Payment Link Sent!',
             variant: 'success',
             text: 'Payment link has been resent to the customer via WhatsApp.'
         );
@@ -193,6 +208,7 @@ class Show extends Component
         // Only super admin can mark payment as completed
         if (! Auth::user()->isSuperAdmin()) {
             Flux::toast(
+                heading: 'Unauthorized',
                 variant: 'danger',
                 text: 'Only super admin can mark payment as completed.'
             );
@@ -203,6 +219,7 @@ class Show extends Component
         // Only payment pending bookings can be marked as completed
         if ($this->booking->status !== BookingStatus::PaymentPending) {
             Flux::toast(
+                heading: 'Invalid Status',
                 variant: 'danger',
                 text: 'Only bookings with payment pending status can be marked as completed.'
             );
@@ -231,6 +248,7 @@ class Show extends Component
         );
 
         Flux::toast(
+            heading: 'Payment Confirmed!',
             variant: 'success',
             text: 'Payment marked as completed. Stalls have been allotted to the customer.'
         );
@@ -241,7 +259,7 @@ class Show extends Component
     {
         // In a real application, you would integrate with a payment gateway
         // For now, return a placeholder URL
-        return config('app.url') . '/payment/' . $this->booking->booking_code;
+        return config('app.url').'/payment/'.$this->booking->booking_code;
     }
 
     public function render()

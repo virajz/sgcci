@@ -168,8 +168,9 @@
                             </flux:callout>
                         @else
                             <flux:button wire:click="approve" variant="primary" class="w-full" icon="check"
-                                iconVariant="outline">
-                                Verify & Approve
+                                iconVariant="outline" wire:loading.attr="disabled">
+                                <span wire:loading.remove wire:target="approve">Verify & Approve</span>
+                                <span wire:loading wire:target="approve">Processing...</span>
                             </flux:button>
                         @endif
                     </div>
@@ -180,8 +181,9 @@
                         </flux:callout>
 
                         <flux:button wire:click="approve" variant="primary" class="w-full" icon="check"
-                            iconVariant="outline">
-                            Approve & Send Payment Link
+                            iconVariant="outline" wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="approve">Approve & Send Payment Link</span>
+                            <span wire:loading wire:target="approve">Processing...</span>
                         </flux:button>
 
                         <flux:button wire:click="openRejectModal" variant="danger" class="w-full" icon="x-mark"
@@ -197,14 +199,29 @@
 
                         @if (auth()->user()->isSuperAdmin())
                             <flux:button wire:click="markPaymentCompleted" variant="primary" class="w-full"
-                                icon="check" iconVariant="outline">
-                                Mark Payment as Completed
+                                icon="check" iconVariant="outline" wire:loading.attr="disabled">
+                                <span wire:loading.remove wire:target="markPaymentCompleted">Mark Payment as
+                                    Completed</span>
+                                <span wire:loading wire:target="markPaymentCompleted">Processing...</span>
                             </flux:button>
                         @endif
 
+                        <flux:button x-data
+                            x-on:click="navigator.clipboard.writeText('{{ $booking->payment_link }}').then(() => {
+                                $flux.toast({
+                                    variant: 'success',
+                                    heading: 'Copied!',
+                                    text: 'Payment link copied to clipboard'
+                                });
+                            })"
+                            variant="outline" class="w-full" icon="link" iconVariant="outline">
+                            Copy Payment Link
+                        </flux:button>
+
                         <flux:button wire:click="resendPaymentLink" variant="outline" class="w-full"
-                            icon="paper-airplane" iconVariant="outline">
-                            Resend Payment Link
+                            icon="paper-airplane" iconVariant="outline" wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="resendPaymentLink">Resend Payment Link</span>
+                            <span wire:loading wire:target="resendPaymentLink">Sending...</span>
                         </flux:button>
                     </div>
                 @elseif ($booking->status === \App\BookingStatus::ApprovedByAdmin && !auth()->user()->isSuperAdmin())
@@ -308,11 +325,19 @@
                     <div class="space-y-3">
                         @if ($booking->payment_due_at)
                             <div>
-                                <flux:subheading class="mb-1 text-sm">Payment Due Date</flux:subheading>
-                                <flux:text class="font-semibold">
+                                <div class="flex items-center justify-between mb-1">
+                                    <flux:subheading class="text-sm">Payment Due Date</flux:subheading>
+                                    @if ($booking->payment_due_at->isPast() && $booking->status === \App\BookingStatus::PaymentPending)
+                                        <flux:badge color="red" variant="solid" size="sm">OVERDUE
+                                        </flux:badge>
+                                    @endif
+                                </div>
+                                <flux:text class="font-semibold"
+                                    :class="$booking->payment_due_at->isPast() && $booking->status === \App\BookingStatus::PaymentPending ? 'text-red-600 dark:text-red-400' : ''">
                                     {{ $booking->payment_due_at->format('M d, Y') }}
                                 </flux:text>
-                                <flux:text class="text-xs text-zinc-500">
+                                <flux:text class="text-xs"
+                                    :class="$booking->payment_due_at->isPast() && $booking->status === \App\BookingStatus::PaymentPending ? 'text-red-500' : 'text-zinc-500'">
                                     ({{ $booking->payment_due_at->diffForHumans() }})
                                 </flux:text>
                             </div>

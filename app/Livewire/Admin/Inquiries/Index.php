@@ -4,6 +4,7 @@ namespace App\Livewire\Admin\Inquiries;
 
 use App\Models\Booking;
 use Flux\Flux;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -41,6 +42,19 @@ class Index extends Component
 
     public function releaseStall(): void
     {
+        // Security check
+        if (! Auth::user()->isAdmin()) {
+            Flux::toast(
+                heading: 'Unauthorized',
+                variant: 'danger',
+                text: 'Only admins can release stalls.'
+            );
+            $this->showConfirmReleaseModal = false;
+            $this->stallToRelease = null;
+
+            return;
+        }
+
         if (! $this->stallToRelease) {
             return;
         }
@@ -54,8 +68,9 @@ class Index extends Component
             $booking->delete();
 
             Flux::toast(
+                heading: 'Stalls Released!',
                 variant: 'success',
-                text: "Stall(s) {$stallNumbers} released successfully."
+                text: "Successfully released stalls: {$stallNumbers}"
             );
         }
 

@@ -103,12 +103,12 @@ class PaymentController extends Controller
             if ($this->ccavenueService->isPaymentSuccessful($responseData)) {
                 SendWhatsAppCampaign::dispatch(
                     'payment_success',
-                    $booking->phone_code . $booking->phone_number,
+                    $booking->phone_code.$booking->phone_number,
                     [
                         $booking->contact_person,
                         $booking->exhibition->name,
                         $booking->booking_code,
-                        '₹ ' . number_format((float) $booking->total_with_gst, 2),
+                        '₹ '.number_format((float) $booking->total_with_gst, 2),
                         now()->format('M d, Y'),
                     ]
                 );

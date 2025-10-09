@@ -67,7 +67,7 @@ class CCAvenueService
             'cancel_url' => config('services.ccavenue.cancel_url'),
             'language' => 'EN',
             'billing_name' => $booking->contact_person,
-            'billing_tel' => $booking->phone_code . $booking->phone_number,
+            'billing_tel' => $booking->phone_code.$booking->phone_number,
             'billing_email' => $booking->email,
             'billing_city' => $booking->city,
             'billing_country' => 'India',
@@ -88,7 +88,7 @@ class CCAvenueService
 
         $dataString = '';
         foreach ($merchantData as $key => $value) {
-            $dataString .= $key . '=' . $value . '&';
+            $dataString .= $key.'='.$value.'&';
         }
 
         return $this->encrypt(rtrim($dataString, '&'));
@@ -155,7 +155,7 @@ class CCAvenueService
     {
         $pad = $blockSize - (strlen($plainText) % $blockSize);
 
-        return $plainText . str_repeat(chr($pad), $pad);
+        return $plainText.str_repeat(chr($pad), $pad);
     }
 
     /**

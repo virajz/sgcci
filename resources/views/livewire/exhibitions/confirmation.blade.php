@@ -1,7 +1,7 @@
 <div class="flex items-center justify-center min-h-screen p-4">
     <flux:main class="w-full max-w-4xl mx-auto space-y-8">
         <section class="flex items-center justify-between">
-            <img src="{{ asset('brand/sgcci-logo.png') }}" alt="SGCCI Logo" class="w-full h-auto max-w-16">
+            <img src="{{ asset('brand/sgcci-logo-fixed.svg') }}" alt="SGCCI Logo" class="w-full h-auto max-w-16">
             <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="w-full h-auto max-w-32">
         </section>
 
@@ -146,7 +146,8 @@
 
         {{-- Action Buttons --}}
         <div class="flex flex-col justify-between gap-4 sm:flex-row">
-            <flux:button wire:click="goBack" variant="ghost" class="w-full sm:w-fit" icon="arrow-left" iconVariant="outline">
+            <flux:button wire:click="goBack" variant="ghost" class="w-full sm:w-fit" icon="arrow-left"
+                iconVariant="outline">
                 Go Back & Edit
             </flux:button>
 

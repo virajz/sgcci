@@ -24,6 +24,11 @@ class StallBlockManager extends Component
 
     public function mount(): void
     {
+        // Ensure user has admin privileges
+        if (! Auth::user()->isAdmin()) {
+            abort(403, 'Unauthorized access.');
+        }
+
         // Get the latest exhibition or allow selection
         $this->exhibitionId = Exhibition::latest()->first()?->id;
     }
@@ -47,6 +52,17 @@ class StallBlockManager extends Component
 
     public function blockStalls(): void
     {
+        // Security check
+        if (! Auth::user()->isAdmin()) {
+            Flux::toast(
+                heading: 'Unauthorized',
+                variant: 'danger',
+                text: 'Only admins can block stalls.'
+            );
+
+            return;
+        }
+
         $this->validate([
             'stallNumbers' => 'required|string',
             'exhibitionId' => 'required|exists:exhibitions,id',
@@ -103,11 +119,13 @@ class StallBlockManager extends Component
 
         if ($created > 0) {
             Flux::toast(
+                heading: 'Stalls Blocked!',
                 variant: 'success',
                 text: "{$created} stall(s) blocked successfully."
             );
         } else {
             Flux::toast(
+                heading: 'No Changes Made',
                 variant: 'warning',
                 text: 'All specified stalls are already blocked or booked.'
             );
@@ -118,6 +136,17 @@ class StallBlockManager extends Component
 
     public function releaseStall(): void
     {
+        // Security check
+        if (! Auth::user()->isAdmin()) {
+            Flux::toast(
+                heading: 'Unauthorized',
+                variant: 'danger',
+                text: 'Only admins can release stalls.'
+            );
+
+            return;
+        }
+
         if (! $this->stallToRelease) {
             return;
         }
@@ -131,8 +160,9 @@ class StallBlockManager extends Component
             $booking->delete();
 
             Flux::toast(
+                heading: 'Stalls Released!',
                 variant: 'success',
-                text: "Stall(s) {$stallNumbers} released successfully."
+                text: "Successfully released stalls: {$stallNumbers}"
             );
 
             $this->dispatch('refresh-inquiries');

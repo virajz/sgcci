@@ -1,7 +1,7 @@
 <div class="lg:h-screen lg:flex lg:flex-col">
     <flux:main class="w-full p-4 mx-auto space-y-6 sm:p-6 lg:p-8 lg:flex lg:flex-col lg:h-full lg:overflow-hidden">
         <section class="flex items-center justify-between mb-6 lg:flex-shrink-0">
-            <img src="{{ asset('brand/sgcci-logo.png') }}" alt="SGCCI Logo" class="w-full h-auto max-w-16">
+            <img src="{{ asset('brand/sgcci-logo-fixed.svg') }}" alt="SGCCI Logo" class="w-full h-auto max-w-16">
             <flux:heading size="xl" class="font-bold tracking-tight">Stall Booking</flux:heading>
             <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="w-full h-auto max-w-32">
         </section>
