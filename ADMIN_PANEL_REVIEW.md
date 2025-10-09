@@ -258,12 +258,19 @@ Track all actions: approvals, rejections, payment link sends, etc. Currently onl
 
 ---
 
-### 16. Add "Copy Payment Link" Button
+### 16. Add "Copy Payment Link" Button ✅
 
-**Priority:** LOW
+**Priority:** LOW → **COMPLETED**
 **Location:** Payment Information card
 
-For quickly copying payment link to clipboard.
+**Status:** ✅ IMPLEMENTED
+
+**Implementation:**
+
+-   Added in admin booking table as dropdown menu item
+-   Added in admin booking show page as dedicated button
+-   Uses `$flux.toast()` for clipboard copy confirmation
+-   Only visible when `status === PaymentPending` and payment link exists
 
 ---
 

@@ -180,6 +180,88 @@ $this->validate([
 
 ---
 
+### 8. Copy Payment Link Button ✅
+
+**Files Changed:**
+
+-   `resources/views/livewire/admin/inquiries/index.blade.php`
+-   `resources/views/livewire/admin/inquiries/show.blade.php`
+
+**Implementation:**
+
+**Index Page (Table):**
+
+```blade
+@if ($booking->status === \App\BookingStatus::PaymentPending && $booking->payment_link)
+    <flux:dropdown position="bottom" align="end">
+        <flux:button size="sm" variant="ghost" icon="ellipsis-horizontal" iconVariant="outline" />
+        <flux:menu>
+            <flux:menu.item icon="link" x-data
+                x-on:click="navigator.clipboard.writeText('{{ $booking->payment_link }}').then(() => {
+                    $flux.toast({
+                        variant: 'success',
+                        heading: 'Copied!',
+                        text: 'Payment link copied to clipboard'
+                    });
+                })">
+                Copy Payment Link
+            </flux:menu.item>
+        </flux:menu>
+    </flux:dropdown>
+@endif
+```
+
+**Show Page:**
+
+```blade
+<flux:button x-data
+    x-on:click="navigator.clipboard.writeText('{{ $booking->payment_link }}').then(() => {
+        $flux.toast({
+            variant: 'success',
+            heading: 'Copied!',
+            text: 'Payment link copied to clipboard'
+        });
+    })"
+    variant="outline" class="w-full" icon="link" iconVariant="outline">
+    Copy Payment Link
+</flux:button>
+```
+
+**Impact:** ✅ Admins can quickly copy payment links with instant feedback
+
+---
+
+### 9. Font Changed to Poppins ✅
+
+**Files Changed:**
+
+-   `resources/views/partials/head.blade.php`
+-   `resources/css/app.css`
+
+**Implementation:**
+
+**Font Import:**
+
+```html
+<link
+	href="https://fonts.bunny.net/css?family=poppins:400,500,600"
+	rel="stylesheet" />
+```
+
+**CSS Theme:**
+
+```css
+@theme {
+	--font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif,
+		'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+		'Noto Color Emoji';
+}
+```
+
+**Impact:** ✅ Improved typography with Poppins font family (weights: 400, 500, 600)
+
+---
+
 ## 🧪 TESTING RESULTS
 
 ### All Tests Passing ✅
@@ -212,16 +294,20 @@ Duration: 2.33s
 
 1. `app/Http/Middleware/EnsureUserIsAdmin.php` - Route protection middleware
 
-### Files Modified (8)
+### Files Modified (12)
 
 1. `bootstrap/app.php` - Middleware registration
 2. `routes/web.php` - Applied admin middleware
 3. `app/Livewire/Admin/Inquiries/Show.php` - Authorization + toast improvements
 4. `app/Livewire/Admin/Inquiries/Index.php` - Authorization + toast improvements
 5. `app/Livewire/Admin/StallBlockManager.php` - Authorization + toast improvements
-6. `resources/views/livewire/admin/inquiries/show.blade.php` - Loading states + overdue indicator
-7. `resources/views/components/layouts/app/sidebar.blade.php` - Toast component (from previous iteration)
-8. `ADMIN_PANEL_REVIEW.md` - Comprehensive review document
+6. `resources/views/livewire/admin/inquiries/show.blade.php` - Loading states + overdue indicator + copy payment link
+7. `resources/views/livewire/admin/inquiries/index.blade.php` - Copy payment link dropdown
+8. `resources/views/components/layouts/app/sidebar.blade.php` - Toast component (from previous iteration)
+9. `resources/views/partials/head.blade.php` - Poppins font import
+10. `resources/css/app.css` - Poppins font configuration
+11. `ADMIN_PANEL_REVIEW.md` - Comprehensive review document
+12. `ADMIN_FIXES_SUMMARY.md` - This implementation summary
 
 ---
 
@@ -237,6 +323,8 @@ Duration: 2.33s
 | MEDIUM   | Validation messages not user-friendly             | ✅ Fixed |
 | MEDIUM   | No overdue payment indicator                      | ✅ Fixed |
 | LOW      | Stall number formatting in toasts                 | ✅ Fixed |
+| LOW      | Copy payment link button                          | ✅ Fixed |
+| LOW      | Font upgrade to Poppins                           | ✅ Fixed |
 
 ---
 
@@ -315,7 +403,7 @@ Flux::toast(
 
 7. **Export Functionality:** Export filtered inquiries to CSV/Excel
 8. **Real-time Updates:** Use Livewire polling or Echo for live updates
-9. **Copy Payment Link:** Add button to copy payment link to clipboard
+9. ~~**Copy Payment Link:** Add button to copy payment link to clipboard~~ ✅ COMPLETED
 10. **Mobile Optimization:** Improve responsive layout for action buttons
 
 ---
@@ -328,10 +416,27 @@ All critical security vulnerabilities have been addressed. The admin panel now h
 -   ✅ **Improved UX** with loading states, clear messaging, and visual indicators
 -   ✅ **Better error handling** with user-friendly validation messages
 -   ✅ **Professional polish** with headings in toasts and formatted text
+-   ✅ **Copy payment link** functionality with toast notifications
+-   ✅ **Modern typography** with Poppins font family
 
 **Security Status:** 🟢 SECURE
 **Code Quality:** 🟢 EXCELLENT
-**Test Coverage:** 🟢 PASSING
+**Test Coverage:** 🟢 PASSING (7/7 tests)
 **User Experience:** 🟢 ENHANCED
 
 The admin panel is now production-ready with enterprise-level security and polish.
+
+---
+
+## 📈 LATEST UPDATES (October 9, 2025)
+
+### Recent Additions:
+
+1. **Copy Payment Link Button** - Quick clipboard copy with toast feedback
+2. **Poppins Font** - Upgraded from Instrument Sans to Poppins (400, 500, 600 weights)
+3. **Toast Notifications** - Using proper `$flux.toast()` API for all notifications
+
+**Total Issues Resolved:** 10/10 from original review
+**Files Modified:** 12 files
+**Tests Passing:** 7/7 (100%)
+**Code Quality:** PSR-12 compliant via Pint
