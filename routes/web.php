@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PaymentController;
 use App\Livewire\Admin\Inquiries\Index as InquiriesIndex;
 use App\Livewire\Admin\Inquiries\Show as InquiriesShow;
 use App\Livewire\Exhibitions\Booking;
@@ -22,6 +23,13 @@ Route::get('/', function () {
 Route::get('exhibitions/{exhibition}/booking', Booking::class)->name('exhibitions.booking.show');
 Route::get('exhibitions/{exhibition}/booking/confirmation', Confirmation::class)->name('exhibitions.booking.confirmation');
 Route::get('exhibitions/{exhibition}/booking/thank-you/{bookingCode}', ThankYou::class)->name('exhibitions.booking.thank-you');
+
+// Payment routes
+Route::prefix('payment')->name('payment.')->group(function () {
+    Route::get('/{bookingCode}', [PaymentController::class, 'initiate'])->name('initiate');
+    Route::post('/response', [PaymentController::class, 'response'])->name('response');
+    Route::post('/cancel', [PaymentController::class, 'cancel'])->name('cancel');
+});
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
@@ -52,4 +60,4 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

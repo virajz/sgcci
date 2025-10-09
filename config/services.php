@@ -42,4 +42,14 @@ return [
         'source' => env('WHATSAPP_SOURCE', 'booking-system'),
     ],
 
+    'ccavenue' => [
+        'merchant_id' => env('CCAVENUE_MERCHANT_ID'),
+        'access_code' => env('CCAVENUE_ACCESS_CODE'),
+        'working_key' => env('CCAVENUE_WORKING_KEY'),
+        'test_mode' => env('CCAVENUE_TEST_MODE', true),
+        'currency' => env('CCAVENUE_CURRENCY', 'INR'),
+        'redirect_url' => env('CCAVENUE_REDIRECT_URL'),
+        'cancel_url' => env('CCAVENUE_CANCEL_URL'),
+    ],
+
 ];

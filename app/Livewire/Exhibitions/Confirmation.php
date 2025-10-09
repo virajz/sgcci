@@ -113,12 +113,21 @@ class Confirmation extends Component
                 'total_area' => 0,
                 'price_per_sqm' => 750,
                 'total_price' => 0,
+                'discount_percentage' => 0,
+                'discount_amount' => 0,
+                'price_after_discount' => 0,
                 'gst_amount' => 0,
                 'total_with_gst' => 0,
             ];
         }
 
-        return BookingModel::calculatePricing($this->bookingData['selectedStalls']);
+        return BookingModel::calculatePricing(
+            $this->bookingData['selectedStalls'],
+            $this->bookingData['hasExhibitedBefore'] ?? false,
+            $this->bookingData['participationYears'] ?? [],
+            $this->bookingData['isSgcciMember'] ?? false,
+            $this->bookingData['membershipType'] ?? null
+        );
     }
 
     public function render()

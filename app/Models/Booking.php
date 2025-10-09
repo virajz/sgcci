@@ -31,6 +31,9 @@ class Booking extends Model
         'total_area',
         'price_per_sqm',
         'total_price',
+        'discount_percentage',
+        'discount_amount',
+        'price_after_discount',
         'gst_amount',
         'total_with_gst',
         'status',
@@ -45,6 +48,14 @@ class Booking extends Model
         'payment_link_sent_at',
         'payment_due_at',
         'payment_completed_at',
+        'payment_transaction_id',
+        'payment_method',
+        'payment_status',
+        'payment_amount',
+        'payment_response',
+        'payment_tracking_id',
+        'payment_bank_ref_no',
+        'payment_initiated_at',
     ];
 
     protected $attributes = [
@@ -62,8 +73,13 @@ class Booking extends Model
             'total_area' => 'decimal:2',
             'price_per_sqm' => 'decimal:2',
             'total_price' => 'decimal:2',
+            'discount_percentage' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
+            'price_after_discount' => 'decimal:2',
             'gst_amount' => 'decimal:2',
             'total_with_gst' => 'decimal:2',
+            'payment_amount' => 'decimal:2',
+            'payment_response' => 'array',
             'status' => BookingStatus::class,
             'admin_approved_at' => 'datetime',
             'super_admin_approved_at' => 'datetime',
@@ -71,6 +87,7 @@ class Booking extends Model
             'payment_link_sent_at' => 'datetime',
             'payment_due_at' => 'datetime',
             'payment_completed_at' => 'datetime',
+            'payment_initiated_at' => 'datetime',
         ];
     }
 
@@ -81,11 +98,21 @@ class Booking extends Model
         static::creating(function ($booking) {
             $booking->booking_code = static::generateUniqueBookingCode();
 
-            // Calculate pricing based on selected stalls
-            $pricing = static::calculatePricing($booking->selected_stalls);
+            // Calculate pricing based on selected stalls and discounts
+            $pricing = static::calculatePricing(
+                $booking->selected_stalls,
+                $booking->has_exhibited_before ?? false,
+                $booking->participation_years ?? [],
+                $booking->is_sgcci_member ?? false,
+                $booking->membership_type
+            );
+
             $booking->total_area = $pricing['total_area'];
             $booking->price_per_sqm = $pricing['price_per_sqm'];
             $booking->total_price = $pricing['total_price'];
+            $booking->discount_percentage = $pricing['discount_percentage'];
+            $booking->discount_amount = $pricing['discount_amount'];
+            $booking->price_after_discount = $pricing['price_after_discount'];
             $booking->gst_amount = $pricing['gst_amount'];
             $booking->total_with_gst = $pricing['total_with_gst'];
         });
@@ -100,8 +127,62 @@ class Booking extends Model
         return $code;
     }
 
-    public static function calculatePricing(array $selectedStalls): array
-    {
+    public static function calculateDiscount(
+        float $totalArea,
+        bool $hasExhibitedBefore = false,
+        array $participationYears = [],
+        bool $isSgcciMember = false,
+        ?string $membershipType = null
+    ): float {
+        $discounts = [];
+
+        // Loyalty Discount - Based on past participation
+        if ($hasExhibitedBefore && count($participationYears) >= 3) {
+            $discounts[] = 10; // 10% for 3+ expos
+        } elseif ($hasExhibitedBefore && count($participationYears) >= 2) {
+            $discounts[] = 5; // 5% for 2 expos
+        }
+
+        // Early Bird Discount - Not applicable for now (would need date check)
+        // $discounts[] = 10; // 10% early bird
+
+        // SGCCI Members Discount
+        if ($isSgcciMember && $membershipType) {
+            $membershipDiscounts = [
+                'premium-member' => 15,
+                'platinum-member' => 12.5,
+                'gold-member' => 10,
+                'chief-patron' => 5,
+                'patron-member' => 5,
+            ];
+
+            if (isset($membershipDiscounts[$membershipType])) {
+                $discounts[] = $membershipDiscounts[$membershipType];
+            }
+        }
+
+        // Special Discount based on Booking Area
+        if ($totalArea >= 100) {
+            $discounts[] = 15; // 15% for 100 sq. mt. & Above
+        } elseif ($totalArea >= 60) {
+            $discounts[] = 10; // 10% for 60-90 sq. mt.
+        }
+        // Note: Up to 50 sq. mt. gets N/A (0%)
+
+        // Calculate total discount (sum of all applicable discounts)
+        $totalDiscount = array_sum($discounts);
+
+        // Maximum discount allowed is 40%
+        return min($totalDiscount, 40);
+    }
+
+    public static function calculatePricing(
+        array $selectedStalls,
+        bool $hasExhibitedBefore = false,
+        array $participationYears = [],
+        bool $isSgcciMember = false,
+        ?string $membershipType = null
+    ): array {
         $stallSizes = static::getStallSizes();
         $totalArea = 0;
         $pricePerSqm = 750; // ₹750 per square meter for 3x3 stalls
@@ -117,13 +198,30 @@ class Booking extends Model
         }
 
         $totalPrice = $totalArea * $pricePerSqm;
-        $gstAmount = $totalPrice * 0.18; // 18% GST
-        $totalWithGst = $totalPrice + $gstAmount;
+
+        // Calculate discount
+        $discountPercentage = static::calculateDiscount(
+            $totalArea,
+            $hasExhibitedBefore,
+            $participationYears,
+            $isSgcciMember,
+            $membershipType
+        );
+
+        $discountAmount = ($totalPrice * $discountPercentage) / 100;
+        $priceAfterDiscount = $totalPrice - $discountAmount;
+
+        // GST is calculated on the discounted price
+        $gstAmount = $priceAfterDiscount * 0.18; // 18% GST
+        $totalWithGst = $priceAfterDiscount + $gstAmount;
 
         return [
             'total_area' => $totalArea,
             'price_per_sqm' => $pricePerSqm,
             'total_price' => $totalPrice,
+            'discount_percentage' => $discountPercentage,
+            'discount_amount' => $discountAmount,
+            'price_after_discount' => $priceAfterDiscount,
             'gst_amount' => $gstAmount,
             'total_with_gst' => $totalWithGst,
         ];
@@ -174,7 +272,7 @@ class Booking extends Model
                     'width' => $size['width'],
                     'height' => $size['height'],
                     'area' => $size['area'],
-                    'size_display' => $size['width'].' x '.$size['height'],
+                    'size_display' => $size['width'] . ' x ' . $size['height'],
                     'price' => $size['area'] * $pricePerSqm,
                 ];
             } else {
@@ -191,6 +289,30 @@ class Booking extends Model
         }
 
         return $lineItems;
+    }
+
+    /**
+     * Check if payment has been completed
+     */
+    public function isPaymentCompleted(): bool
+    {
+        return $this->payment_completed_at !== null;
+    }
+
+    /**
+     * Check if payment is pending
+     */
+    public function isPaymentPending(): bool
+    {
+        return in_array($this->status, [BookingStatus::Allotted, BookingStatus::PaymentPending]) && ! $this->isPaymentCompleted();
+    }
+
+    /**
+     * Get payment URL for this booking
+     */
+    public function getPaymentUrl(): string
+    {
+        return route('payment.initiate', ['bookingCode' => $this->booking_code]);
     }
 
     public function exhibition(): BelongsTo

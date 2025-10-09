@@ -1,8 +1,8 @@
 <div class="flex items-center justify-center min-h-screen p-4">
     <flux:main class="w-full max-w-4xl mx-auto space-y-8">
         <section class="flex items-center justify-between">
-            <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="w-full h-auto max-w-32">
             <img src="{{ asset('brand/sgcci-logo.png') }}" alt="SGCCI Logo" class="w-full h-auto max-w-16">
+            <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="w-full h-auto max-w-32">
         </section>
 
         <div class="text-center">
@@ -110,6 +110,15 @@
                             <span class="text-zinc-600 dark:text-zinc-400">Subtotal:</span>
                             <span class="font-medium">₹{{ number_format($this->pricing['total_price'], 2) }}</span>
                         </div>
+
+                        @if ($this->pricing['discount_percentage'] > 0)
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-zinc-600 dark:text-zinc-400">Discount
+                                    ({{ number_format($this->pricing['discount_percentage'], 2) }}%):</span>
+                                <span
+                                    class="font-medium text-green-600 dark:text-green-400">-₹{{ number_format($this->pricing['discount_amount'], 2) }}</span>
+                            </div>
+                        @endif
 
                         <div class="flex items-center justify-between text-sm">
                             <span class="text-zinc-600 dark:text-zinc-400">GST (18%):</span>

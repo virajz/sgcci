@@ -127,6 +127,45 @@ class Show extends Component
         $this->dispatch('booking-updated');
     }
 
+    public function resendPaymentLink(): void
+    {
+
+        // Only payment pending bookings can have payment link resent
+        if ($this->booking->status !== BookingStatus::PaymentPending) {
+            session()->flash('error', 'Payment link can only be resent for bookings with payment pending status.');
+
+            return;
+        }
+
+        $paymentDueAt = $this->booking->payment_due_at ?? now()->addDays(3);
+
+        // Update the payment link sent timestamp
+        $this->booking->update([
+            'payment_link_sent_at' => now(),
+        ]);
+
+        // Send WhatsApp notification for booking confirmation with payment link
+        SendWhatsAppCampaign::dispatch(
+            campaignName: 'booking_confirmationpayment',
+            phoneCode: $this->booking->phone_code,
+            phoneNumber: $this->booking->phone_number,
+            templateParams: [
+                $this->booking->contact_person,                          // {{1}} Contact Person Name
+                $this->booking->exhibition->title,                       // {{2}} Exhibition Title
+                implode(', ', $this->booking->selected_stalls),          // {{3}} Allotted Stalls
+                $this->booking->booking_code,                            // {{4}} Booking Code
+                number_format($this->booking->total_area, 0),            // {{5}} Total Area
+                number_format($this->booking->total_with_gst, 2),        // {{6}} Total Amount with GST
+                $paymentDueAt->format('M d, Y'),                         // {{7}} Payment Due Date (first)
+                $this->booking->payment_link,                            // {{8}} Payment Link URL
+                $paymentDueAt->format('M d, Y'),                         // {{9}} Payment Due Date (repeated)
+            ]
+        );
+
+        session()->flash('success', 'Payment link has been resent to the customer via WhatsApp.');
+        $this->dispatch('booking-updated');
+    }
+
     public function markPaymentCompleted(): void
     {
         // Only super admin can mark payment as completed

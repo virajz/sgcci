@@ -217,7 +217,7 @@ Log::channel('whatsapp')->info('WhatsApp booking received notification', [
         implode(', ', $booking->selected_stalls),
         $booking->booking_code,
         $booking->total_area,
-        number_format($booking->total_with_gst, 2),
+        number_format((float) $booking->total_with_gst, 2),
     ],
 ]);
 ```

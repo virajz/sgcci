@@ -1,9 +1,9 @@
 <div class="lg:h-screen lg:flex lg:flex-col">
     <flux:main class="w-full p-4 mx-auto space-y-6 sm:p-6 lg:p-8 lg:flex lg:flex-col lg:h-full lg:overflow-hidden">
         <section class="flex items-center justify-between mb-6 lg:flex-shrink-0">
-            <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="w-full h-auto max-w-32">
-            <flux:heading size="xl" class="font-bold tracking-tight">Stall Booking</flux:heading>
             <img src="{{ asset('brand/sgcci-logo.png') }}" alt="SGCCI Logo" class="w-full h-auto max-w-16">
+            <flux:heading size="xl" class="font-bold tracking-tight">Stall Booking</flux:heading>
+            <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="w-full h-auto max-w-32">
         </section>
 
         <div class="grid grid-cols-1 gap-y-6 lg:grid-cols-3 lg:gap-8 lg:flex-1 lg:overflow-hidden">
@@ -165,7 +165,7 @@
                                 @if ($hasExhibitedBefore)
                                     <div x-ref="participationSection">
                                         <flux:subheading class="mb-4">Select year(s)</flux:subheading>
-                                        <flux:checkbox.group wire:model="participationYears" variant="cards"
+                                        <flux:checkbox.group wire:model.live="participationYears" variant="cards"
                                             class="grid grid-cols-2 gap-4 lg:grid-cols-3">
                                             <flux:checkbox value="2011" label="2011" />
                                             <flux:checkbox value="2013" label="2013" />
@@ -206,7 +206,7 @@
                                 @if ($isSgcciMember)
                                     <div x-ref="membershipSection">
                                         <flux:subheading class="mb-4">Select membership type</flux:subheading>
-                                        <flux:radio.group wire:model="membershipType" variant="cards"
+                                        <flux:radio.group wire:model.live="membershipType" variant="cards"
                                             class="grid gap-4">
                                             <flux:radio value="premium-member" label="Premium Member" />
                                             <flux:radio value="platinum-member" label="Platinum Member" />
@@ -250,6 +250,15 @@
                                         <span
                                             class="font-medium">₹{{ number_format($this->pricing['total_price'], 2) }}</span>
                                     </div>
+
+                                    @if ($this->pricing['discount_percentage'] > 0)
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-zinc-600 dark:text-zinc-400">Discount
+                                                ({{ number_format($this->pricing['discount_percentage'], 2) }}%):</span>
+                                            <span
+                                                class="font-medium text-green-600 dark:text-green-400">-₹{{ number_format($this->pricing['discount_amount'], 2) }}</span>
+                                        </div>
+                                    @endif
 
                                     <div class="flex items-center justify-between text-sm">
                                         <span class="text-zinc-600 dark:text-zinc-400">GST (18%):</span>

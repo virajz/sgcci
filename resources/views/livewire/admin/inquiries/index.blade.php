@@ -60,7 +60,7 @@
                                 </flux:table.cell>
 
                                 <flux:table.cell>
-                                    <div class="font-semibold">₹{{ number_format($booking->total_with_gst, 2) }}
+                                    <div class="font-semibold">₹{{ number_format((float) $booking->total_with_gst, 2) }}
                                     </div>
                                 </flux:table.cell>
 

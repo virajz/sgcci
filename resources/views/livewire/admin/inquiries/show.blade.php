@@ -107,12 +107,21 @@
 
                     <div class="flex items-center justify-between text-sm">
                         <span class="text-zinc-600 dark:text-zinc-400">Subtotal:</span>
-                        <span class="font-medium">₹{{ number_format($booking->total_price, 2) }}</span>
+                        <span class="font-medium">₹{{ number_format((float) $booking->total_price, 2) }}</span>
                     </div>
+
+                    @if ($booking->discount_percentage > 0)
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-zinc-600 dark:text-zinc-400">Discount
+                                ({{ number_format((float) $booking->discount_percentage, 2) }}%):</span>
+                            <span
+                                class="font-medium text-green-600 dark:text-green-400">-₹{{ number_format((float) $booking->discount_amount, 2) }}</span>
+                        </div>
+                    @endif
 
                     <div class="flex items-center justify-between text-sm">
                         <span class="text-zinc-600 dark:text-zinc-400">GST (18%):</span>
-                        <span class="font-medium">₹{{ number_format($booking->gst_amount, 2) }}</span>
+                        <span class="font-medium">₹{{ number_format((float) $booking->gst_amount, 2) }}</span>
                     </div>
 
                     <flux:separator />
@@ -120,7 +129,7 @@
                     <div class="flex items-center justify-between">
                         <span class="text-lg font-semibold">Total Amount:</span>
                         <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                            ₹{{ number_format($booking->total_with_gst, 2) }}
+                            ₹{{ number_format((float) $booking->total_with_gst, 2) }}
                         </span>
                     </div>
                 </div>
@@ -189,23 +198,27 @@
                             Reject Booking
                         </flux:button>
                     </div>
-                @elseif ($booking->status === \App\BookingStatus::PaymentPending && auth()->user()->isSuperAdmin())
+                @elseif ($booking->status === \App\BookingStatus::PaymentPending && auth()->user()->isAdmin())
                     <div class="space-y-3">
                         <flux:callout variant="warning" class="mb-4">
                             Payment link has been sent. Waiting for customer payment confirmation.
                         </flux:callout>
 
-                        <flux:button wire:click="markPaymentCompleted" variant="primary" class="w-full" icon="check">
-                            Mark Payment as Completed
+                        @if (auth()->user()->isSuperAdmin())
+                            <flux:button wire:click="markPaymentCompleted" variant="primary" class="w-full"
+                                icon="check">
+                                Mark Payment as Completed
+                            </flux:button>
+                        @endif
+
+                        <flux:button wire:click="resendPaymentLink" variant="outline" class="w-full"
+                            icon="paper-airplane">
+                            Resend Payment Link
                         </flux:button>
                     </div>
                 @elseif ($booking->status === \App\BookingStatus::ApprovedByAdmin && !auth()->user()->isSuperAdmin())
                     <flux:callout variant="info">
                         Awaiting super admin approval for stall allotment.
-                    </flux:callout>
-                @elseif ($booking->status === \App\BookingStatus::PaymentPending && !auth()->user()->isSuperAdmin())
-                    <flux:callout variant="info">
-                        Payment link sent. Awaiting payment confirmation from super admin.
                     </flux:callout>
                 @else
                     <flux:callout variant="info">

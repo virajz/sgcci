@@ -47,12 +47,21 @@ class Booking extends Component
                 'total_area' => 0,
                 'price_per_sqm' => 750,
                 'total_price' => 0,
+                'discount_percentage' => 0,
+                'discount_amount' => 0,
+                'price_after_discount' => 0,
                 'gst_amount' => 0,
                 'total_with_gst' => 0,
             ];
         }
 
-        return BookingModel::calculatePricing($this->selectedStalls);
+        return BookingModel::calculatePricing(
+            $this->selectedStalls,
+            $this->hasExhibitedBefore,
+            $this->participationYears,
+            $this->isSgcciMember,
+            $this->membershipType
+        );
     }
 
     #[On('stalls-selected')]
@@ -65,6 +74,30 @@ class Booking extends Component
     {
         $this->selectedStalls = [];
         $this->dispatch('clear-stalls');
+    }
+
+    public function updatedParticipationYears(): void
+    {
+        // Force pricing recalculation when participation years change
+        unset($this->pricing);
+    }
+
+    public function updatedMembershipType(): void
+    {
+        // Force pricing recalculation when membership type changes
+        unset($this->pricing);
+    }
+
+    public function updatedHasExhibitedBefore(): void
+    {
+        // Force pricing recalculation when exhibited before status changes
+        unset($this->pricing);
+    }
+
+    public function updatedIsSgcciMember(): void
+    {
+        // Force pricing recalculation when SGCCI membership status changes
+        unset($this->pricing);
     }
 
     public function save(): void

@@ -1,8 +1,8 @@
 <div class="flex items-center justify-center min-h-screen p-4">
     <flux:main class="w-full max-w-3xl mx-auto space-y-8">
         <section class="flex items-center justify-between">
-            <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="w-full h-auto max-w-32">
             <img src="{{ asset('brand/sgcci-logo.png') }}" alt="SGCCI Logo" class="w-full h-auto max-w-16">
+            <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="w-full h-auto max-w-32">
         </section>
 
         <div class="text-center">
@@ -114,20 +114,29 @@
                             </div>
                             <div class="flex justify-between text-sm">
                                 <span class="text-zinc-600 dark:text-zinc-400">Price per sq m:</span>
-                                <span class="font-medium">₹{{ number_format($booking->price_per_sqm, 2) }}</span>
+                                <span
+                                    class="font-medium">₹{{ number_format((float) $booking->price_per_sqm, 2) }}</span>
                             </div>
                             <div class="flex justify-between text-sm">
                                 <span class="text-zinc-600 dark:text-zinc-400">Subtotal:</span>
-                                <span class="font-medium">₹{{ number_format($booking->total_price, 2) }}</span>
+                                <span class="font-medium">₹{{ number_format((float) $booking->total_price, 2) }}</span>
                             </div>
+                            @if ($booking->discount_percentage > 0)
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-zinc-600 dark:text-zinc-400">Discount
+                                        ({{ number_format((float) $booking->discount_percentage, 2) }}%):</span>
+                                    <span
+                                        class="font-medium text-green-600 dark:text-green-400">-₹{{ number_format((float) $booking->discount_amount, 2) }}</span>
+                                </div>
+                            @endif
                             <div class="flex justify-between text-sm">
                                 <span class="text-zinc-600 dark:text-zinc-400">GST (18%):</span>
-                                <span class="font-medium">₹{{ number_format($booking->gst_amount, 2) }}</span>
+                                <span class="font-medium">₹{{ number_format((float) $booking->gst_amount, 2) }}</span>
                             </div>
                             <div class="flex justify-between pt-2 border-t dark:border-zinc-700">
                                 <span class="text-lg font-semibold">Total Amount:</span>
                                 <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                                    ₹{{ number_format($booking->total_with_gst, 2) }}
+                                    ₹{{ number_format((float) $booking->total_with_gst, 2) }}
                                 </span>
                             </div>
                         </div>
