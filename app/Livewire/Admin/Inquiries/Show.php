@@ -3,9 +3,9 @@
 namespace App\Livewire\Admin\Inquiries;
 
 use App\BookingStatus;
+use App\Jobs\SendWhatsAppCampaign;
 use App\Models\Booking;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -54,19 +54,23 @@ class Show extends Component
                 'payment_due_at' => $paymentDueAt,
             ]);
 
-            // Log WhatsApp message for payment request
-            Log::channel('whatsapp')->info('WhatsApp payment request to be sent', [
-                'booking_code' => $this->booking->booking_code,
-                'recipient' => $this->booking->phone_code.$this->booking->phone_number,
-                'contact_person' => $this->booking->contact_person,
-                'brand_name' => $this->booking->brand_name,
-                'exhibition' => $this->booking->exhibition->title,
-                'selected_stalls' => $this->booking->selected_stalls,
-                'total_amount' => $this->booking->total_with_gst,
-                'payment_link' => $this->booking->payment_link,
-                'payment_due_date' => $paymentDueAt->format('M d, Y'),
-                'template' => 'payment_request',
-            ]);
+            // Send WhatsApp notification for booking confirmation with payment link
+            SendWhatsAppCampaign::dispatch(
+                campaignName: 'booking_confirmationpayment',
+                phoneCode: $this->booking->phone_code,
+                phoneNumber: $this->booking->phone_number,
+                templateParams: [
+                    $this->booking->contact_person,                          // {{1}} Contact Person Name
+                    $this->booking->exhibition->title,                       // {{2}} Exhibition Title
+                    implode(', ', $this->booking->selected_stalls),          // {{3}} Allotted Stalls
+                    $this->booking->booking_code,                            // {{4}} Booking Code
+                    number_format($this->booking->total_area, 0),            // {{5}} Total Area
+                    number_format($this->booking->total_with_gst, 2),        // {{6}} Total Amount with GST
+                    $paymentDueAt->format('M d, Y'),                         // {{7}} Payment Due Date (first)
+                    $this->booking->payment_link,                            // {{8}} Payment Link URL
+                    $paymentDueAt->format('M d, Y'),                         // {{9}} Payment Due Date (repeated)
+                ]
+            );
 
             session()->flash('success', 'Booking approved! Payment link sent to customer. Stalls will be allotted once payment is received.');
             $this->dispatch('booking-updated');
@@ -104,6 +108,20 @@ class Show extends Component
             'rejected_at' => now(),
         ]);
 
+        // Send WhatsApp notification for booking rejection
+        SendWhatsAppCampaign::dispatch(
+            campaignName: 'booking_reject',
+            phoneCode: $this->booking->phone_code,
+            phoneNumber: $this->booking->phone_number,
+            templateParams: [
+                $this->booking->contact_person,                          // {{1}} Contact Person Name
+                $this->booking->exhibition->title,                       // {{2}} Exhibition Title
+                $this->booking->booking_code,                            // {{3}} Booking Code
+                implode(', ', $this->booking->selected_stalls),          // {{4}} Requested Stalls
+                $this->rejectionReason,                                  // {{5}} Rejection Reason
+            ]
+        );
+
         $this->showRejectModal = false;
         session()->flash('success', 'Booking has been rejected.');
         $this->dispatch('booking-updated');
@@ -130,17 +148,20 @@ class Show extends Component
             'payment_completed_at' => now(),
         ]);
 
-        // Log WhatsApp message for payment confirmation
-        Log::channel('whatsapp')->info('WhatsApp payment confirmation to be sent', [
-            'booking_code' => $this->booking->booking_code,
-            'recipient' => $this->booking->phone_code.$this->booking->phone_number,
-            'contact_person' => $this->booking->contact_person,
-            'brand_name' => $this->booking->brand_name,
-            'exhibition' => $this->booking->exhibition->title,
-            'selected_stalls' => $this->booking->selected_stalls,
-            'total_amount' => $this->booking->total_with_gst,
-            'template' => 'payment_confirmed',
-        ]);
+        // Send WhatsApp notification for payment success
+        SendWhatsAppCampaign::dispatch(
+            campaignName: 'payment_success',
+            phoneCode: $this->booking->phone_code,
+            phoneNumber: $this->booking->phone_number,
+            templateParams: [
+                $this->booking->contact_person,                          // {{1}} Contact Person Name
+                $this->booking->exhibition->title,                       // {{2}} Exhibition Title
+                $this->booking->booking_code,                            // {{3}} Booking Code
+                number_format($this->booking->total_with_gst, 2),        // {{4}} Amount Paid
+                now()->format('M d, Y'),                                 // {{5}} Payment Date
+                implode(', ', $this->booking->selected_stalls),          // {{6}} Confirmed Stalls
+            ]
+        );
 
         session()->flash('success', 'Payment marked as completed. Stalls have been allotted to the customer.');
         $this->dispatch('booking-updated');

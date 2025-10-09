@@ -82,8 +82,9 @@ Best regards,
 4. `{{4}}` - Booking Code
 5. `{{5}}` - Total Area
 6. `{{6}}` - Total Amount with GST
-7. `{{7}}` - Payment Due Date
+7. `{{7}}` - Payment Due Date (first occurrence)
 8. `{{8}}` - Payment Link URL
+9. `{{9}}` - Payment Due Date (second occurrence - same as {{7}})
 
 ---
 
@@ -126,6 +127,48 @@ Best regards,
 3. `{{3}}` - Booking Code
 4. `{{4}}` - Requested Stalls
 5. `{{5}}` - Rejection Reason
+
+---
+
+## Template 4: Payment Success
+
+**Template Name:** `payment_success`
+**Category:** UTILITY
+**Language:** English
+
+### Message:
+
+```
+🎉 Payment Confirmed! {{1}}
+
+Your payment for *{{2}}* has been successfully received!
+
+*Payment Details:*
+📋 Booking Code: *{{3}}*
+💰 Amount Paid: ₹{{4}}
+📅 Payment Date: {{5}}
+
+*Your Confirmed Stalls:*
+{{6}}
+
+Your stall booking is now complete! You will receive further details about the exhibition setup and participation guidelines soon.
+
+For any queries, feel free to contact us.
+
+Thank you for choosing SGCCI!
+
+Best regards,
+*SGCCI Team*
+```
+
+### Variables:
+
+1. `{{1}}` - Contact Person Name
+2. `{{2}}` - Exhibition Title
+3. `{{3}}` - Booking Code
+4. `{{4}}` - Amount Paid
+5. `{{5}}` - Payment Date
+6. `{{6}}` - Confirmed Stalls (formatted list)
 
 ---
 
