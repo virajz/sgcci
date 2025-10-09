@@ -37,6 +37,9 @@ class Booking extends Model
         'gst_amount',
         'total_with_gst',
         'status',
+        'is_manual_block',
+        'blocked_by',
+        'blocked_at',
         'admin_approved_by',
         'admin_approved_at',
         'super_admin_approved_by',
@@ -70,6 +73,7 @@ class Booking extends Model
             'selected_stalls' => 'array',
             'has_exhibited_before' => 'boolean',
             'is_sgcci_member' => 'boolean',
+            'is_manual_block' => 'boolean',
             'total_area' => 'decimal:2',
             'price_per_sqm' => 'decimal:2',
             'total_price' => 'decimal:2',
@@ -84,6 +88,7 @@ class Booking extends Model
             'admin_approved_at' => 'datetime',
             'super_admin_approved_at' => 'datetime',
             'rejected_at' => 'datetime',
+            'blocked_at' => 'datetime',
             'payment_link_sent_at' => 'datetime',
             'payment_due_at' => 'datetime',
             'payment_completed_at' => 'datetime',
@@ -272,7 +277,7 @@ class Booking extends Model
                     'width' => $size['width'],
                     'height' => $size['height'],
                     'area' => $size['area'],
-                    'size_display' => $size['width'] . ' x ' . $size['height'],
+                    'size_display' => $size['width'].' x '.$size['height'],
                     'price' => $size['area'] * $pricePerSqm,
                 ];
             } else {
@@ -333,5 +338,10 @@ class Booking extends Model
     public function rejectedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    public function blockedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'blocked_by');
     }
 }

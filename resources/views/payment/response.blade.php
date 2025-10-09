@@ -19,7 +19,7 @@
                 @if ($isSuccess)
                     <div
                         class="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-green-100 dark:bg-green-950/30">
-                        <flux:icon.check class="w-12 h-12 text-green-600 dark:text-green-400" />
+                        <flux:icon.check variant="outline" class="w-12 h-12 text-green-600 dark:text-green-400" />
                     </div>
                     <flux:heading size="xl" class="mb-2 text-green-600 dark:text-green-400">
                         Payment Successful!
@@ -30,7 +30,7 @@
                 @else
                     <div
                         class="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-red-100 dark:bg-red-950/30">
-                        <flux:icon.x-mark class="w-12 h-12 text-red-600 dark:text-red-400" />
+                        <flux:icon.x-mark variant="outline" class="w-12 h-12 text-red-600 dark:text-red-400" />
                     </div>
                     <flux:heading size="xl" class="mb-2 text-red-600 dark:text-red-400">
                         Payment Failed
@@ -134,7 +134,7 @@
             {{-- Support Information --}}
             <div class="p-4 mt-6 rounded-lg bg-zinc-100 dark:bg-zinc-800">
                 <div class="flex items-start gap-3">
-                    <flux:icon.information-circle
+                    <flux:icon.information-circle variant="outline"
                         class="flex-shrink-0 w-5 h-5 mt-0.5 text-zinc-600 dark:text-zinc-400" />
                     <div>
                         <flux:text class="text-sm text-zinc-700 dark:text-zinc-300">

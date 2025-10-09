@@ -179,7 +179,7 @@
                                 This booking is pending initial admin verification. Admins should verify first.
                             </flux:callout>
                         @else
-                            <flux:button wire:click="approve" variant="primary" class="w-full" icon="check">
+                            <flux:button wire:click="approve" variant="primary" class="w-full" icon="check" iconVariant="outline">
                                 Verify & Approve
                             </flux:button>
                         @endif
@@ -190,11 +190,11 @@
                             This booking has been verified by an admin. You can now allot the stalls.
                         </flux:callout>
 
-                        <flux:button wire:click="approve" variant="primary" class="w-full" icon="check">
+                        <flux:button wire:click="approve" variant="primary" class="w-full" icon="check" iconVariant="outline">
                             Approve & Send Payment Link
                         </flux:button>
 
-                        <flux:button wire:click="openRejectModal" variant="danger" class="w-full" icon="x-mark">
+                        <flux:button wire:click="openRejectModal" variant="danger" class="w-full" icon="x-mark" iconVariant="outline">
                             Reject Booking
                         </flux:button>
                     </div>
@@ -206,13 +206,13 @@
 
                         @if (auth()->user()->isSuperAdmin())
                             <flux:button wire:click="markPaymentCompleted" variant="primary" class="w-full"
-                                icon="check">
+                                icon="check" iconVariant="outline">
                                 Mark Payment as Completed
                             </flux:button>
                         @endif
 
                         <flux:button wire:click="resendPaymentLink" variant="outline" class="w-full"
-                            icon="paper-airplane">
+                            icon="paper-airplane" iconVariant="outline">
                             Resend Payment Link
                         </flux:button>
                     </div>

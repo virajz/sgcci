@@ -78,7 +78,7 @@
             {{-- Security Message --}}
             <div class="p-4 mt-6 rounded-lg bg-blue-50 dark:bg-blue-950/30">
                 <div class="flex items-start gap-3">
-                    <flux:icon.shield-check class="flex-shrink-0 w-5 h-5 mt-0.5 text-blue-600 dark:text-blue-400" />
+                    <flux:icon.shield-check variant="outline" class="flex-shrink-0 w-5 h-5 mt-0.5 text-blue-600 dark:text-blue-400" />
                     <div>
                         <flux:text class="font-medium text-blue-900 dark:text-blue-100">Secure Payment</flux:text>
                         <flux:text class="text-sm text-blue-700 dark:text-blue-300">

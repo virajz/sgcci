@@ -1,20 +1,22 @@
 <div class="space-y-6">
-    <flux:heading size="xl" class="mb-6">Booking Inquiries</flux:heading>
+    <div class="flex items-center justify-between mb-6">
+        <flux:heading size="xl">Booking Inquiries</flux:heading>
+        <livewire:admin.stall-block-manager />
+    </div>
 
-    <div class="grid gap-4 md:grid-cols-2">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <flux:tabs wire:model.live="statusFilter" variant="segmented">
+            <flux:tab name="all">All</flux:tab>
+            <flux:tab name="pending_approval">Pending</flux:tab>
+            <flux:tab name="approved_by_admin">Approved</flux:tab>
+            <flux:tab name="payment_pending">Payment Pending</flux:tab>
+            <flux:tab name="payment_completed">Completed</flux:tab>
+            <flux:tab name="manual_block">Manual Block</flux:tab>
+            <flux:tab name="rejected">Rejected</flux:tab>
+        </flux:tabs>
+
         <flux:input wire:model.live.debounce.300ms="search" placeholder="Search by code, brand, contact, or email..."
-            icon="magnifying-glass" />
-
-        <flux:select wire:model.live="statusFilter" variant="listbox">
-            <flux:select.option value="all">All Statuses</flux:select.option>
-            <flux:select.option value="pending_approval">Pending Approval</flux:select.option>
-            <flux:select.option value="approved_by_admin">Approved by Admin</flux:select.option>
-            <flux:select.option value="allotted">Allotted</flux:select.option>
-            <flux:select.option value="payment_pending">Payment Pending</flux:select.option>
-            <flux:select.option value="payment_completed">Payment Completed</flux:select.option>
-            <flux:select.option value="rejected">Rejected</flux:select.option>
-            <flux:select.option value="expired">Expired</flux:select.option>
-        </flux:select>
+            icon="magnifying-glass" iconVariant="outline" class="md:max-w-md" />
     </div>
 
     <flux:card class="overflow-hidden">
@@ -37,8 +39,7 @@
                             <flux:table.row :key="$booking->id">
                                 <flux:table.cell>
                                     <a href="{{ route('admin.inquiries.show', $booking) }}"
-                                        class="font-mono font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                        wire:navigate>
+                                        class="font-semibold text-black dark:text-white" wire:navigate>
                                         {{ $booking->booking_code }}
                                     </a>
                                 </flux:table.cell>
@@ -60,14 +61,25 @@
                                 </flux:table.cell>
 
                                 <flux:table.cell>
-                                    <div class="font-semibold">₹{{ number_format((float) $booking->total_with_gst, 2) }}
+                                    <div class="font-semibold">
+                                        @if ($booking->is_manual_block)
+                                            ₹0.00
+                                        @else
+                                            ₹{{ number_format((float) $booking->total_with_gst, 2) }}
+                                        @endif
                                     </div>
                                 </flux:table.cell>
 
                                 <flux:table.cell>
-                                    <flux:badge :color="$booking->status->color()" variant="solid">
-                                        {{ $booking->status->label() }}
-                                    </flux:badge>
+                                    @if ($booking->is_manual_block)
+                                        <flux:badge color="zinc" variant="solid">
+                                            Manual Block
+                                        </flux:badge>
+                                    @else
+                                        <flux:badge :color="$booking->status->color()" variant="solid">
+                                            {{ $booking->status->label() }}
+                                        </flux:badge>
+                                    @endif
                                 </flux:table.cell>
 
                                 <flux:table.cell>
@@ -77,10 +89,19 @@
                                 </flux:table.cell>
 
                                 <flux:table.cell>
-                                    <flux:button size="sm" variant="ghost" icon="eye"
-                                        href="{{ route('admin.inquiries.show', $booking) }}" wire:navigate>
-                                        View
-                                    </flux:button>
+                                    @if ($booking->is_manual_block)
+                                        <flux:button size="sm" variant="ghost" icon="lock-open"
+                                            class="cursor-pointer" iconVariant="outline"
+                                            wire:click="releaseStall({{ $booking->id }})"
+                                            wire:confirm="Are you sure you want to release this manually blocked stall?">
+                                            Release
+                                        </flux:button>
+                                    @else
+                                        <flux:button size="sm" variant="ghost" icon="eye" iconVariant="outline"
+                                            href="{{ route('admin.inquiries.show', $booking) }}" wire:navigate>
+                                            View
+                                        </flux:button>
+                                    @endif
                                 </flux:table.cell>
                             </flux:table.row>
                         @endforeach

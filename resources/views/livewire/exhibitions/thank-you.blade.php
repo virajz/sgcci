@@ -8,7 +8,7 @@
         <div class="text-center">
             <div
                 class="flex items-center justify-center w-20 h-20 mx-auto mb-6 ring-[12px] bg-green-600 rounded-full ring-green-200 dark:ring-green-800">
-                <flux:icon.check class="w-12 h-12 text-white" />
+                <flux:icon.check variant="outline" class="w-12 h-12 text-white" />
             </div>
 
             <flux:heading size="xl" class="mb-4 text-3xl">Booking Confirmed!</flux:heading>
@@ -167,10 +167,10 @@
 
         <div class="flex justify-center gap-4">
             <flux:button href="{{ route('exhibitions.booking.show', $booking->exhibition) }}" variant="outline"
-                icon="arrow-left">
+                icon="arrow-left" iconVariant="outline">
                 Back to Booking
             </flux:button>
-            <flux:button href="{{ route('home') }}" variant="primary" icon="home">
+            <flux:button href="{{ route('home') }}" variant="primary" icon="home" iconVariant="outline">
                 Go to Homepage
             </flux:button>
         </div>

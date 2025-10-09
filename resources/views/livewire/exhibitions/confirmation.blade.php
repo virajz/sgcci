@@ -146,7 +146,7 @@
 
         {{-- Action Buttons --}}
         <div class="flex flex-col justify-between gap-4 sm:flex-row">
-            <flux:button wire:click="goBack" variant="ghost" class="w-full sm:w-fit" icon="arrow-left">
+            <flux:button wire:click="goBack" variant="ghost" class="w-full sm:w-fit" icon="arrow-left" iconVariant="outline">
                 Go Back & Edit
             </flux:button>
 

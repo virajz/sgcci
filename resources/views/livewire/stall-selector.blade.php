@@ -343,9 +343,9 @@
 
     <!-- Zoom Controls -->
     <div class="flex justify-center gap-2">
-        <flux:button icon="plus" x-on:click="zoomIn" size="sm" class="shadow-lg" />
-        <flux:button icon="minus" x-on:click="zoomOut" size="sm" class="shadow-lg" />
-        <flux:button icon="arrow-path" x-on:click="resetZoom" size="sm" class="shadow-lg" />
+        <flux:button icon="plus" iconVariant="outline" x-on:click="zoomIn" size="sm" class="shadow-lg" />
+        <flux:button icon="minus" iconVariant="outline" x-on:click="zoomOut" size="sm" class="shadow-lg" />
+        <flux:button icon="arrow-path" iconVariant="outline" x-on:click="resetZoom" size="sm" class="shadow-lg" />
     </div>
 
     <!-- Legend -->
