@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'whatsapp' => [
+        'api_key' => env('WHATSAPP_API_KEY'),
+        'api_url' => env('WHATSAPP_API_URL'),
+        'username' => env('WHATSAPP_USERNAME'),
+        'source' => env('WHATSAPP_SOURCE', 'booking-system'),
+    ],
+
 ];

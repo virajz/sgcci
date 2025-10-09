@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Exhibitions;
 
+use App\Jobs\SendWhatsAppCampaign;
 use App\Models\Booking as BookingModel;
 use App\Models\Exhibition;
-use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -71,17 +71,20 @@ class Confirmation extends Component
             'selected_stalls' => $this->bookingData['selectedStalls'],
         ]);
 
-        // Log WhatsApp message for inquiry submission
-        Log::channel('whatsapp')->info('WhatsApp inquiry submitted message to be sent', [
-            'booking_code' => $booking->booking_code,
-            'recipient' => $booking->phone_code.$booking->phone_number,
-            'contact_person' => $booking->contact_person,
-            'brand_name' => $booking->brand_name,
-            'exhibition' => $this->exhibition->title,
-            'selected_stalls' => $booking->selected_stalls,
-            'total_amount' => $booking->total_with_gst,
-            'template' => 'inquiry_submitted',
-        ]);
+        // Send WhatsApp message for booking confirmation (in background)
+        SendWhatsAppCampaign::dispatch(
+            campaignName: 'booking_received',
+            phoneCode: $booking->phone_code,
+            phoneNumber: $booking->phone_number,
+            templateParams: [
+                $booking->contact_person,                              // {{1}} Contact Person Name
+                $this->exhibition->title,                              // {{2}} Exhibition Title
+                implode(', ', $booking->selected_stalls),              // {{3}} Selected Stalls
+                $booking->booking_code,                                // {{4}} Booking Code
+                number_format($booking->total_area, 0),                // {{5}} Total Area
+                number_format($booking->total_with_gst, 2),            // {{6}} Total Amount with GST
+            ]
+        );
 
         // Mark token as used
         $usedTokens[] = $token;
