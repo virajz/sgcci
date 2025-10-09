@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Inquiries;
 
 use App\Models\Booking;
+use Flux\Flux;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -16,6 +17,10 @@ class Index extends Component
 
     public string $statusFilter = 'all';
 
+    public bool $showConfirmReleaseModal = false;
+
+    public ?int $stallToRelease = null;
+
     public function updatingSearch(): void
     {
         $this->resetPage();
@@ -28,16 +33,34 @@ class Index extends Component
 
     protected $listeners = ['refresh-inquiries' => '$refresh'];
 
-    public function releaseStall(int $bookingId): void
+    public function confirmRelease(int $bookingId): void
     {
-        $booking = Booking::where('id', $bookingId)
+        $this->stallToRelease = $bookingId;
+        $this->showConfirmReleaseModal = true;
+    }
+
+    public function releaseStall(): void
+    {
+        if (! $this->stallToRelease) {
+            return;
+        }
+
+        $booking = Booking::where('id', $this->stallToRelease)
             ->where('is_manual_block', true)
             ->first();
 
         if ($booking) {
+            $stallNumbers = implode(', ', $booking->selected_stalls);
             $booking->delete();
-            session()->flash('success', 'Stall released successfully.');
+
+            Flux::toast(
+                variant: 'success',
+                text: "Stall(s) {$stallNumbers} released successfully."
+            );
         }
+
+        $this->showConfirmReleaseModal = false;
+        $this->stallToRelease = null;
     }
 
     public function render()

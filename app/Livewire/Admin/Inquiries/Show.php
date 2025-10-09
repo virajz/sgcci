@@ -5,6 +5,7 @@ namespace App\Livewire\Admin\Inquiries;
 use App\BookingStatus;
 use App\Jobs\SendWhatsAppCampaign;
 use App\Models\Booking;
+use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -35,7 +36,10 @@ class Show extends Component
                 'admin_approved_at' => now(),
             ]);
 
-            session()->flash('success', 'Booking verified successfully. Awaiting super admin approval for stall allotment.');
+            Flux::toast(
+                variant: 'success',
+                text: 'Booking verified successfully. Awaiting super admin approval for stall allotment.'
+            );
             $this->dispatch('booking-updated');
 
             return;
@@ -72,13 +76,19 @@ class Show extends Component
                 ]
             );
 
-            session()->flash('success', 'Booking approved! Payment link sent to customer. Stalls will be allotted once payment is received.');
+            Flux::toast(
+                variant: 'success',
+                text: 'Booking approved! Payment link sent to customer. Stalls will be allotted once payment is received.'
+            );
             $this->dispatch('booking-updated');
 
             return;
         }
 
-        session()->flash('error', 'Unable to approve booking at this stage.');
+        Flux::toast(
+            variant: 'danger',
+            text: 'Unable to approve booking at this stage.'
+        );
     }
 
     public function openRejectModal(): void
@@ -91,7 +101,10 @@ class Show extends Component
     {
         // Only super admin can reject bookings
         if (! Auth::user()->isSuperAdmin()) {
-            session()->flash('error', 'Only super admin can reject bookings.');
+            Flux::toast(
+                variant: 'danger',
+                text: 'Only super admin can reject bookings.'
+            );
             $this->showRejectModal = false;
 
             return;
@@ -123,7 +136,10 @@ class Show extends Component
         );
 
         $this->showRejectModal = false;
-        session()->flash('success', 'Booking has been rejected.');
+        Flux::toast(
+            variant: 'success',
+            text: 'Booking has been rejected.'
+        );
         $this->dispatch('booking-updated');
     }
 
@@ -132,7 +148,10 @@ class Show extends Component
 
         // Only payment pending bookings can have payment link resent
         if ($this->booking->status !== BookingStatus::PaymentPending) {
-            session()->flash('error', 'Payment link can only be resent for bookings with payment pending status.');
+            Flux::toast(
+                variant: 'danger',
+                text: 'Payment link can only be resent for bookings with payment pending status.'
+            );
 
             return;
         }
@@ -162,7 +181,10 @@ class Show extends Component
             ]
         );
 
-        session()->flash('success', 'Payment link has been resent to the customer via WhatsApp.');
+        Flux::toast(
+            variant: 'success',
+            text: 'Payment link has been resent to the customer via WhatsApp.'
+        );
         $this->dispatch('booking-updated');
     }
 
@@ -170,14 +192,20 @@ class Show extends Component
     {
         // Only super admin can mark payment as completed
         if (! Auth::user()->isSuperAdmin()) {
-            session()->flash('error', 'Only super admin can mark payment as completed.');
+            Flux::toast(
+                variant: 'danger',
+                text: 'Only super admin can mark payment as completed.'
+            );
 
             return;
         }
 
         // Only payment pending bookings can be marked as completed
         if ($this->booking->status !== BookingStatus::PaymentPending) {
-            session()->flash('error', 'Only bookings with payment pending status can be marked as completed.');
+            Flux::toast(
+                variant: 'danger',
+                text: 'Only bookings with payment pending status can be marked as completed.'
+            );
 
             return;
         }
@@ -202,7 +230,10 @@ class Show extends Component
             ]
         );
 
-        session()->flash('success', 'Payment marked as completed. Stalls have been allotted to the customer.');
+        Flux::toast(
+            variant: 'success',
+            text: 'Payment marked as completed. Stalls have been allotted to the customer.'
+        );
         $this->dispatch('booking-updated');
     }
 
@@ -210,7 +241,7 @@ class Show extends Component
     {
         // In a real application, you would integrate with a payment gateway
         // For now, return a placeholder URL
-        return config('app.url').'/payment/'.$this->booking->booking_code;
+        return config('app.url') . '/payment/' . $this->booking->booking_code;
     }
 
     public function render()

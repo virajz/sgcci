@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Models\Booking;
 use App\Models\Exhibition;
+use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -12,6 +13,10 @@ class StallBlockManager extends Component
     public $showBlockModal = false;
 
     public $showReleaseModal = false;
+
+    public $showConfirmReleaseModal = false;
+
+    public $stallToRelease = null;
 
     public $stallNumbers = '';
 
@@ -32,6 +37,12 @@ class StallBlockManager extends Component
     public function openReleaseModal(): void
     {
         $this->showReleaseModal = true;
+    }
+
+    public function confirmRelease(int $bookingId): void
+    {
+        $this->stallToRelease = $bookingId;
+        $this->showConfirmReleaseModal = true;
     }
 
     public function blockStalls(): void
@@ -90,21 +101,45 @@ class StallBlockManager extends Component
         $this->showBlockModal = false;
         $this->stallNumbers = '';
 
-        $this->dispatch('stalls-blocked', count: $created);
+        if ($created > 0) {
+            Flux::toast(
+                variant: 'success',
+                text: "{$created} stall(s) blocked successfully."
+            );
+        } else {
+            Flux::toast(
+                variant: 'warning',
+                text: 'All specified stalls are already blocked or booked.'
+            );
+        }
+
         $this->dispatch('refresh-inquiries');
     }
 
-    public function releaseStall(int $bookingId): void
+    public function releaseStall(): void
     {
-        $booking = Booking::where('id', $bookingId)
+        if (! $this->stallToRelease) {
+            return;
+        }
+
+        $booking = Booking::where('id', $this->stallToRelease)
             ->where('is_manual_block', true)
             ->first();
 
         if ($booking) {
+            $stallNumbers = implode(', ', $booking->selected_stalls);
             $booking->delete();
-            $this->dispatch('stall-released');
+
+            Flux::toast(
+                variant: 'success',
+                text: "Stall(s) {$stallNumbers} released successfully."
+            );
+
             $this->dispatch('refresh-inquiries');
         }
+
+        $this->showConfirmReleaseModal = false;
+        $this->stallToRelease = null;
     }
 
     public function render()

@@ -92,8 +92,7 @@
                                     @if ($booking->is_manual_block)
                                         <flux:button size="sm" variant="ghost" icon="lock-open"
                                             class="cursor-pointer" iconVariant="outline"
-                                            wire:click="releaseStall({{ $booking->id }})"
-                                            wire:confirm="Are you sure you want to release this manually blocked stall?">
+                                            wire:click="confirmRelease({{ $booking->id }})">
                                             Release
                                         </flux:button>
                                     @else
@@ -126,4 +125,24 @@
             </div>
         @endif
     </flux:card>
+
+    {{-- Confirmation Modal for Release --}}
+    <flux:modal wire:model="showConfirmReleaseModal" class="min-w-[22rem]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Release Stall?</flux:heading>
+                <flux:text class="mt-2">
+                    <p>You're about to release this manually blocked stall.</p>
+                    <p>This action will make the stall available for booking again.</p>
+                </flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
+                <flux:button wire:click="releaseStall" variant="danger">Release Stall</flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </div>

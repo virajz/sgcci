@@ -12,18 +12,6 @@
         </flux:badge>
     </div>
 
-    @if (session('success'))
-        <flux:callout variant="success" class="mb-6">
-            {{ session('success') }}
-        </flux:callout>
-    @endif
-
-    @if (session('error'))
-        <flux:callout variant="danger" class="mb-6">
-            {{ session('error') }}
-        </flux:callout>
-    @endif
-
     <div class="grid gap-6 lg:grid-cols-3">
         {{-- Main Content --}}
         <div class="space-y-6 lg:col-span-2">
@@ -179,7 +167,8 @@
                                 This booking is pending initial admin verification. Admins should verify first.
                             </flux:callout>
                         @else
-                            <flux:button wire:click="approve" variant="primary" class="w-full" icon="check" iconVariant="outline">
+                            <flux:button wire:click="approve" variant="primary" class="w-full" icon="check"
+                                iconVariant="outline">
                                 Verify & Approve
                             </flux:button>
                         @endif
@@ -190,11 +179,13 @@
                             This booking has been verified by an admin. You can now allot the stalls.
                         </flux:callout>
 
-                        <flux:button wire:click="approve" variant="primary" class="w-full" icon="check" iconVariant="outline">
+                        <flux:button wire:click="approve" variant="primary" class="w-full" icon="check"
+                            iconVariant="outline">
                             Approve & Send Payment Link
                         </flux:button>
 
-                        <flux:button wire:click="openRejectModal" variant="danger" class="w-full" icon="x-mark" iconVariant="outline">
+                        <flux:button wire:click="openRejectModal" variant="danger" class="w-full" icon="x-mark"
+                            iconVariant="outline">
                             Reject Booking
                         </flux:button>
                     </div>
