@@ -182,25 +182,37 @@
                         </flux:callout>
 
                         <flux:button wire:click="approve" variant="primary" class="w-full" icon="check">
-                            Allot Stalls & Send Payment Link
+                            Approve & Send Payment Link
                         </flux:button>
 
                         <flux:button wire:click="openRejectModal" variant="danger" class="w-full" icon="x-mark">
                             Reject Booking
                         </flux:button>
                     </div>
+                @elseif ($booking->status === \App\BookingStatus::PaymentPending && auth()->user()->isSuperAdmin())
+                    <div class="space-y-3">
+                        <flux:callout variant="warning" class="mb-4">
+                            Payment link has been sent. Waiting for customer payment confirmation.
+                        </flux:callout>
+
+                        <flux:button wire:click="markPaymentCompleted" variant="primary" class="w-full" icon="check">
+                            Mark Payment as Completed
+                        </flux:button>
+                    </div>
                 @elseif ($booking->status === \App\BookingStatus::ApprovedByAdmin && !auth()->user()->isSuperAdmin())
                     <flux:callout variant="info">
                         Awaiting super admin approval for stall allotment.
+                    </flux:callout>
+                @elseif ($booking->status === \App\BookingStatus::PaymentPending && !auth()->user()->isSuperAdmin())
+                    <flux:callout variant="info">
+                        Payment link sent. Awaiting payment confirmation from super admin.
                     </flux:callout>
                 @else
                     <flux:callout variant="info">
                         @if ($booking->status === \App\BookingStatus::Rejected)
                             This booking has been rejected.
                         @elseif ($booking->status === \App\BookingStatus::Allotted)
-                            Stalls have been allotted. Awaiting payment.
-                        @elseif ($booking->status === \App\BookingStatus::PaymentPending)
-                            Awaiting payment from customer.
+                            Stalls have been allotted and payment has been completed.
                         @elseif ($booking->status === \App\BookingStatus::PaymentCompleted)
                             Payment completed successfully.
                         @elseif ($booking->status === \App\BookingStatus::Expired)
@@ -237,13 +249,26 @@
                             <div class="pb-3 border-b dark:border-zinc-700">
                                 <div class="flex items-center gap-2 mb-1">
                                     <flux:icon.check class="w-4 h-4 text-green-500" />
-                                    <flux:subheading class="text-sm">Stalls Allotted by Super Admin</flux:subheading>
+                                    <flux:subheading class="text-sm">Payment Link Sent by Super Admin</flux:subheading>
                                 </div>
                                 <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">
                                     {{ $booking->superAdminApprovedBy->name }}
                                 </flux:text>
                                 <flux:text class="text-xs text-zinc-500">
                                     {{ $booking->super_admin_approved_at->format('M d, Y h:i A') }}
+                                </flux:text>
+                            </div>
+                        @endif
+
+                        @if ($booking->payment_completed_at)
+                            <div class="pb-3 border-b dark:border-zinc-700">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <flux:icon.check class="w-4 h-4 text-green-500" />
+                                    <flux:subheading class="text-sm">Payment Completed & Stalls Allotted
+                                    </flux:subheading>
+                                </div>
+                                <flux:text class="text-xs text-zinc-500">
+                                    {{ $booking->payment_completed_at->format('M d, Y h:i A') }}
                                 </flux:text>
                             </div>
                         @endif

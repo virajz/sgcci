@@ -41,12 +41,12 @@ class Show extends Component
             return;
         }
 
-        // Super admin can allot stalls (final approval)
+        // Super admin can approve and send payment link
         if ($user->isSuperAdmin() && $this->booking->status === BookingStatus::ApprovedByAdmin) {
             $paymentDueAt = now()->addDays(3);
 
             $this->booking->update([
-                'status' => BookingStatus::Allotted,
+                'status' => BookingStatus::PaymentPending,
                 'super_admin_approved_by' => $user->id,
                 'super_admin_approved_at' => now(),
                 'payment_link' => $this->generatePaymentLink(),
@@ -68,7 +68,7 @@ class Show extends Component
                 'template' => 'payment_request',
             ]);
 
-            session()->flash('success', 'Stalls allotted successfully! Payment link sent to customer.');
+            session()->flash('success', 'Booking approved! Payment link sent to customer. Stalls will be allotted once payment is received.');
             $this->dispatch('booking-updated');
 
             return;
@@ -106,6 +106,43 @@ class Show extends Component
 
         $this->showRejectModal = false;
         session()->flash('success', 'Booking has been rejected.');
+        $this->dispatch('booking-updated');
+    }
+
+    public function markPaymentCompleted(): void
+    {
+        // Only super admin can mark payment as completed
+        if (! Auth::user()->isSuperAdmin()) {
+            session()->flash('error', 'Only super admin can mark payment as completed.');
+
+            return;
+        }
+
+        // Only payment pending bookings can be marked as completed
+        if ($this->booking->status !== BookingStatus::PaymentPending) {
+            session()->flash('error', 'Only bookings with payment pending status can be marked as completed.');
+
+            return;
+        }
+
+        $this->booking->update([
+            'status' => BookingStatus::Allotted,
+            'payment_completed_at' => now(),
+        ]);
+
+        // Log WhatsApp message for payment confirmation
+        Log::channel('whatsapp')->info('WhatsApp payment confirmation to be sent', [
+            'booking_code' => $this->booking->booking_code,
+            'recipient' => $this->booking->phone_code.$this->booking->phone_number,
+            'contact_person' => $this->booking->contact_person,
+            'brand_name' => $this->booking->brand_name,
+            'exhibition' => $this->booking->exhibition->title,
+            'selected_stalls' => $this->booking->selected_stalls,
+            'total_amount' => $this->booking->total_with_gst,
+            'template' => 'payment_confirmed',
+        ]);
+
+        session()->flash('success', 'Payment marked as completed. Stalls have been allotted to the customer.');
         $this->dispatch('booking-updated');
     }
 

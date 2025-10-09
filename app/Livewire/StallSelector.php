@@ -57,8 +57,8 @@ class StallSelector extends Component
                 return collect($booking->selected_stalls)->map(function ($stall) use ($booking) {
                     // Map statuses for UI display
                     $uiStatus = match ($booking->status->value) {
-                        'allotted' => 'allotted',
-                        'pending_approval', 'approved_by_admin', 'payment_pending', 'payment_completed' => 'reserved',
+                        'payment_completed' => 'allotted',
+                        'pending_approval', 'approved_by_admin', 'payment_pending', 'allotted' => 'reserved',
                         'rejected', 'expired', 'cancelled' => null, // These stalls are available again
                         default => null,
                     };
