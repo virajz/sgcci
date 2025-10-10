@@ -6,6 +6,7 @@ use App\Models\Booking;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -16,11 +17,21 @@ class Index extends Component
 
     public string $search = '';
 
+    #[Url(as: 'tab')]
     public string $statusFilter = 'all';
 
     public bool $showConfirmReleaseModal = false;
 
     public ?int $stallToRelease = null;
+
+    public function mount(): void
+    {
+        // If tab parameter is provided in URL, use it
+        $tab = request()->query('tab');
+        if ($tab && in_array($tab, ['all', 'pending_approval', 'approved_by_admin', 'payment_pending', 'payment_completed', 'manual_block', 'rejected'])) {
+            $this->statusFilter = $tab;
+        }
+    }
 
     public function updatingSearch(): void
     {

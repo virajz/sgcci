@@ -3,6 +3,7 @@
 use App\Http\Controllers\PaymentController;
 use App\Livewire\Admin\Inquiries\Index as InquiriesIndex;
 use App\Livewire\Admin\Inquiries\Show as InquiriesShow;
+use App\Livewire\Dashboard;
 use App\Livewire\Exhibitions\Booking;
 use App\Livewire\Exhibitions\Confirmation;
 use App\Livewire\Exhibitions\ThankYou;
@@ -31,7 +32,7 @@ Route::prefix('payment')->name('payment.')->group(function () {
     Route::post('/cancel', [PaymentController::class, 'cancel'])->name('cancel');
 });
 
-Route::view('dashboard', 'dashboard')
+Route::get('dashboard', Dashboard::class)
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
@@ -60,4 +61,4 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
