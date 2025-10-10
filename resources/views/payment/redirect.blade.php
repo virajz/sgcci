@@ -93,7 +93,6 @@
 
             {{-- Hidden Form for Auto-Submission --}}
             <form method="post" name="redirect" action="{{ $gatewayUrl }}" class="hidden">
-                @csrf
                 <input type="hidden" name="encRequest" value="{{ $encRequest }}">
                 <input type="hidden" name="access_code" value="{{ $accessCode }}">
             </form>
@@ -101,7 +100,7 @@
 
         {{-- Footer Note --}}
         <flux:text class="block mt-4 text-sm text-center text-zinc-500">
-            If you are not redirected automatically within 5 seconds,
+            If you are not redirected automatically within 3 seconds,
             <button onclick="document.redirect.submit()"
                 class="font-medium underline text-primary-600 dark:text-primary-400 hover:text-primary-700">
                 click here
@@ -115,7 +114,7 @@
         // Auto-submit the form after a brief delay
         setTimeout(function() {
             document.redirect.submit();
-        }, 10000);
+        }, 3000);
     </script>
 </body>
 

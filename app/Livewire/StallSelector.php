@@ -39,6 +39,14 @@ class StallSelector extends Component
                 array_filter($this->selectedStalls, fn ($stall) => $stall !== $stallNumber)
             );
         } else {
+            // Check if stall is already allotted (payment completed)
+            $bookedStalls = $this->bookedStalls;
+            if (isset($bookedStalls[$stallNumber]) && $bookedStalls[$stallNumber] === 'allotted') {
+                $this->dispatch('stall-unavailable', stallNumber: $stallNumber);
+
+                return;
+            }
+
             $this->selectedStalls[] = $stallNumber;
         }
 
@@ -51,10 +59,19 @@ class StallSelector extends Component
             return [];
         }
 
+        // Define status priority (higher number = higher priority)
+        $statusPriority = [
+            'payment_completed' => 3,
+            'allotted' => 2,
+            'payment_pending' => 1,
+            'approved_by_admin' => 1,
+            'pending_approval' => 1,
+        ];
+
         return Booking::where('exhibition_id', $this->exhibitionId)
             ->get()
-            ->flatMap(function ($booking) {
-                return collect($booking->selected_stalls)->map(function ($stall) use ($booking) {
+            ->flatMap(function ($booking) use ($statusPriority) {
+                return collect($booking->selected_stalls)->map(function ($stall) use ($booking, $statusPriority) {
                     // Map statuses for UI display
                     $uiStatus = match ($booking->status->value) {
                         'payment_completed' => 'allotted',
@@ -66,12 +83,13 @@ class StallSelector extends Component
                     return [
                         'stall_number' => $stall,
                         'status' => $uiStatus,
+                        'priority' => $statusPriority[$booking->status->value] ?? 0,
                     ];
                 });
             })
             ->filter(fn ($stall) => $stall['status'] !== null) // Remove stalls with null status
             ->groupBy('stall_number')
-            ->map(fn ($stalls) => $stalls->first()['status'])
+            ->map(fn ($stalls) => $stalls->sortByDesc('priority')->first()['status']) // Prioritize payment_completed over pending
             ->toArray();
     }
 

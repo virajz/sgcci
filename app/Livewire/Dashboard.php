@@ -30,7 +30,7 @@ class Dashboard extends Component
             ])
             ->where('is_manual_block', false)
             ->get()
-            ->flatMap(fn($booking) => $booking->selected_stalls)
+            ->flatMap(fn ($booking) => $booking->selected_stalls)
             ->unique()
             ->count();
 
@@ -38,7 +38,7 @@ class Dashboard extends Component
         $manualBlockCount = Booking::where('exhibition_id', $exhibition->id)
             ->where('is_manual_block', true)
             ->get()
-            ->flatMap(fn($booking) => $booking->selected_stalls)
+            ->flatMap(fn ($booking) => $booking->selected_stalls)
             ->unique()
             ->count();
 

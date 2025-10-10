@@ -65,22 +65,24 @@ class Show extends Component
             ]);
 
             // Send WhatsApp notification for booking confirmation with payment link
-            SendWhatsAppCampaign::dispatch(
-                campaignName: 'booking_confirmationpayment',
-                phoneCode: $this->booking->phone_code,
-                phoneNumber: $this->booking->phone_number,
-                templateParams: [
-                    $this->booking->contact_person,                          // {{1}} Contact Person Name
-                    $this->booking->exhibition->title,                       // {{2}} Exhibition Title
-                    implode(', ', $this->booking->selected_stalls),          // {{3}} Allotted Stalls
-                    $this->booking->booking_code,                            // {{4}} Booking Code
-                    number_format($this->booking->total_area, 0),            // {{5}} Total Area
-                    number_format($this->booking->total_with_gst, 2),        // {{6}} Total Amount with GST
-                    $paymentDueAt->format('M d, Y'),                         // {{7}} Payment Due Date (first)
-                    $this->booking->payment_link,                            // {{8}} Payment Link URL
-                    $paymentDueAt->format('M d, Y'),                         // {{9}} Payment Due Date (repeated)
-                ]
-            );
+            if (config('services.whatsapp.enabled')) {
+                SendWhatsAppCampaign::dispatch(
+                    campaignName: 'booking_confirmationpayment',
+                    phoneCode: $this->booking->phone_code,
+                    phoneNumber: $this->booking->phone_number,
+                    templateParams: [
+                        $this->booking->contact_person,                          // {{1}} Contact Person Name
+                        $this->booking->exhibition->title,                       // {{2}} Exhibition Title
+                        implode(', ', $this->booking->selected_stalls),          // {{3}} Allotted Stalls
+                        $this->booking->booking_code,                            // {{4}} Booking Code
+                        number_format($this->booking->total_area, 0),            // {{5}} Total Area
+                        number_format($this->booking->total_with_gst, 2),        // {{6}} Total Amount with GST
+                        $paymentDueAt->format('M d, Y'),                         // {{7}} Payment Due Date (first)
+                        $this->booking->payment_link,                            // {{8}} Payment Link URL
+                        $paymentDueAt->format('M d, Y'),                         // {{9}} Payment Due Date (repeated)
+                    ]
+                );
+            }
 
             Flux::toast(
                 heading: 'Booking Approved!',
@@ -134,18 +136,20 @@ class Show extends Component
         ]);
 
         // Send WhatsApp notification for booking rejection
-        SendWhatsAppCampaign::dispatch(
-            campaignName: 'booking_reject',
-            phoneCode: $this->booking->phone_code,
-            phoneNumber: $this->booking->phone_number,
-            templateParams: [
-                $this->booking->contact_person,                          // {{1}} Contact Person Name
-                $this->booking->exhibition->title,                       // {{2}} Exhibition Title
-                $this->booking->booking_code,                            // {{3}} Booking Code
-                implode(', ', $this->booking->selected_stalls),          // {{4}} Requested Stalls
-                $this->rejectionReason,                                  // {{5}} Rejection Reason
-            ]
-        );
+        if (config('services.whatsapp.enabled')) {
+            SendWhatsAppCampaign::dispatch(
+                campaignName: 'booking_reject',
+                phoneCode: $this->booking->phone_code,
+                phoneNumber: $this->booking->phone_number,
+                templateParams: [
+                    $this->booking->contact_person,                          // {{1}} Contact Person Name
+                    $this->booking->exhibition->title,                       // {{2}} Exhibition Title
+                    $this->booking->booking_code,                            // {{3}} Booking Code
+                    implode(', ', $this->booking->selected_stalls),          // {{4}} Requested Stalls
+                    $this->rejectionReason,                                  // {{5}} Rejection Reason
+                ]
+            );
+        }
 
         $this->showRejectModal = false;
         Flux::toast(
@@ -178,22 +182,24 @@ class Show extends Component
         ]);
 
         // Send WhatsApp notification for booking confirmation with payment link
-        SendWhatsAppCampaign::dispatch(
-            campaignName: 'booking_confirmationpayment',
-            phoneCode: $this->booking->phone_code,
-            phoneNumber: $this->booking->phone_number,
-            templateParams: [
-                $this->booking->contact_person,                          // {{1}} Contact Person Name
-                $this->booking->exhibition->title,                       // {{2}} Exhibition Title
-                implode(', ', $this->booking->selected_stalls),          // {{3}} Allotted Stalls
-                $this->booking->booking_code,                            // {{4}} Booking Code
-                number_format($this->booking->total_area, 0),            // {{5}} Total Area
-                number_format($this->booking->total_with_gst, 2),        // {{6}} Total Amount with GST
-                $paymentDueAt->format('M d, Y'),                         // {{7}} Payment Due Date (first)
-                $this->booking->payment_link,                            // {{8}} Payment Link URL
-                $paymentDueAt->format('M d, Y'),                         // {{9}} Payment Due Date (repeated)
-            ]
-        );
+        if (config('services.whatsapp.enabled')) {
+            SendWhatsAppCampaign::dispatch(
+                campaignName: 'booking_confirmationpayment',
+                phoneCode: $this->booking->phone_code,
+                phoneNumber: $this->booking->phone_number,
+                templateParams: [
+                    $this->booking->contact_person,                          // {{1}} Contact Person Name
+                    $this->booking->exhibition->title,                       // {{2}} Exhibition Title
+                    implode(', ', $this->booking->selected_stalls),          // {{3}} Allotted Stalls
+                    $this->booking->booking_code,                            // {{4}} Booking Code
+                    number_format($this->booking->total_area, 0),            // {{5}} Total Area
+                    number_format($this->booking->total_with_gst, 2),        // {{6}} Total Amount with GST
+                    $paymentDueAt->format('M d, Y'),                         // {{7}} Payment Due Date (first)
+                    $this->booking->payment_link,                            // {{8}} Payment Link URL
+                    $paymentDueAt->format('M d, Y'),                         // {{9}} Payment Due Date (repeated)
+                ]
+            );
+        }
 
         Flux::toast(
             heading: 'Payment Link Sent!',
@@ -233,19 +239,21 @@ class Show extends Component
         ]);
 
         // Send WhatsApp notification for payment success
-        SendWhatsAppCampaign::dispatch(
-            campaignName: 'payment_success',
-            phoneCode: $this->booking->phone_code,
-            phoneNumber: $this->booking->phone_number,
-            templateParams: [
-                $this->booking->contact_person,                          // {{1}} Contact Person Name
-                $this->booking->exhibition->title,                       // {{2}} Exhibition Title
-                $this->booking->booking_code,                            // {{3}} Booking Code
-                number_format($this->booking->total_with_gst, 2),        // {{4}} Amount Paid
-                now()->format('M d, Y'),                                 // {{5}} Payment Date
-                implode(', ', $this->booking->selected_stalls),          // {{6}} Confirmed Stalls
-            ]
-        );
+        if (config('services.whatsapp.enabled')) {
+            SendWhatsAppCampaign::dispatch(
+                campaignName: 'payment_success',
+                phoneCode: $this->booking->phone_code,
+                phoneNumber: $this->booking->phone_number,
+                templateParams: [
+                    $this->booking->contact_person,                          // {{1}} Contact Person Name
+                    $this->booking->exhibition->title,                       // {{2}} Exhibition Title
+                    $this->booking->booking_code,                            // {{3}} Booking Code
+                    number_format($this->booking->total_with_gst, 2),        // {{4}} Amount Paid
+                    now()->format('M d, Y'),                                 // {{5}} Payment Date
+                    implode(', ', $this->booking->selected_stalls),          // {{6}} Confirmed Stalls
+                ]
+            );
+        }
 
         Flux::toast(
             heading: 'Payment Confirmed!',
@@ -259,7 +267,7 @@ class Show extends Component
     {
         // In a real application, you would integrate with a payment gateway
         // For now, return a placeholder URL
-        return config('app.url').'/payment/'.$this->booking->booking_code;
+        return config('app.url') . '/payment/' . $this->booking->booking_code;
     }
 
     public function render()

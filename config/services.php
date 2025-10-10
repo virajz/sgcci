@@ -36,6 +36,7 @@ return [
     ],
 
     'whatsapp' => [
+        'enabled' => env('WHATSAPP_ENABLED', false),
         'api_key' => env('WHATSAPP_API_KEY'),
         'api_url' => env('WHATSAPP_API_URL'),
         'username' => env('WHATSAPP_USERNAME'),

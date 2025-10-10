@@ -80,8 +80,11 @@ class PaymentController extends Controller
             // Find booking
             $booking = Booking::where('booking_code', $responseData['order_id'])->firstOrFail();
 
+            // Track if this is a new payment completion (to prevent duplicate WhatsApp on refresh)
+            $wasAlreadyCompleted = $booking->status === BookingStatus::PaymentCompleted;
+
             // Update booking with payment details
-            $booking->update([
+            $updateData = [
                 'payment_transaction_id' => $responseData['tracking_id'] ?? null,
                 'payment_tracking_id' => $responseData['tracking_id'] ?? null,
                 'payment_bank_ref_no' => $responseData['bank_ref_no'] ?? null,
@@ -90,7 +93,17 @@ class PaymentController extends Controller
                 'payment_amount' => $responseData['amount'] ?? $booking->total_with_gst,
                 'payment_response' => json_encode($responseData),
                 'payment_completed_at' => $this->ccavenueService->isPaymentSuccessful($responseData) ? now() : null,
-            ]);
+            ];
+
+            // Update booking status to PaymentCompleted if payment was successful
+            if ($this->ccavenueService->isPaymentSuccessful($responseData)) {
+                $updateData['status'] = BookingStatus::PaymentCompleted;
+
+                // Cancel any older pending bookings for the same stalls to prevent double-booking
+                $this->cancelConflictingBookings($booking);
+            }
+
+            $booking->update($updateData);
 
             // Log the response
             Log::info('CCAvenue Payment Response', [
@@ -99,17 +112,23 @@ class PaymentController extends Controller
                 'tracking_id' => $responseData['tracking_id'] ?? null,
             ]);
 
-            // Send WhatsApp notification for successful payment
-            if ($this->ccavenueService->isPaymentSuccessful($responseData)) {
+            // Send WhatsApp notification ONLY if this is a NEW payment completion (prevent duplicates on refresh)
+            if (
+                $this->ccavenueService->isPaymentSuccessful($responseData)
+                && config('services.whatsapp.enabled')
+                && ! $wasAlreadyCompleted
+            ) {
                 SendWhatsAppCampaign::dispatch(
-                    'payment_success',
-                    $booking->phone_code.$booking->phone_number,
-                    [
-                        $booking->contact_person,
-                        $booking->exhibition->name,
-                        $booking->booking_code,
-                        '₹ '.number_format((float) $booking->total_with_gst, 2),
-                        now()->format('M d, Y'),
+                    campaignName: 'payment_success',
+                    phoneCode: $booking->phone_code,
+                    phoneNumber: $booking->phone_number,
+                    templateParams: [
+                        $booking->contact_person,                             // {{1}} Contact Person Name
+                        $booking->exhibition->title,                          // {{2}} Exhibition Title
+                        $booking->booking_code,                               // {{3}} Booking Code
+                        number_format((float) ($responseData['amount'] ?? $booking->total_with_gst), 2), // {{4}} Amount Paid
+                        now()->format('M d, Y'),                              // {{5}} Payment Date
+                        implode(', ', $booking->selected_stalls),             // {{6}} Confirmed Stalls
                     ]
                 );
             }
@@ -154,5 +173,43 @@ class PaymentController extends Controller
         }
 
         return redirect()->route('home')->with('info', 'Payment was cancelled.');
+    }
+
+    /**
+     * Cancel older pending bookings that conflict with the newly paid booking
+     */
+    private function cancelConflictingBookings(Booking $paidBooking): void
+    {
+        // Find all other bookings for the same exhibition with overlapping stalls
+        Booking::where('exhibition_id', $paidBooking->exhibition_id)
+            ->where('id', '!=', $paidBooking->id)
+            ->whereIn('status', [
+                BookingStatus::PendingApproval,
+                BookingStatus::ApprovedByAdmin,
+                BookingStatus::Allotted,
+                BookingStatus::PaymentPending,
+            ])
+            ->get()
+            ->each(function ($booking) use ($paidBooking) {
+                // Check if this booking has any stalls in common with the paid booking
+                $overlappingStalls = array_intersect(
+                    $booking->selected_stalls ?? [],
+                    $paidBooking->selected_stalls ?? []
+                );
+
+                if (! empty($overlappingStalls)) {
+                    $booking->update([
+                        'status' => BookingStatus::Cancelled,
+                        'rejection_reason' => 'Auto-cancelled: Stalls ' . implode(', ', $overlappingStalls) .
+                            ' were booked by another customer (Booking #' . $paidBooking->booking_code . ').',
+                    ]);
+
+                    Log::info('Auto-cancelled conflicting booking', [
+                        'cancelled_booking' => $booking->booking_code,
+                        'winning_booking' => $paidBooking->booking_code,
+                        'overlapping_stalls' => $overlappingStalls,
+                    ]);
+                }
+            });
     }
 }

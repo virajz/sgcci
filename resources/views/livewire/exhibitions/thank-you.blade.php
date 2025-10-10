@@ -1,6 +1,6 @@
 <div class="flex items-center justify-center min-h-screen p-4">
-    <flux:main class="w-full max-w-3xl mx-auto space-y-8">
-        <div class="pb-6 mb-6 border-b border-zinc-200 dark:border-zinc-700">
+    <flux:main class="w-full max-w-3xl mx-auto">
+        <div class="pb-6 mb-6 space-y-8 border-b border-zinc-200 dark:border-zinc-700">
             <div class="flex items-center justify-between mb-4">
                 <img src="{{ asset('brand/sgcci-logo-fixed.svg') }}" alt="SGCCI Logo" class="w-full h-auto max-w-16">
                 <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="w-full h-auto max-w-32">
@@ -76,7 +76,7 @@
                             <div>
                                 <flux:subheading class="text-sm">Exhibition</flux:subheading>
                                 <flux:text class="font-semibold text-black dark:text-white">
-                                    {{ $booking->exhibition->title }}</flux:text>
+                                    {{ $exhibition->title }}</flux:text>
                             </div>
                         </div>
 
@@ -173,7 +173,7 @@
             </flux:callout>
 
             <div class="flex justify-center gap-4">
-                <flux:button href="{{ route('exhibitions.booking.show', $booking->exhibition) }}" variant="outline"
+                <flux:button href="{{ route('exhibitions.booking.show', $booking->exhibition_id) }}" variant="outline"
                     icon="arrow-left" iconVariant="outline">
                     Back to Booking
                 </flux:button>
@@ -181,5 +181,6 @@
                     Go to Homepage
                 </flux:button>
             </div>
+        </div>
     </flux:main>
 </div>

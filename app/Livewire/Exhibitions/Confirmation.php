@@ -6,18 +6,25 @@ use App\Jobs\SendWhatsAppCampaign;
 use App\Models\Booking as BookingModel;
 use App\Models\Exhibition;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('components.layouts.front')]
 class Confirmation extends Component
 {
-    public Exhibition $exhibition;
+    #[Locked]
+    public int $exhibitionId;
 
     public array $bookingData = [];
 
+    public function getExhibitionProperty(): Exhibition
+    {
+        return Exhibition::findOrFail($this->exhibitionId);
+    }
+
     public function mount(Exhibition $exhibition): void
     {
-        $this->exhibition = $exhibition;
+        $this->exhibitionId = $exhibition->id;
 
         // Get booking data from session
         $this->bookingData = session('booking_data', []);
@@ -72,19 +79,21 @@ class Confirmation extends Component
         ]);
 
         // Send WhatsApp message for booking confirmation (in background)
-        SendWhatsAppCampaign::dispatch(
-            campaignName: 'booking_received',
-            phoneCode: $booking->phone_code,
-            phoneNumber: $booking->phone_number,
-            templateParams: [
-                $booking->contact_person,                              // {{1}} Contact Person Name
-                $this->exhibition->title,                              // {{2}} Exhibition Title
-                implode(', ', $booking->selected_stalls),              // {{3}} Selected Stalls
-                $booking->booking_code,                                // {{4}} Booking Code
-                number_format($booking->total_area, 0),                // {{5}} Total Area
-                number_format($booking->total_with_gst, 2),            // {{6}} Total Amount with GST
-            ]
-        );
+        if (config('services.whatsapp.enabled')) {
+            SendWhatsAppCampaign::dispatch(
+                campaignName: 'booking_received',
+                phoneCode: $booking->phone_code,
+                phoneNumber: $booking->phone_number,
+                templateParams: [
+                    $booking->contact_person,                              // {{1}} Contact Person Name
+                    $this->exhibition->title,                              // {{2}} Exhibition Title
+                    implode(', ', $booking->selected_stalls),              // {{3}} Selected Stalls
+                    $booking->booking_code,                                // {{4}} Booking Code
+                    number_format($booking->total_area, 0),                // {{5}} Total Area
+                    number_format($booking->total_with_gst, 2),            // {{6}} Total Amount with GST
+                ]
+            );
+        }
 
         // Mark token as used
         $usedTokens[] = $token;

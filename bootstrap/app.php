@@ -14,6 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
         ]);
+
+        // Exclude CCAvenue callback routes from CSRF verification
+        $middleware->validateCsrfTokens(except: [
+            'payment/response',
+            'payment/cancel',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

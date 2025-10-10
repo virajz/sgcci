@@ -18,7 +18,7 @@
             <div class="mb-6 text-center">
                 @if ($isSuccess)
                     <div
-                        class="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-green-100 dark:bg-green-950/30">
+                        class="inline-flex items-center justify-center w-20 h-20 mb-4 bg-green-100 rounded-full dark:bg-green-950/30">
                         <flux:icon.check variant="outline" class="w-12 h-12 text-green-600 dark:text-green-400" />
                     </div>
                     <flux:heading size="xl" class="mb-2 text-green-600 dark:text-green-400">
@@ -29,7 +29,7 @@
                     </flux:subheading>
                 @else
                     <div
-                        class="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-red-100 dark:bg-red-950/30">
+                        class="inline-flex items-center justify-center w-20 h-20 mb-4 bg-red-100 rounded-full dark:bg-red-950/30">
                         <flux:icon.x-mark variant="outline" class="w-12 h-12 text-red-600 dark:text-red-400" />
                     </div>
                     <flux:heading size="xl" class="mb-2 text-red-600 dark:text-red-400">
@@ -113,7 +113,8 @@
             <div class="mt-8 space-y-3">
                 @if ($isSuccess)
                     <flux:button variant="primary"
-                        href="{{ route('exhibitions.bookings.show', $responseData['order_id']) }}" class="w-full">
+                        href="{{ route('exhibitions.booking.thank-you', ['exhibition' => $booking->exhibition_id, 'bookingCode' => $responseData['order_id']]) }}"
+                        class="w-full">
                         View Booking Details
                     </flux:button>
                     <flux:button variant="ghost" href="{{ route('home') }}" class="w-full">
@@ -125,7 +126,8 @@
                         Try Again
                     </flux:button>
                     <flux:button variant="ghost"
-                        href="{{ route('exhibitions.bookings.show', $responseData['order_id']) }}" class="w-full">
+                        href="{{ route('exhibitions.booking.thank-you', ['exhibition' => $booking->exhibition_id, 'bookingCode' => $responseData['order_id']]) }}"
+                        class="w-full">
                         View Booking Details
                     </flux:button>
                 @endif

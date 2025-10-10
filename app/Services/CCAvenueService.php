@@ -67,13 +67,16 @@ class CCAvenueService
             'cancel_url' => config('services.ccavenue.cancel_url'),
             'language' => 'EN',
             'billing_name' => $booking->contact_person,
-            'billing_tel' => $booking->phone_code.$booking->phone_number,
-            'billing_email' => $booking->email,
+            'billing_address' => $booking->city, // Using city as address (mandatory field)
             'billing_city' => $booking->city,
+            'billing_state' => 'Gujarat', // Default to Gujarat for SGCCI
+            'billing_zip' => '380009', // Default to SGCCI headquarters pincode
             'billing_country' => 'India',
-            'merchant_param1' => $booking->id,
-            'merchant_param2' => $booking->exhibition_id,
-            'merchant_param3' => $booking->brand_name,
+            'billing_tel' => str_replace(' ', '', $booking->phone_code.$booking->phone_number),
+            'billing_email' => $booking->email,
+            'merchant_param1' => (string) $booking->id,
+            'merchant_param2' => (string) $booking->exhibition_id,
+            'merchant_param3' => (string) $booking->brand_name,
         ];
 
         return $merchantData;

@@ -6,13 +6,15 @@ use App\Http\Requests\StoreBookingRequest;
 use App\Models\Booking as BookingModel;
 use App\Models\Exhibition;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
 #[Layout('components.layouts.front')]
 class Booking extends Component
 {
-    public Exhibition $exhibition;
+    #[Locked]
+    public int $exhibitionId;
 
     public string $brandName = '';
 
@@ -37,6 +39,11 @@ class Booking extends Component
     public bool $isSgcciMember = false;
 
     public string $membershipType = '';
+
+    public function getExhibitionProperty(): Exhibition
+    {
+        return Exhibition::findOrFail($this->exhibitionId);
+    }
 
     public array $selectedStalls = [];
 
@@ -132,7 +139,7 @@ class Booking extends Component
 
     public function mount(Exhibition $exhibition): void
     {
-        $this->exhibition = $exhibition;
+        $this->exhibitionId = $exhibition->id;
 
         // Restore data from session if available (user went back from confirmation)
         $sessionData = session('booking_data', []);
