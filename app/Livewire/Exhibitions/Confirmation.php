@@ -94,6 +94,12 @@ class Confirmation extends Component
                     number_format($booking->total_with_gst, 2),            // {{6}} Total Amount with GST
                 ]
             );
+
+            // Send WhatsApp notification to staff members
+            \App\Jobs\SendStaffWhatsAppNotifications::dispatch(
+                booking: $booking,
+                campaignName: 'booking_received'
+            );
         }
 
         // Mark token as used

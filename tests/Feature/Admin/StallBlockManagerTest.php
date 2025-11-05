@@ -81,7 +81,8 @@ test('admin can release blocked stalls', function () {
 
     Volt::test('admin.stall-block-manager')
         ->set('exhibitionId', $this->exhibition->id)
-        ->call('releaseStall', $booking->id)
+        ->set('stallToRelease', $booking->id)
+        ->call('releaseStall')
         ->assertDispatched('stall-released')
         ->assertDispatched('refresh-inquiries');
 
@@ -138,5 +139,5 @@ test('blocked stalls appear as allotted in stall selector', function () {
 
     Volt::test('stall-selector')
         ->set('exhibitionId', $this->exhibition->id)
-        ->assertSet('bookedStalls', fn ($stalls) => $stalls['101'] === 'allotted');
+        ->assertSet('bookedStalls', fn($stalls) => $stalls['101'] === 'allotted');
 });

@@ -3,6 +3,7 @@
 use App\Http\Controllers\PaymentController;
 use App\Livewire\Admin\Inquiries\Index as InquiriesIndex;
 use App\Livewire\Admin\Inquiries\Show as InquiriesShow;
+use App\Livewire\Admin\StaffMembers\Index as StaffMembersIndex;
 use App\Livewire\Dashboard;
 use App\Livewire\Exhibitions\Booking;
 use App\Livewire\Exhibitions\Confirmation;
@@ -58,6 +59,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         Route::get('inquiries', InquiriesIndex::class)->name('inquiries.index');
         Route::get('inquiries/{booking}', InquiriesShow::class)->name('inquiries.show');
+        Route::get('staff-members', StaffMembersIndex::class)->name('staff-members.index');
     });
 });
 

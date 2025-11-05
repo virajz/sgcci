@@ -82,6 +82,12 @@ class Show extends Component
                         $paymentDueAt->format('M d, Y'),                         // {{9}} Payment Due Date (repeated)
                     ]
                 );
+
+                // Send WhatsApp notification to staff members
+                \App\Jobs\SendStaffWhatsAppNotifications::dispatch(
+                    booking: $this->booking,
+                    campaignName: 'booking_confirmationpayment'
+                );
             }
 
             Flux::toast(

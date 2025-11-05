@@ -123,6 +123,7 @@ class StallBlockManager extends Component
                 variant: 'success',
                 text: "{$created} stall(s) blocked successfully."
             );
+            $this->dispatch('stalls-blocked');
         } else {
             Flux::toast(
                 heading: 'No Changes Made',
@@ -165,6 +166,7 @@ class StallBlockManager extends Component
                 text: "Successfully released stalls: {$stallNumbers}"
             );
 
+            $this->dispatch('stall-released');
             $this->dispatch('refresh-inquiries');
         }
 

@@ -99,14 +99,14 @@ test('thank you page displays pricing information', function () {
         'email' => 'john@testmotors.com',
         'city' => 'Surat',
         'product_profile' => ['4-wheelers'],
-        'selected_stalls' => ['35'], // 7x22 = 154 sq m
+        'selected_stalls' => ['1'], // 44 sq m
     ]);
 
     \Livewire\Livewire::test(ThankYou::class, ['exhibition' => $exhibition, 'bookingCode' => $booking->booking_code])
         ->assertSee('Pricing Details')
-        ->assertSee('154.00 sq m')
-        ->assertSee('₹750.00')
-        ->assertSee('₹115,500.00');
+        ->assertSee('44.00 sq m')
+        ->assertSee('₹5,000')
+        ->assertSee('₹220,000');
 });
 
 test('thank you page displays GST number when provided', function () {

@@ -131,6 +131,12 @@ class PaymentController extends Controller
                         implode(', ', $booking->selected_stalls),             // {{6}} Confirmed Stalls
                     ]
                 );
+
+                // Send WhatsApp notification to staff members
+                \App\Jobs\SendStaffWhatsAppNotifications::dispatch(
+                    booking: $booking,
+                    campaignName: 'payment_success'
+                );
             }
 
             return view('payment.response', [
