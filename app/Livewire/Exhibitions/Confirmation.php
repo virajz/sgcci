@@ -64,6 +64,8 @@ class Confirmation extends Component
         $booking = BookingModel::create([
             'exhibition_id' => $this->exhibition->id,
             'brand_name' => $this->bookingData['brandName'],
+            'facia_name' => $this->bookingData['faciaName'] ?? null,
+            'trophy_name' => $this->bookingData['trophyName'] ?? null,
             'contact_person' => $this->bookingData['contactPerson'],
             'phone_code' => $this->bookingData['phoneCode'],
             'phone_number' => $this->bookingData['phoneNumber'],

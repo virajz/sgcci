@@ -16,6 +16,8 @@ class Booking extends Model
         'booking_code',
         'exhibition_id',
         'brand_name',
+        'facia_name',
+        'trophy_name',
         'contact_person',
         'phone_code',
         'phone_number',

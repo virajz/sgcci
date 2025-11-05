@@ -23,6 +23,18 @@
                         <flux:subheading class="mb-1 text-sm">Brand / Dealership</flux:subheading>
                         <flux:text class="font-semibold">{{ $booking->brand_name }}</flux:text>
                     </div>
+                    @if ($booking->facia_name)
+                        <div>
+                            <flux:subheading class="mb-1 text-sm">Facia Name</flux:subheading>
+                            <flux:text class="font-semibold">{{ $booking->facia_name }}</flux:text>
+                        </div>
+                    @endif
+                    @if ($booking->trophy_name)
+                        <div>
+                            <flux:subheading class="mb-1 text-sm">Trophy Name</flux:subheading>
+                            <flux:text class="font-semibold">{{ $booking->trophy_name }}</flux:text>
+                        </div>
+                    @endif
                     <div>
                         <flux:subheading class="mb-1 text-sm">Contact Person</flux:subheading>
                         <flux:text class="font-semibold">{{ $booking->contact_person }}</flux:text>
@@ -228,6 +240,19 @@
                     <flux:callout variant="info">
                         Awaiting super admin approval for stall allotment.
                     </flux:callout>
+                @elseif ($booking->status === \App\BookingStatus::Expired && auth()->user()->isAdmin())
+                    <div class="space-y-3">
+                        <flux:callout variant="danger" class="mb-4">
+                            This booking has expired due to payment timeout. You can re-enable it to give the customer
+                            another chance.
+                        </flux:callout>
+
+                        <flux:button wire:click="reEnableExpiredBooking" variant="primary" class="w-full"
+                            icon="arrow-path" iconVariant="outline" wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="reEnableExpiredBooking">Re-enable Booking</span>
+                            <span wire:loading wire:target="reEnableExpiredBooking">Re-enabling...</span>
+                        </flux:button>
+                    </div>
                 @else
                     <flux:callout variant="info">
                         @if ($booking->status === \App\BookingStatus::Rejected)

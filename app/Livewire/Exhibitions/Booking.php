@@ -18,6 +18,10 @@ class Booking extends Component
 
     public string $brandName = '';
 
+    public string $faciaName = '';
+
+    public string $trophyName = '';
+
     public string $contactPerson = '';
 
     public string $phoneCode = '+91';
@@ -139,6 +143,8 @@ class Booking extends Component
             'token' => $bookingToken,
             'exhibitionId' => $this->exhibition->id,
             'brandName' => $this->brandName,
+            'faciaName' => $this->faciaName,
+            'trophyName' => $this->trophyName,
             'contactPerson' => $this->contactPerson,
             'phoneCode' => $this->phoneCode,
             'phoneNumber' => $this->phoneNumber,
@@ -167,6 +173,8 @@ class Booking extends Component
         $sessionData = session('booking_data', []);
         if (! empty($sessionData)) {
             $this->brandName = $sessionData['brandName'] ?? '';
+            $this->faciaName = $sessionData['faciaName'] ?? '';
+            $this->trophyName = $sessionData['trophyName'] ?? '';
             $this->contactPerson = $sessionData['contactPerson'] ?? '';
             $this->phoneCode = $sessionData['phoneCode'] ?? '+91';
             $this->phoneNumber = $sessionData['phoneNumber'] ?? '';

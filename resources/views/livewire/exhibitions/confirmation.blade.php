@@ -23,6 +23,20 @@
                             <flux:text class="font-semibold text-black dark:text-white">
                                 {{ $bookingData['brandName'] ?? '' }}</flux:text>
                         </div>
+                        @if (!empty($bookingData['faciaName']))
+                            <div>
+                                <flux:subheading class="text-sm">Facia Name</flux:subheading>
+                                <flux:text class="font-semibold text-black dark:text-white">
+                                    {{ $bookingData['faciaName'] }}</flux:text>
+                            </div>
+                        @endif
+                        @if (!empty($bookingData['trophyName']))
+                            <div>
+                                <flux:subheading class="text-sm">Trophy Name</flux:subheading>
+                                <flux:text class="font-semibold text-black dark:text-white">
+                                    {{ $bookingData['trophyName'] }}</flux:text>
+                            </div>
+                        @endif
                         <div>
                             <flux:subheading class="text-sm">Contact Person</flux:subheading>
                             <flux:text class="font-semibold text-black dark:text-white">

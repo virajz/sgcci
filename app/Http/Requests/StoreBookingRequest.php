@@ -23,6 +23,8 @@ class StoreBookingRequest extends FormRequest
     {
         return [
             'brandName' => ['required', 'string', 'max:255'],
+            'faciaName' => ['nullable', 'string', 'max:255'],
+            'trophyName' => ['nullable', 'string', 'max:255'],
             'contactPerson' => ['required', 'string', 'max:255'],
             'phoneCode' => ['required', 'string', 'max:10'],
             'phoneNumber' => ['required', 'string', 'max:20'],

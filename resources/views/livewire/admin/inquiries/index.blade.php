@@ -13,6 +13,7 @@
             <flux:tab name="payment_completed">Completed</flux:tab>
             <flux:tab name="manual_block">Manual Block</flux:tab>
             <flux:tab name="rejected">Rejected</flux:tab>
+            <flux:tab name="expired">Expired</flux:tab>
         </flux:tabs>
 
         <flux:input wire:model.live.debounce.300ms="search"

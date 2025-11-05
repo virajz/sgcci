@@ -28,7 +28,7 @@ class Index extends Component
     {
         // If tab parameter is provided in URL, use it
         $tab = request()->query('tab');
-        if ($tab && in_array($tab, ['all', 'pending_approval', 'approved_by_admin', 'payment_pending', 'payment_completed', 'manual_block', 'rejected'])) {
+        if ($tab && in_array($tab, ['all', 'pending_approval', 'approved_by_admin', 'payment_pending', 'payment_completed', 'manual_block', 'rejected', 'expired'])) {
             $this->statusFilter = $tab;
         }
     }
