@@ -160,3 +160,117 @@ _SGCCI Team_
 6. {{6}} - Confirmed Stalls (formatted list)
 
 ---
+
+## STAFF NOTIFICATION TEMPLATES
+
+These templates are sent to staff members for internal notifications about bookings.
+
+---
+
+## Template 5: Staff - New Booking Received
+
+_Template Name:_ staff*booking_received
+\_Category:* UTILITY
+_Language:_ English
+
+### Message:
+
+_New Booking Alert_
+
+Customer: {{1}}
+Exhibition: {{2}}
+Stalls Requested: {{3}}
+
+Booking Code: {{4}}
+Total Area: {{5}} sq m
+Amount: ₹{{6}}
+
+Status: Pending Review
+Action Required: Please review and approve/reject this booking in the admin panel.
+
+_SGCCI Admin System_
+
+### Variables:
+
+1. {{1}} - Contact Person Name
+2. {{2}} - Exhibition Title
+3. {{3}} - Selected Stalls (comma-separated list)
+4. {{4}} - Booking Code
+5. {{5}} - Total Area
+6. {{6}} - Total Amount with GST
+
+---
+
+## Template 6: Staff - Booking Approved & Payment Link Sent
+
+_Template Name:_ staff*booking_confirmation_payment
+\_Category:* UTILITY
+_Language:_ English
+
+### Message:
+
+_Booking Approved_
+
+Customer: {{1}}
+Exhibition: {{2}}
+Allotted Stalls: {{3}}
+
+Booking Code: {{4}}
+Total Area: {{5}} sq m
+Amount: ₹{{6}}
+Payment Due: {{7}}
+
+Payment Link: {{8}}
+
+Status: Payment Pending
+Payment Deadline: {{9}}
+
+_SGCCI Admin System_
+
+### Variables:
+
+1. {{1}} - Contact Person Name
+2. {{2}} - Exhibition Title
+3. {{3}} - Allotted Stalls (comma-separated list)
+4. {{4}} - Booking Code
+5. {{5}} - Total Area
+6. {{6}} - Total Amount with GST
+7. {{7}} - Payment Due Date
+8. {{8}} - Payment Link URL
+9. {{9}} - Payment Due Date (repeated)
+
+---
+
+## Template 7: Staff - Payment Received
+
+_Template Name:_ staff*payment_success
+\_Category:* UTILITY
+_Language:_ English
+
+### Message:
+
+_Payment Received_
+
+Customer: {{1}}
+Exhibition: {{2}}
+Booking Code: {{3}}
+Amount Paid: ₹{{4}}
+Payment Date: {{5}}
+
+Confirmed Stalls: {{6}}
+
+Status: Payment Complete
+Next Step: Process stall allocation and send confirmation documents.
+
+_SGCCI Admin System_
+
+### Variables:
+
+1. {{1}} - Contact Person Name
+2. {{2}} - Exhibition Title
+3. {{3}} - Booking Code
+4. {{4}} - Amount Paid
+5. {{5}} - Payment Date
+6. {{6}} - Confirmed Stalls (comma-separated list)
+
+---
