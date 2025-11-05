@@ -269,11 +269,72 @@ class Show extends Component
         $this->dispatch('booking-updated');
     }
 
+    public function reEnableExpiredBooking(): void
+    {
+        // Only admin or super admin can re-enable expired bookings
+        if (! Auth::user()->isAdmin()) {
+            Flux::toast(
+                heading: 'Unauthorized',
+                variant: 'danger',
+                text: 'Only admin can re-enable expired bookings.'
+            );
+
+            return;
+        }
+
+        // Only expired bookings can be re-enabled
+        if ($this->booking->status !== BookingStatus::Expired) {
+            Flux::toast(
+                heading: 'Invalid Status',
+                variant: 'danger',
+                text: 'Only expired bookings can be re-enabled.'
+            );
+
+            return;
+        }
+
+        // Extend payment due date by 3 more days
+        $newPaymentDueAt = now()->addDays(3);
+
+        $this->booking->update([
+            'status' => BookingStatus::PaymentPending,
+            'payment_due_at' => $newPaymentDueAt,
+            'payment_link_sent_at' => now(),
+        ]);
+
+        // Send WhatsApp notification with extended payment link
+        if (config('services.whatsapp.enabled')) {
+            SendWhatsAppCampaign::dispatch(
+                campaignName: 'booking_confirmationpayment',
+                phoneCode: $this->booking->phone_code,
+                phoneNumber: $this->booking->phone_number,
+                templateParams: [
+                    $this->booking->contact_person,                          // {{1}} Contact Person Name
+                    $this->booking->exhibition->title,                       // {{2}} Exhibition Title
+                    implode(', ', $this->booking->selected_stalls),          // {{3}} Allotted Stalls
+                    $this->booking->booking_code,                            // {{4}} Booking Code
+                    number_format($this->booking->total_area, 0),            // {{5}} Total Area
+                    number_format($this->booking->total_with_gst, 2),        // {{6}} Total Amount with GST
+                    $newPaymentDueAt->format('M d, Y'),                      // {{7}} Payment Due Date (first)
+                    $this->booking->payment_link,                            // {{8}} Payment Link URL
+                    $newPaymentDueAt->format('M d, Y'),                      // {{9}} Payment Due Date (repeated)
+                ]
+            );
+        }
+
+        Flux::toast(
+            heading: 'Booking Re-enabled!',
+            variant: 'success',
+            text: 'The expired booking has been re-enabled and payment link sent to customer.'
+        );
+        $this->dispatch('booking-updated');
+    }
+
     protected function generatePaymentLink(): string
     {
         // In a real application, you would integrate with a payment gateway
         // For now, return a placeholder URL
-        return config('app.url').'/payment/'.$this->booking->booking_code;
+        return config('app.url') . '/payment/' . $this->booking->booking_code;
     }
 
     public function render()
