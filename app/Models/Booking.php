@@ -6,6 +6,7 @@ use App\BookingStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
 
 class Booking extends Model
 {
@@ -39,6 +40,11 @@ class Booking extends Model
         'price_after_discount',
         'gst_amount',
         'total_with_gst',
+        'amount_paid',
+        'remaining_amount',
+        'partial_payment_deadline',
+        'last_payment_reminder_sent_at',
+        'payment_history',
         'status',
         'is_manual_block',
         'blocked_by',
@@ -75,6 +81,7 @@ class Booking extends Model
             'product_profile' => 'array',
             'participation_years' => 'array',
             'selected_stalls' => 'array',
+            'payment_history' => 'array',
             'has_exhibited_before' => 'boolean',
             'is_sgcci_member' => 'boolean',
             'is_manual_block' => 'boolean',
@@ -86,6 +93,8 @@ class Booking extends Model
             'price_after_discount' => 'decimal:2',
             'gst_amount' => 'decimal:2',
             'total_with_gst' => 'decimal:2',
+            'amount_paid' => 'decimal:2',
+            'remaining_amount' => 'decimal:2',
             'payment_amount' => 'decimal:2',
             'payment_response' => 'array',
             'status' => BookingStatus::class,
@@ -97,6 +106,8 @@ class Booking extends Model
             'payment_due_at' => 'datetime',
             'payment_completed_at' => 'datetime',
             'payment_initiated_at' => 'datetime',
+            'partial_payment_deadline' => 'date',
+            'last_payment_reminder_sent_at' => 'datetime',
         ];
     }
 
@@ -125,6 +136,17 @@ class Booking extends Model
             $booking->price_after_discount = $pricing['price_after_discount'];
             $booking->gst_amount = $pricing['gst_amount'];
             $booking->total_with_gst = $pricing['total_with_gst'];
+
+            // Initialize part payment fields
+            $booking->amount_paid = $booking->amount_paid ?? 0;
+            $booking->remaining_amount = $pricing['total_with_gst'] - ($booking->amount_paid ?? 0);
+        });
+
+        static::updating(function ($booking) {
+            // If total_with_gst or amount_paid changed, recalculate remaining_amount
+            if ($booking->isDirty('total_with_gst') || $booking->isDirty('amount_paid')) {
+                $booking->remaining_amount = $booking->total_with_gst - $booking->amount_paid;
+            }
         });
     }
 
@@ -296,7 +318,7 @@ class Booking extends Model
                     'width' => $size['width'],
                     'height' => $size['height'],
                     'area' => $size['area'],
-                    'size_display' => $size['width'].' x '.$size['height'],
+                    'size_display' => $size['width'] . ' x ' . $size['height'],
                     'price' => $size['area'] * $pricePerSqm,
                 ];
             } else {
@@ -320,7 +342,7 @@ class Booking extends Model
      */
     public function isPaymentCompleted(): bool
     {
-        return $this->payment_completed_at !== null;
+        return $this->payment_completed_at !== null || (float) $this->remaining_amount <= 0;
     }
 
     /**
@@ -329,6 +351,112 @@ class Booking extends Model
     public function isPaymentPending(): bool
     {
         return in_array($this->status, [BookingStatus::Allotted, BookingStatus::PaymentPending]) && ! $this->isPaymentCompleted();
+    }
+
+    /**
+     * Check if booking has partial payment
+     */
+    public function hasPartialPayment(): bool
+    {
+        return $this->amount_paid > 0 && $this->remaining_amount > 0;
+    }
+
+    /**
+     * Calculate payment percentage completed
+     */
+    public function getPaymentPercentage(): float
+    {
+        if ($this->total_with_gst <= 0) {
+            return 0;
+        }
+
+        return ($this->amount_paid / $this->total_with_gst) * 100;
+    }
+
+    /**
+     * Check if partial payment deadline is approaching (within 3 days)
+     */
+    public function isPaymentDeadlineApproaching(): bool
+    {
+        if (! $this->partial_payment_deadline || $this->isPaymentCompleted()) {
+            return false;
+        }
+
+        $daysUntilDeadline = now()->diffInDays($this->partial_payment_deadline, false);
+
+        return $daysUntilDeadline <= 3 && $daysUntilDeadline >= 0;
+    }
+
+    /**
+     * Check if payment deadline has passed
+     */
+    public function isPaymentOverdue(): bool
+    {
+        if (! $this->partial_payment_deadline || $this->isPaymentCompleted()) {
+            return false;
+        }
+
+        return now()->isAfter($this->partial_payment_deadline);
+    }
+
+    /**
+     * Record a payment
+     */
+    public function recordPayment(float $amount, string $method = 'manual', ?string $transactionId = null, array $additionalData = []): void
+    {
+        $paymentRecord = [
+            'amount' => $amount,
+            'method' => $method,
+            'transaction_id' => $transactionId,
+            'recorded_at' => now()->toDateTimeString(),
+            'recorded_by' => Auth::id(),
+            ...$additionalData,
+        ];
+
+        $history = $this->payment_history ?? [];
+        $history[] = $paymentRecord;
+
+        $newAmountPaid = $this->amount_paid + $amount;
+        $newRemainingAmount = max(0, $this->total_with_gst - $newAmountPaid);
+
+        $updateData = [
+            'amount_paid' => $newAmountPaid,
+            'remaining_amount' => $newRemainingAmount,
+            'payment_history' => $history,
+        ];
+
+        // If payment is now complete
+        if ($newRemainingAmount <= 0) {
+            $updateData['payment_completed_at'] = now();
+            $updateData['status'] = BookingStatus::Allotted;
+            $updateData['payment_method'] = $method;
+            if ($transactionId) {
+                $updateData['payment_transaction_id'] = $transactionId;
+            }
+        }
+
+        $this->update($updateData);
+    }
+
+    /**
+     * Scope to get bookings with pending payments approaching deadline
+     */
+    public function scopePaymentDeadlineApproaching($query)
+    {
+        return $query->where('remaining_amount', '>', 0)
+            ->whereNotNull('partial_payment_deadline')
+            ->whereDate('partial_payment_deadline', '<=', now()->addDays(3))
+            ->whereDate('partial_payment_deadline', '>=', now());
+    }
+
+    /**
+     * Scope to get bookings with overdue payments
+     */
+    public function scopePaymentOverdue($query)
+    {
+        return $query->where('remaining_amount', '>', 0)
+            ->whereNotNull('partial_payment_deadline')
+            ->whereDate('partial_payment_deadline', '<', now());
     }
 
     /**

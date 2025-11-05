@@ -18,6 +18,8 @@ return new class extends Migration
 
             // Company & Contact Information
             $table->string('brand_name');
+            $table->string('facia_name')->nullable();
+            $table->string('trophy_name')->nullable();
             $table->string('contact_person');
             $table->string('phone_code', 10);
             $table->string('phone_number', 20);
@@ -43,6 +45,13 @@ return new class extends Migration
             $table->decimal('price_after_discount', 10, 2)->default(0);
             $table->decimal('gst_amount', 10, 2);
             $table->decimal('total_with_gst', 10, 2);
+
+            // Part Payment Tracking
+            $table->decimal('amount_paid', 10, 2)->default(0);
+            $table->decimal('remaining_amount', 10, 2)->default(0);
+            $table->date('partial_payment_deadline')->nullable();
+            $table->timestamp('last_payment_reminder_sent_at')->nullable();
+            $table->json('payment_history')->nullable();
 
             // Status & Workflow
             $table->string('status')->default('pending_approval');

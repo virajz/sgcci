@@ -132,8 +132,102 @@
                             ₹{{ number_format((float) $booking->total_with_gst, 2) }}
                         </span>
                     </div>
+
+                    {{-- Payment Status Section --}}
+                    @if (
+                        $booking->amount_paid > 0 ||
+                            $booking->status === \App\BookingStatus::PaymentPending ||
+                            $booking->status === \App\BookingStatus::Allotted)
+                        <flux:separator />
+
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-zinc-600 dark:text-zinc-400">Amount Paid:</span>
+                                <span class="font-semibold text-green-600 dark:text-green-400">
+                                    ₹{{ number_format((float) $booking->amount_paid, 2) }}
+                                </span>
+                            </div>
+
+                            @if ($booking->remaining_amount > 0)
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-zinc-600 dark:text-zinc-400">Remaining Amount:</span>
+                                    <span class="font-semibold text-orange-600 dark:text-orange-400">
+                                        ₹{{ number_format((float) $booking->remaining_amount, 2) }}
+                                    </span>
+                                </div>
+
+                                @if ($booking->partial_payment_deadline)
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-zinc-600 dark:text-zinc-400">Payment Deadline:</span>
+                                        <span
+                                            class="font-medium {{ $booking->isPaymentOverdue() ? 'text-red-600 dark:text-red-400' : 'text-zinc-900 dark:text-zinc-100' }}">
+                                            {{ $booking->partial_payment_deadline->format('M d, Y') }}
+                                            @if ($booking->isPaymentOverdue())
+                                                <flux:badge color="red" size="sm" class="ml-1">Overdue
+                                                </flux:badge>
+                                            @elseif ($booking->isPaymentDeadlineApproaching())
+                                                <flux:badge color="orange" size="sm" class="ml-1">Due Soon
+                                                </flux:badge>
+                                            @endif
+                                        </span>
+                                    </div>
+                                @endif
+                            @endif
+
+                            {{-- Payment Progress Bar --}}
+                            <div>
+                                <div class="flex items-center justify-between mb-1 text-xs">
+                                    <span class="text-zinc-600 dark:text-zinc-400">Payment Progress</span>
+                                    <span class="font-medium">{{ round($booking->getPaymentPercentage(), 1) }}%</span>
+                                </div>
+                                <div class="h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+                                    <div class="h-full transition-all {{ $booking->isPaymentCompleted() ? 'bg-green-500' : 'bg-blue-500' }}"
+                                        style="width: {{ min(100, $booking->getPaymentPercentage()) }}%">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </flux:card>
+
+            {{-- Payment History --}}
+            @if ($booking->payment_history && count($booking->payment_history) > 0)
+                <flux:card>
+                    <flux:heading size="lg" class="mb-4">Payment History</flux:heading>
+                    <div class="space-y-3">
+                        @foreach ($booking->payment_history as $payment)
+                            <div class="pb-3 border-b last:border-0 dark:border-zinc-700">
+                                <div class="flex items-start justify-between mb-1">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <flux:badge variant="solid" color="green" size="sm">
+                                                ₹{{ number_format($payment['amount'], 2) }}
+                                            </flux:badge>
+                                            <flux:badge variant="outline" size="sm">
+                                                {{ ucwords(str_replace('_', ' ', $payment['method'])) }}
+                                            </flux:badge>
+                                        </div>
+                                        @if (isset($payment['transaction_id']) && $payment['transaction_id'])
+                                            <flux:text class="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+                                                Ref: {{ $payment['transaction_id'] }}
+                                            </flux:text>
+                                        @endif
+                                        @if (isset($payment['notes']) && $payment['notes'])
+                                            <flux:text class="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+                                                {{ $payment['notes'] }}
+                                            </flux:text>
+                                        @endif
+                                    </div>
+                                </div>
+                                <flux:text class="text-xs text-zinc-500">
+                                    {{ \Carbon\Carbon::parse($payment['recorded_at'])->format('M d, Y h:i A') }}
+                                </flux:text>
+                            </div>
+                        @endforeach
+                    </div>
+                </flux:card>
+            @endif
 
             {{-- Additional Information --}}
             <flux:card>
@@ -209,14 +303,7 @@
                             Payment link has been sent. Waiting for customer payment confirmation.
                         </flux:callout>
 
-                        @if (auth()->user()->isSuperAdmin())
-                            <flux:button wire:click="markPaymentCompleted" variant="primary" class="w-full"
-                                icon="check" iconVariant="outline" wire:loading.attr="disabled">
-                                <span wire:loading.remove wire:target="markPaymentCompleted">Mark Payment as
-                                    Completed</span>
-                                <span wire:loading wire:target="markPaymentCompleted">Processing...</span>
-                            </flux:button>
-                        @endif
+                        <livewire:admin.inquiries.record-payment :booking="$booking" :key="'record-payment-' . $booking->id" />
 
                         <flux:button x-data
                             x-on:click="navigator.clipboard.writeText('{{ $booking->payment_link }}').then(() => {

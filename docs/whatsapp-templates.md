@@ -172,6 +172,82 @@ Best regards,
 
 ---
 
+## Template 5: Partial Payment Received
+
+**Template Name:** `partial_payment_received`
+**Category:** UTILITY
+**Language:** English
+
+### Message:
+
+```
+Hello {{1}},
+
+Thank you for your payment! We have received ₹{{2}} for your booking.
+
+*Payment Status:*
+📋 Booking Code: *{{3}}*
+💰 Remaining Amount: ₹{{4}}
+📅 Final Payment Due: {{5}}
+
+⚠️ *Important:* Please complete the remaining payment by {{5}} to confirm your booking.
+
+For any queries, contact us or reply to this message.
+
+Thank you,
+*SGCCI Team*
+```
+
+### Variables:
+
+1. `{{1}}` - Contact Person Name
+2. `{{2}}` - Amount Paid (formatted)
+3. `{{3}}` - Booking Code
+4. `{{4}}` - Remaining Amount (formatted)
+5. `{{5}}` - Payment Deadline Date
+
+---
+
+## Template 6: Payment Reminder
+
+**Template Name:** `payment_reminder`
+**Category:** UTILITY
+**Language:** English
+
+### Message:
+
+```
+Hello {{1}},
+
+This is a reminder about your pending payment for booking *{{2}}*.
+
+*Payment Details:*
+💰 Remaining Amount: ₹{{3}}
+📅 Payment Deadline: {{4}}
+⏰ Days Remaining: {{5}}
+
+*Your Stalls:*
+{{6}}
+
+⚠️ *Action Required:* Please complete the payment to secure your booking.
+
+For assistance, contact us or reply to this message.
+
+Best regards,
+*SGCCI Team*
+```
+
+### Variables:
+
+1. `{{1}}` - Contact Person Name
+2. `{{2}}` - Booking Code
+3. `{{3}}` - Remaining Amount (formatted)
+4. `{{4}}` - Payment Deadline Date
+5. `{{5}}` - Days Until Deadline
+6. `{{6}}` - Allotted Stalls (formatted list)
+
+---
+
 ## Implementation Notes
 
 ### WhatsApp Business API Format

@@ -8,6 +8,7 @@ use App\Models\Booking;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 #[Layout('components.layouts.app')]
@@ -27,6 +28,12 @@ class Show extends Component
         }
 
         $this->booking = $booking;
+    }
+
+    #[On('booking-updated')]
+    public function refreshBooking(): void
+    {
+        $this->booking->refresh();
     }
 
     public function approve(): void
