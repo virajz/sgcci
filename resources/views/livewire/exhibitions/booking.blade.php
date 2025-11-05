@@ -310,12 +310,21 @@
                     </div>
 
                     {{-- Sticky submit button --}}
-                    <div class="flex justify-end pt-4 mt-6 lg:flex-shrink-0 lg:sticky lg:bottom-0">
-                        <flux:button type="submit" variant="primary" class="w-full lg:w-fit"
-                            wire:loading.attr="disabled">
-                            <span wire:loading.remove wire:target="save">Continue</span>
-                            <span wire:loading wire:target="save">Submitting...</span>
-                        </flux:button>
+                    <div class="pt-4 mt-6 space-y-3 lg:flex-shrink-0 lg:sticky lg:bottom-0">
+                        <p class="text-xs text-center text-zinc-600 dark:text-zinc-400">
+                            By continuing, you agree to the terms in the
+                            <a href="{{ asset('Application-Form-Auto-Expo-26.pdf') }}" target="_blank"
+                                class="underline transition-colors hover:text-primary-600 dark:hover:text-primary-400">
+                                Application Form
+                            </a>
+                        </p>
+                        <div class="flex justify-end">
+                            <flux:button type="submit" variant="primary" class="w-full lg:w-fit"
+                                wire:loading.attr="disabled">
+                                <span wire:loading.remove wire:target="save">Continue</span>
+                                <span wire:loading wire:target="save">Submitting...</span>
+                            </flux:button>
+                        </div>
                     </div>
                 </form>
             </section>

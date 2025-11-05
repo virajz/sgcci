@@ -140,7 +140,11 @@
 
         <flux:callout variant="info" class="mb-6">
             <flux:text>
-                Please review all details carefully. Once confirmed, you will receive a booking confirmation code.
+                By confirming, you agree to the terms and conditions in the
+                <a href="{{ asset('Application-Form-Auto-Expo-26.pdf') }}" target="_blank"
+                    class="underline transition-colors hover:text-primary-600 dark:hover:text-primary-400">
+                    Application Form
+                </a>
             </flux:text>
         </flux:callout>
 
