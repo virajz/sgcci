@@ -28,6 +28,8 @@ class Booking extends Component
 
     public string $city = 'Surat';
 
+    public string $customCity = '';
+
     public ?string $gstNumber = null;
 
     public array $productProfile = [];
@@ -126,6 +128,9 @@ class Booking extends Component
     {
         $validated = $this->validate((new StoreBookingRequest)->rules());
 
+        // Use custom city if "Others" is selected
+        $cityToSave = $this->city === 'Others' ? $this->customCity : $this->city;
+
         // Generate a unique token to prevent duplicate submissions
         $bookingToken = \Illuminate\Support\Str::uuid()->toString();
 
@@ -138,7 +143,8 @@ class Booking extends Component
             'phoneCode' => $this->phoneCode,
             'phoneNumber' => $this->phoneNumber,
             'email' => $this->email,
-            'city' => $this->city,
+            'city' => $cityToSave,
+            'customCity' => $this->customCity,
             'gstNumber' => $this->gstNumber,
             'productProfile' => $this->productProfile,
             'hasExhibitedBefore' => $this->hasExhibitedBefore,
@@ -166,6 +172,7 @@ class Booking extends Component
             $this->phoneNumber = $sessionData['phoneNumber'] ?? '';
             $this->email = $sessionData['email'] ?? '';
             $this->city = $sessionData['city'] ?? 'Surat';
+            $this->customCity = $sessionData['customCity'] ?? '';
             $this->gstNumber = $sessionData['gstNumber'] ?? null;
             $this->productProfile = $sessionData['productProfile'] ?? [];
             $this->hasExhibitedBefore = $sessionData['hasExhibitedBefore'] ?? false;

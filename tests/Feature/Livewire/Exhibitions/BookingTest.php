@@ -86,3 +86,40 @@ it('restores selected stalls from session when returning from confirmation', fun
         ->assertSee('35')
         ->assertSee('37');
 });
+
+it('requires custom city when Others is selected', function () {
+    $exhibition = Exhibition::factory()->create();
+
+    Livewire::test(Booking::class, ['exhibition' => $exhibition])
+        ->set('brandName', 'Test Motors')
+        ->set('contactPerson', 'John Doe')
+        ->set('phoneNumber', '98765 43210')
+        ->set('email', 'john@test.com')
+        ->set('city', 'Others')
+        ->set('customCity', '')
+        ->set('productProfile', ['4-wheelers'])
+        ->set('spaceType', 'standard')
+        ->set('selectedStalls', ['A1'])
+        ->call('save')
+        ->assertHasErrors(['customCity']);
+});
+
+it('saves custom city when Others is selected', function () {
+    $exhibition = Exhibition::factory()->create();
+
+    Livewire::test(Booking::class, ['exhibition' => $exhibition])
+        ->set('brandName', 'Test Motors')
+        ->set('contactPerson', 'John Doe')
+        ->set('phoneNumber', '98765 43210')
+        ->set('email', 'john@test.com')
+        ->set('city', 'Others')
+        ->set('customCity', 'Jaipur')
+        ->set('productProfile', ['4-wheelers'])
+        ->set('spaceType', 'standard')
+        ->set('selectedStalls', ['A1'])
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertRedirect();
+
+    expect(session('booking_data.city'))->toBe('Jaipur');
+});

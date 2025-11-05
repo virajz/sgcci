@@ -110,13 +110,25 @@
                                     <flux:input wire:model="email" type="email" label="Email"
                                         placeholder="you@example.com" error="{{ $errors->first('email') }}" />
 
-                                    <flux:select wire:model="city" variant="listbox" searchable label="Select City">
+                                    <flux:select wire:model.live="city" variant="listbox" searchable label="Select City">
                                         <flux:select.option>Ahmedabad</flux:select.option>
+                                        <flux:select.option>Bangalore</flux:select.option>
                                         <flux:select.option>Baroda</flux:select.option>
+                                        <flux:select.option>Chennai</flux:select.option>
                                         <flux:select.option>Delhi</flux:select.option>
+                                        <flux:select.option>Hyderabad</flux:select.option>
+                                        <flux:select.option>Kolkata</flux:select.option>
                                         <flux:select.option>Mumbai</flux:select.option>
+                                        <flux:select.option>Pune</flux:select.option>
                                         <flux:select.option selected>Surat</flux:select.option>
+                                        <flux:select.option>Others</flux:select.option>
                                     </flux:select>
+
+                                    @if ($city === 'Others')
+                                        <flux:input wire:model="customCity" label="Enter Your City"
+                                            placeholder="Enter city name"
+                                            error="{{ $errors->first('customCity') }}" />
+                                    @endif
                                 </div>
                             </div>
                         </flux:fieldset>
