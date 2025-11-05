@@ -36,6 +36,7 @@ class StoreBookingRequest extends FormRequest
             'participationYears.*' => ['string'],
             'isSgcciMember' => ['boolean'],
             'membershipType' => ['nullable', 'string'],
+            'spaceType' => ['required', 'string', 'in:standard,raw'],
             'selectedStalls' => ['required', 'array', 'min:1'],
             'selectedStalls.*' => ['string'],
         ];
@@ -57,6 +58,8 @@ class StoreBookingRequest extends FormRequest
             'city.required' => 'Please select a city.',
             'productProfile.required' => 'Please select at least one product profile.',
             'productProfile.min' => 'Please select at least one product profile.',
+            'spaceType.required' => 'Please select a space type.',
+            'spaceType.in' => 'Invalid space type selected.',
             'selectedStalls.required' => 'Please select at least one stall.',
             'selectedStalls.min' => 'Please select at least one stall.',
         ];

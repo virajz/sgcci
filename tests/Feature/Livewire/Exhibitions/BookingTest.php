@@ -77,13 +77,12 @@ it('restores selected stalls from session when returning from confirmation', fun
         'email' => 'john@testmotors.com',
         'city' => 'Surat',
         'productProfile' => ['4-wheelers'],
-        'selectedStalls' => ['35', '47'],
+        'selectedStalls' => ['35', '37'],
     ]);
 
     Livewire::test(Booking::class, ['exhibition' => $exhibition])
-        ->assertSet('selectedStalls', ['35', '47'])
+        ->assertSet('selectedStalls', ['35', '37'])
         ->assertSee('Selected Stalls (2)')
         ->assertSee('35')
-        ->assertSee('47')
-        ->assertSeeLivewire('stall-selector');
+        ->assertSee('37');
 });

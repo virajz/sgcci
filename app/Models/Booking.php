@@ -28,6 +28,7 @@ class Booking extends Model
         'is_sgcci_member',
         'membership_type',
         'selected_stalls',
+        'space_type',
         'total_area',
         'price_per_sqm',
         'total_price',
@@ -63,6 +64,7 @@ class Booking extends Model
 
     protected $attributes = [
         'status' => 'pending_approval',
+        'space_type' => 'standard',
     ];
 
     protected function casts(): array
@@ -109,7 +111,8 @@ class Booking extends Model
                 $booking->has_exhibited_before ?? false,
                 $booking->participation_years ?? [],
                 $booking->is_sgcci_member ?? false,
-                $booking->membership_type
+                $booking->membership_type,
+                $booking->space_type ?? 'standard'
             );
 
             $booking->total_area = $pricing['total_area'];
@@ -186,11 +189,18 @@ class Booking extends Model
         bool $hasExhibitedBefore = false,
         array $participationYears = [],
         bool $isSgcciMember = false,
-        ?string $membershipType = null
+        ?string $membershipType = null,
+        string $spaceType = 'standard'
     ): array {
         $stallSizes = static::getStallSizes();
         $totalArea = 0;
-        $pricePerSqm = 750; // ₹750 per square meter for 3x3 stalls
+
+        // Pricing based on space type
+        $pricePerSqm = match ($spaceType) {
+            'raw' => 4500,
+            'standard' => 5000,
+            default => 5000,
+        };
 
         foreach ($selectedStalls as $stallNumber) {
             if (isset($stallSizes[$stallNumber])) {
@@ -263,10 +273,17 @@ class Booking extends Model
         return $stallSizes;
     }
 
-    public static function getStallLineItems(array $selectedStalls): array
+    public static function getStallLineItems(array $selectedStalls, string $spaceType = 'standard'): array
     {
         $stallSizes = static::getStallSizes();
-        $pricePerSqm = 750;
+
+        // Pricing based on space type
+        $pricePerSqm = match ($spaceType) {
+            'raw' => 4500,
+            'standard' => 5000,
+            default => 5000,
+        };
+
         $lineItems = [];
 
         foreach ($selectedStalls as $stallNumber) {

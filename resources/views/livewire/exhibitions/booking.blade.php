@@ -141,6 +141,25 @@
                         <flux:separator />
 
                         <flux:fieldset>
+                            <flux:legend>Space Type</flux:legend>
+
+                            <div class="space-y-6">
+                                <flux:subheading class="mb-4">Select the type of space you want</flux:subheading>
+                                <flux:radio.group wire:model.live="spaceType" variant="cards" class="grid gap-4">
+                                    <flux:radio value="standard" label="Standard Space - ₹5,000/sq m"
+                                        description="Fully fabricated stall with walls, flooring, and basic amenities" />
+                                    <flux:radio value="raw" label="Raw Space - ₹4,500/sq m"
+                                        description="Open space without fabrication - customize as per your needs" />
+                                </flux:radio.group>
+                                @error('spaceType')
+                                    <flux:error>{{ $message }}</flux:error>
+                                @enderror
+                            </div>
+                        </flux:fieldset>
+
+                        <flux:separator />
+
+                        <flux:fieldset>
                             <flux:legend>Past Participation</flux:legend>
 
                             <div class="space-y-6">

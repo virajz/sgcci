@@ -11,7 +11,7 @@ use Livewire\Component;
 class Dashboard extends Component
 {
     // Total stalls available in the exhibition (based on the map)
-    private const TOTAL_STALLS = 93;
+    private const TOTAL_STALLS = 104;
 
     public function getAvailableStallsProperty(): int
     {
@@ -30,7 +30,7 @@ class Dashboard extends Component
             ])
             ->where('is_manual_block', false)
             ->get()
-            ->flatMap(fn ($booking) => $booking->selected_stalls)
+            ->flatMap(fn($booking) => $booking->selected_stalls)
             ->unique()
             ->count();
 
@@ -38,7 +38,7 @@ class Dashboard extends Component
         $manualBlockCount = Booking::where('exhibition_id', $exhibition->id)
             ->where('is_manual_block', true)
             ->get()
-            ->flatMap(fn ($booking) => $booking->selected_stalls)
+            ->flatMap(fn($booking) => $booking->selected_stalls)
             ->unique()
             ->count();
 

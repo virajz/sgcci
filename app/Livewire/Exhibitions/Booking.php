@@ -40,6 +40,8 @@ class Booking extends Component
 
     public string $membershipType = '';
 
+    public string $spaceType = 'standard';
+
     public function getExhibitionProperty(): Exhibition
     {
         return Exhibition::findOrFail($this->exhibitionId);
@@ -50,9 +52,15 @@ class Booking extends Component
     public function getPricingProperty(): array
     {
         if (empty($this->selectedStalls)) {
+            $defaultPricePerSqm = match ($this->spaceType) {
+                'raw' => 4500,
+                'standard' => 5000,
+                default => 5000,
+            };
+
             return [
                 'total_area' => 0,
-                'price_per_sqm' => 750,
+                'price_per_sqm' => $defaultPricePerSqm,
                 'total_price' => 0,
                 'discount_percentage' => 0,
                 'discount_amount' => 0,
@@ -67,7 +75,8 @@ class Booking extends Component
             $this->hasExhibitedBefore,
             $this->participationYears,
             $this->isSgcciMember,
-            $this->membershipType
+            $this->membershipType,
+            $this->spaceType
         );
     }
 
@@ -107,6 +116,12 @@ class Booking extends Component
         unset($this->pricing);
     }
 
+    public function updatedSpaceType(): void
+    {
+        // Force pricing recalculation when space type changes
+        unset($this->pricing);
+    }
+
     public function save(): void
     {
         $validated = $this->validate((new StoreBookingRequest)->rules());
@@ -130,6 +145,7 @@ class Booking extends Component
             'participationYears' => $this->participationYears,
             'isSgcciMember' => $this->isSgcciMember,
             'membershipType' => $this->membershipType,
+            'spaceType' => $this->spaceType,
             'selectedStalls' => $this->selectedStalls,
         ]]);
 
@@ -156,6 +172,7 @@ class Booking extends Component
             $this->participationYears = $sessionData['participationYears'] ?? [];
             $this->isSgcciMember = $sessionData['isSgcciMember'] ?? false;
             $this->membershipType = $sessionData['membershipType'] ?? '';
+            $this->spaceType = $sessionData['spaceType'] ?? 'standard';
             $this->selectedStalls = $sessionData['selectedStalls'] ?? [];
         }
     }

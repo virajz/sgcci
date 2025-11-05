@@ -75,6 +75,7 @@ class Confirmation extends Component
             'participation_years' => $this->bookingData['participationYears'],
             'is_sgcci_member' => $this->bookingData['isSgcciMember'],
             'membership_type' => $this->bookingData['membershipType'],
+            'space_type' => $this->bookingData['spaceType'] ?? 'standard',
             'selected_stalls' => $this->bookingData['selectedStalls'],
         ]);
 
@@ -112,15 +113,25 @@ class Confirmation extends Component
             return [];
         }
 
-        return BookingModel::getStallLineItems($this->bookingData['selectedStalls']);
+        return BookingModel::getStallLineItems(
+            $this->bookingData['selectedStalls'],
+            $this->bookingData['spaceType'] ?? 'standard'
+        );
     }
 
     public function getPricingProperty(): array
     {
         if (empty($this->bookingData['selectedStalls'])) {
+            $spaceType = $this->bookingData['spaceType'] ?? 'standard';
+            $defaultPricePerSqm = match ($spaceType) {
+                'raw' => 4500,
+                'standard' => 5000,
+                default => 5000,
+            };
+
             return [
                 'total_area' => 0,
-                'price_per_sqm' => 750,
+                'price_per_sqm' => $defaultPricePerSqm,
                 'total_price' => 0,
                 'discount_percentage' => 0,
                 'discount_amount' => 0,
@@ -135,7 +146,8 @@ class Confirmation extends Component
             $this->bookingData['hasExhibitedBefore'] ?? false,
             $this->bookingData['participationYears'] ?? [],
             $this->bookingData['isSgcciMember'] ?? false,
-            $this->bookingData['membershipType'] ?? null
+            $this->bookingData['membershipType'] ?? null,
+            $this->bookingData['spaceType'] ?? 'standard'
         );
     }
 
