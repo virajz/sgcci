@@ -82,6 +82,10 @@ class PaymentController extends Controller
 
             // Track if this is a new payment completion (to prevent duplicate WhatsApp on refresh)
             $wasAlreadyCompleted = $booking->status === BookingStatus::PaymentCompleted;
+            $previousAmountPaid = (float) $booking->amount_paid;
+
+            // Get the payment amount from the response
+            $paymentAmount = (float) ($responseData['amount'] ?? 0);
 
             // Update booking with payment details
             $updateData = [
@@ -90,17 +94,43 @@ class PaymentController extends Controller
                 'payment_bank_ref_no' => $responseData['bank_ref_no'] ?? null,
                 'payment_method' => $responseData['payment_mode'] ?? 'CCAvenue',
                 'payment_status' => $responseData['order_status'] ?? 'Unknown',
-                'payment_amount' => $responseData['amount'] ?? $booking->total_with_gst,
                 'payment_response' => json_encode($responseData),
-                'payment_completed_at' => $this->ccavenueService->isPaymentSuccessful($responseData) ? now() : null,
             ];
 
-            // Update booking status to PaymentCompleted if payment was successful
+            // If payment was successful, record it
             if ($this->ccavenueService->isPaymentSuccessful($responseData)) {
-                $updateData['status'] = BookingStatus::PaymentCompleted;
+                // Record the payment in history
+                $paymentHistory = $booking->payment_history ?? [];
+                $paymentHistory[] = [
+                    'amount' => $paymentAmount,
+                    'method' => 'CCAvenue',
+                    'transaction_id' => $responseData['tracking_id'] ?? null,
+                    'bank_ref_no' => $responseData['bank_ref_no'] ?? null,
+                    'payment_mode' => $responseData['payment_mode'] ?? null,
+                    'recorded_at' => now()->toDateTimeString(),
+                    'status' => 'success',
+                ];
 
-                // Cancel any older pending bookings for the same stalls to prevent double-booking
-                $this->cancelConflictingBookings($booking);
+                // Update amounts
+                $newAmountPaid = $previousAmountPaid + $paymentAmount;
+                $newRemainingAmount = max(0, (float) $booking->total_with_gst - $newAmountPaid);
+
+                $updateData['amount_paid'] = $newAmountPaid;
+                $updateData['remaining_amount'] = $newRemainingAmount;
+                $updateData['payment_history'] = $paymentHistory;
+                $updateData['payment_amount'] = $paymentAmount;
+
+                // If payment is fully complete
+                if ($newRemainingAmount <= 0) {
+                    $updateData['payment_completed_at'] = now();
+                    $updateData['status'] = BookingStatus::PaymentCompleted;
+
+                    // Cancel any older pending bookings for the same stalls to prevent double-booking
+                    $this->cancelConflictingBookings($booking);
+                } else {
+                    // Partial payment - set status to PaymentPending
+                    $updateData['status'] = BookingStatus::PaymentPending;
+                }
             }
 
             $booking->update($updateData);
@@ -110,6 +140,9 @@ class PaymentController extends Controller
                 'booking_code' => $booking->booking_code,
                 'status' => $responseData['order_status'] ?? 'Unknown',
                 'tracking_id' => $responseData['tracking_id'] ?? null,
+                'amount' => $paymentAmount,
+                'total_paid' => $booking->amount_paid,
+                'remaining' => $booking->remaining_amount,
             ]);
 
             // Send WhatsApp notification ONLY if this is a NEW payment completion (prevent duplicates on refresh)
@@ -117,25 +150,31 @@ class PaymentController extends Controller
                 $this->ccavenueService->isPaymentSuccessful($responseData)
                 && config('services.whatsapp.enabled')
                 && ! $wasAlreadyCompleted
+                && $paymentAmount > 0
             ) {
+                // Determine which WhatsApp template to use
+                $isFullPayment = $booking->remaining_amount <= 0;
+                $campaignName = $isFullPayment ? 'payment_success' : 'partial_payment_success';
+
                 SendWhatsAppCampaign::dispatch(
-                    campaignName: 'payment_success',
+                    campaignName: $campaignName,
                     phoneCode: $booking->phone_code,
                     phoneNumber: $booking->phone_number,
                     templateParams: [
                         $booking->contact_person,                             // {{1}} Contact Person Name
                         $booking->exhibition->title,                          // {{2}} Exhibition Title
                         $booking->booking_code,                               // {{3}} Booking Code
-                        number_format((float) ($responseData['amount'] ?? $booking->total_with_gst), 2), // {{4}} Amount Paid
+                        number_format($paymentAmount, 2),                     // {{4}} Amount Paid
                         now()->format('M d, Y'),                              // {{5}} Payment Date
                         implode(', ', $booking->selected_stalls),             // {{6}} Confirmed Stalls
+                        number_format((float) $booking->remaining_amount, 2), // {{7}} Remaining Amount (for partial)
                     ]
                 );
 
                 // Send WhatsApp notification to staff members
                 \App\Jobs\SendStaffWhatsAppNotifications::dispatch(
                     booking: $booking,
-                    campaignName: 'payment_success'
+                    campaignName: $campaignName
                 );
             }
 
@@ -206,8 +245,8 @@ class PaymentController extends Controller
                 if (! empty($overlappingStalls)) {
                     $booking->update([
                         'status' => BookingStatus::Cancelled,
-                        'rejection_reason' => 'Auto-cancelled: Stalls '.implode(', ', $overlappingStalls).
-                            ' were booked by another customer (Booking #'.$paidBooking->booking_code.').',
+                        'rejection_reason' => 'Auto-cancelled: Stalls ' . implode(', ', $overlappingStalls) .
+                            ' were booked by another customer (Booking #' . $paidBooking->booking_code . ').',
                     ]);
 
                     Log::info('Auto-cancelled conflicting booking', [

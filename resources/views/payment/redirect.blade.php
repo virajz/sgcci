@@ -57,6 +57,22 @@
                     <flux:text class="font-semibold text-black dark:text-white">{{ $booking->brand_name }}</flux:text>
                 </div>
 
+                <div class="flex items-center justify-between py-3 border-b border-zinc-200 dark:border-zinc-700">
+                    <flux:text class="text-zinc-600 dark:text-zinc-400">Total Booking Amount</flux:text>
+                    <flux:text class="font-semibold text-black dark:text-white">
+                        ₹{{ number_format((float) $booking->total_with_gst, 2) }}
+                    </flux:text>
+                </div>
+
+                @if ($booking->amount_paid > 0)
+                    <div class="flex items-center justify-between py-3 border-b border-zinc-200 dark:border-zinc-700">
+                        <flux:text class="text-zinc-600 dark:text-zinc-400">Amount Already Paid</flux:text>
+                        <flux:text class="font-semibold text-green-600 dark:text-green-400">
+                            ₹{{ number_format((float) $booking->amount_paid, 2) }}
+                        </flux:text>
+                    </div>
+                @endif
+
                 @if ($booking->discount_percentage > 0)
                     <div class="flex items-center justify-between py-3 border-b border-zinc-200 dark:border-zinc-700">
                         <flux:text class="text-zinc-600 dark:text-zinc-400">Discount
@@ -68,9 +84,26 @@
                 @endif
 
                 <div class="flex items-center justify-between py-4 pt-6">
-                    <flux:heading size="lg">Amount to Pay</flux:heading>
+                    <div>
+                        <flux:heading size="lg">
+                            @if ($booking->amount_paid > 0)
+                                Remaining Amount
+                            @else
+                                Amount to Pay (50%)
+                            @endif
+                        </flux:heading>
+                        @if ($booking->amount_paid <= 0)
+                            <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">
+                                First payment of 50% is required
+                            </flux:text>
+                        @endif
+                    </div>
                     <flux:heading size="xl" class="text-primary-600 dark:text-primary-400">
-                        ₹{{ number_format((float) $booking->total_with_gst, 2) }}
+                        @php
+                            $paymentAmount =
+                                $booking->amount_paid > 0 ? $booking->remaining_amount : $booking->total_with_gst * 0.5;
+                        @endphp
+                        ₹{{ number_format((float) $paymentAmount, 2) }}
                     </flux:heading>
                 </div>
             </div>
@@ -100,7 +133,7 @@
 
         {{-- Footer Note --}}
         <flux:text class="block mt-4 text-sm text-center text-zinc-500">
-            If you are not redirected automatically within 3 seconds,
+            If you are not redirected automatically within 6 seconds,
             <button onclick="document.redirect.submit()"
                 class="font-medium underline text-primary-600 dark:text-primary-400 hover:text-primary-700">
                 click here
@@ -114,7 +147,7 @@
         // Auto-submit the form after a brief delay
         setTimeout(function() {
             document.redirect.submit();
-        }, 3000);
+        }, 6000);
     </script>
 </body>
 
