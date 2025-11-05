@@ -1,11 +1,11 @@
-<div class="space-y-6">
+<div class="space-y-6" x-data="{ statusFilter: @entangle('statusFilter').live }">
     <div class="flex items-center justify-between mb-6">
         <flux:heading size="xl">Booking Inquiries</flux:heading>
         <livewire:admin.stall-block-manager />
     </div>
 
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <flux:tabs wire:model.live="statusFilter" variant="segmented">
+        <flux:tabs x-model="statusFilter" variant="segmented">
             <flux:tab name="all">All</flux:tab>
             <flux:tab name="pending_approval">Pending</flux:tab>
             <flux:tab name="approved_by_admin">Approved</flux:tab>
@@ -15,8 +15,9 @@
             <flux:tab name="rejected">Rejected</flux:tab>
         </flux:tabs>
 
-        <flux:input wire:model.live.debounce.300ms="search" placeholder="Search by code, brand, contact, or email..."
-            icon="magnifying-glass" iconVariant="outline" class="md:max-w-md" />
+        <flux:input wire:model.live.debounce.300ms="search"
+            placeholder="Search by code, brand, contact, phone, or email..." icon="magnifying-glass"
+            iconVariant="outline" class="md:max-w-md" />
     </div>
 
     <flux:card class="overflow-hidden">
@@ -27,6 +28,7 @@
                         <flux:table.column>Booking Code</flux:table.column>
                         <flux:table.column>Brand Name</flux:table.column>
                         <flux:table.column>Contact Person</flux:table.column>
+                        <flux:table.column>Phone</flux:table.column>
                         <flux:table.column>Stalls</flux:table.column>
                         <flux:table.column>Amount</flux:table.column>
                         <flux:table.column>Status</flux:table.column>
@@ -49,6 +51,10 @@
                                 <flux:table.cell>
                                     <div>{{ $booking->contact_person }}</div>
                                     <div class="text-xs text-zinc-500">{{ $booking->email }}</div>
+                                </flux:table.cell>
+
+                                <flux:table.cell>
+                                    <div class="text-sm">{{ $booking->phone_code }} {{ $booking->phone_number }}</div>
                                 </flux:table.cell>
 
                                 <flux:table.cell>

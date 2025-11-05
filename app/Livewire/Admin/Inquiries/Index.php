@@ -91,14 +91,19 @@ class Index extends Component
 
     public function render()
     {
+        $search = strtolower($this->search);
+        // Remove spaces for phone number search
+        $phoneSearch = str_replace(' ', '', $this->search);
+
         $bookings = Booking::query()
             ->with(['exhibition', 'adminApprovedBy', 'superAdminApprovedBy', 'rejectedBy', 'blockedBy'])
-            ->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('booking_code', 'like', "%{$this->search}%")
-                        ->orWhere('brand_name', 'like', "%{$this->search}%")
-                        ->orWhere('contact_person', 'like', "%{$this->search}%")
-                        ->orWhere('email', 'like', "%{$this->search}%");
+            ->when($this->search, function ($query) use ($search, $phoneSearch) {
+                $query->where(function ($q) use ($search, $phoneSearch) {
+                    $q->whereRaw('LOWER(booking_code) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(brand_name) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(contact_person) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(email) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw("REPLACE(phone_number, ' ', '') LIKE ?", ["%{$phoneSearch}%"]);
                 });
             })
             ->when($this->statusFilter === 'manual_block', function ($query) {

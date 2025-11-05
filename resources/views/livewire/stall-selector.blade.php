@@ -1,5 +1,5 @@
 <div x-data="{
-    selectedStalls: @entangle('selectedStalls'),
+    selectedStalls: @entangle('selectedStalls').live,
     bookedStalls: @js($bookedStalls),
     svgElement: null,
     stallElements: [],
@@ -15,9 +15,20 @@
     toggleStall(stallNumber) {
         // Don't allow selecting reserved or allotted stalls
         if (this.bookedStalls[stallNumber]) {
+            $wire.dispatch('stall-unavailable', { stallNumber });
             return;
         }
-        $wire.toggleStall(stallNumber);
+
+        // Handle selection locally in Alpine for instant feedback
+        const index = this.selectedStalls.indexOf(stallNumber);
+        if (index > -1) {
+            this.selectedStalls.splice(index, 1);
+        } else {
+            this.selectedStalls.push(stallNumber);
+        }
+
+        // Dispatch event for parent components
+        $wire.dispatch('stalls-selected', { selectedStalls: this.selectedStalls });
     },
     isSelected(stallNumber) {
         return this.selectedStalls.includes(stallNumber);

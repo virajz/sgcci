@@ -1,4 +1,8 @@
-<div class="lg:h-screen lg:flex lg:flex-col">
+<div class="lg:h-screen lg:flex lg:flex-col" x-data="{
+    city: @entangle('city').live,
+    hasExhibitedBefore: @entangle('hasExhibitedBefore').live,
+    isSgcciMember: @entangle('isSgcciMember').live
+}">
     <flux:main class="w-full p-4 mx-auto space-y-6 sm:p-6 lg:p-8 lg:flex lg:flex-col lg:h-full lg:overflow-hidden">
         <section class="flex items-center justify-between mb-6 lg:flex-shrink-0">
             <img src="{{ asset('brand/sgcci-logo-fixed.svg') }}" alt="SGCCI Logo" class="w-full h-auto max-w-16">
@@ -110,7 +114,7 @@
                                     <flux:input wire:model="email" type="email" label="Email"
                                         placeholder="you@example.com" error="{{ $errors->first('email') }}" />
 
-                                    <flux:select wire:model.live="city" variant="listbox" searchable label="Select City">
+                                    <flux:select x-model="city" variant="listbox" searchable label="Select City">
                                         <flux:select.option>Ahmedabad</flux:select.option>
                                         <flux:select.option>Bangalore</flux:select.option>
                                         <flux:select.option>Baroda</flux:select.option>
@@ -124,11 +128,10 @@
                                         <flux:select.option>Others</flux:select.option>
                                     </flux:select>
 
-                                    @if ($city === 'Others')
+                                    <div x-show="city === 'Others'" x-cloak>
                                         <flux:input wire:model="customCity" label="Enter Your City"
-                                            placeholder="Enter city name"
-                                            error="{{ $errors->first('customCity') }}" />
-                                    @endif
+                                            placeholder="Enter city name" error="{{ $errors->first('customCity') }}" />
+                                    </div>
                                 </div>
                             </div>
                         </flux:fieldset>
@@ -177,9 +180,9 @@
                             <div class="space-y-6">
                                 <div class="flex items-center justify-between">
                                     <flux:heading size="lg">Have you exhibited before?</flux:heading>
-                                    <flux:switch wire:model.live="hasExhibitedBefore"
+                                    <flux:switch x-model="hasExhibitedBefore"
                                         x-on:change="$nextTick(() => {
-                                            if ($wire.hasExhibitedBefore) {
+                                            if (hasExhibitedBefore) {
                                                 setTimeout(() => {
                                                     const container = $refs.scrollContainer;
                                                     const element = $refs.participationSection;
@@ -193,20 +196,18 @@
                                         })" />
                                 </div>
 
-                                @if ($hasExhibitedBefore)
-                                    <div x-ref="participationSection">
-                                        <flux:subheading class="mb-4">Select year(s)</flux:subheading>
-                                        <flux:checkbox.group wire:model.live="participationYears" variant="cards"
-                                            class="grid grid-cols-2 gap-4 lg:grid-cols-3">
-                                            <flux:checkbox value="2011" label="2011" />
-                                            <flux:checkbox value="2013" label="2013" />
-                                            <flux:checkbox value="2015" label="2015" />
-                                            <flux:checkbox value="2017" label="2017" />
-                                            <flux:checkbox value="2019" label="2019" />
-                                            <flux:checkbox value="2024" label="2024" />
-                                        </flux:checkbox.group>
-                                    </div>
-                                @endif
+                                <div x-show="hasExhibitedBefore" x-cloak x-ref="participationSection">
+                                    <flux:subheading class="mb-4">Select year(s)</flux:subheading>
+                                    <flux:checkbox.group wire:model.live="participationYears" variant="cards"
+                                        class="grid grid-cols-2 gap-4 lg:grid-cols-3">
+                                        <flux:checkbox value="2011" label="2011" />
+                                        <flux:checkbox value="2013" label="2013" />
+                                        <flux:checkbox value="2015" label="2015" />
+                                        <flux:checkbox value="2017" label="2017" />
+                                        <flux:checkbox value="2019" label="2019" />
+                                        <flux:checkbox value="2024" label="2024" />
+                                    </flux:checkbox.group>
+                                </div>
                             </div>
                         </flux:fieldset>
 
@@ -218,9 +219,9 @@
                             <div class="space-y-6">
                                 <div class="flex items-center justify-between">
                                     <flux:heading size="lg">Are you an SGCCI member?</flux:heading>
-                                    <flux:switch wire:model.live="isSgcciMember"
+                                    <flux:switch x-model="isSgcciMember"
                                         x-on:change="$nextTick(() => {
-                                            if ($wire.isSgcciMember) {
+                                            if (isSgcciMember) {
                                                 setTimeout(() => {
                                                     const container = $refs.scrollContainer;
                                                     const element = $refs.membershipSection;
@@ -234,21 +235,19 @@
                                         })" />
                                 </div>
 
-                                @if ($isSgcciMember)
-                                    <div x-ref="membershipSection">
-                                        <flux:subheading class="mb-4">Select membership type</flux:subheading>
-                                        <flux:radio.group wire:model.live="membershipType" variant="cards"
-                                            class="grid gap-4">
-                                            <flux:radio value="premium-member" label="Premium Member" />
-                                            <flux:radio value="platinum-member" label="Platinum Member" />
-                                            <flux:radio value="gold-member" label="Gold Member" />
-                                            <flux:radio value="chief-patron" label="Chief Patron" />
-                                            <flux:radio value="patron-member" label="Patron Member" />
-                                            <flux:radio value="life-member" label="Life Member" />
-                                            <flux:radio value="company-member" label="Company Member" />
-                                        </flux:radio.group>
-                                    </div>
-                                @endif
+                                <div x-show="isSgcciMember" x-cloak x-ref="membershipSection">
+                                    <flux:subheading class="mb-4">Select membership type</flux:subheading>
+                                    <flux:radio.group wire:model.live="membershipType" variant="cards"
+                                        class="grid gap-4">
+                                        <flux:radio value="premium-member" label="Premium Member" />
+                                        <flux:radio value="platinum-member" label="Platinum Member" />
+                                        <flux:radio value="gold-member" label="Gold Member" />
+                                        <flux:radio value="chief-patron" label="Chief Patron" />
+                                        <flux:radio value="patron-member" label="Patron Member" />
+                                        <flux:radio value="life-member" label="Life Member" />
+                                        <flux:radio value="company-member" label="Company Member" />
+                                    </flux:radio.group>
+                                </div>
                             </div>
                         </flux:fieldset>
 

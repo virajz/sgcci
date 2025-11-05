@@ -32,27 +32,6 @@ class StallSelector extends Component
         $this->dispatch('stalls-restored');
     }
 
-    public function toggleStall(string $stallNumber): void
-    {
-        if (in_array($stallNumber, $this->selectedStalls)) {
-            $this->selectedStalls = array_values(
-                array_filter($this->selectedStalls, fn ($stall) => $stall !== $stallNumber)
-            );
-        } else {
-            // Check if stall is already allotted (payment completed)
-            $bookedStalls = $this->bookedStalls;
-            if (isset($bookedStalls[$stallNumber]) && $bookedStalls[$stallNumber] === 'allotted') {
-                $this->dispatch('stall-unavailable', stallNumber: $stallNumber);
-
-                return;
-            }
-
-            $this->selectedStalls[] = $stallNumber;
-        }
-
-        $this->dispatch('stalls-selected', selectedStalls: $this->selectedStalls);
-    }
-
     public function getBookedStallsProperty(): array
     {
         if (! $this->exhibitionId) {
