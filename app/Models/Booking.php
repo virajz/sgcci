@@ -116,7 +116,9 @@ class Booking extends Model
         parent::boot();
 
         static::creating(function ($booking) {
-            $booking->booking_code = static::generateUniqueBookingCode();
+            if (! $booking->booking_code) {
+                $booking->booking_code = static::generateUniqueBookingCode();
+            }
 
             // Calculate pricing based on selected stalls and discounts
             $pricing = static::calculatePricing(
@@ -318,7 +320,7 @@ class Booking extends Model
                     'width' => $size['width'],
                     'height' => $size['height'],
                     'area' => $size['area'],
-                    'size_display' => $size['width'] . ' x ' . $size['height'],
+                    'size_display' => $size['width'].' x '.$size['height'],
                     'price' => $size['area'] * $pricePerSqm,
                 ];
             } else {

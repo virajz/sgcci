@@ -34,7 +34,7 @@ class RecordPayment extends Component
         ];
 
         if ($this->paymentType === 'partial') {
-            $rules['paymentAmount'] = ['required', 'numeric', 'min:0.01', 'max:' . $this->booking->remaining_amount];
+            $rules['paymentAmount'] = ['required', 'numeric', 'min:0.01', 'max:'.$this->booking->remaining_amount];
         }
 
         return $rules;
@@ -168,7 +168,7 @@ class RecordPayment extends Component
             variant: 'success',
             text: $this->booking->isPaymentCompleted()
                 ? 'Full payment recorded successfully. Stalls confirmed!'
-                : 'Partial payment recorded. Remaining: ₹' . number_format($this->booking->remaining_amount, 2)
+                : 'Partial payment recorded. Remaining: ₹'.number_format($this->booking->remaining_amount, 2)
         );
 
         $this->dispatch('booking-updated');

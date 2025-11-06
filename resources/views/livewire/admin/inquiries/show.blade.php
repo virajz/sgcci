@@ -266,6 +266,22 @@
             <flux:card>
                 <flux:heading size="lg" class="mb-4">Actions</flux:heading>
 
+                {{-- Edit Booking Button (Available to all admins, only if no payment received) --}}
+                @if ($booking->amount_paid <= 0)
+                    <div class="mb-4">
+                        <flux:button href="{{ route('admin.inquiries.edit', $booking) }}" variant="outline"
+                            class="w-full" icon="pencil" iconVariant="outline">
+                            Edit Booking Details
+                        </flux:button>
+                    </div>
+
+                    <flux:separator class="my-4" />
+                @else
+                    <flux:callout variant="info" class="mb-4">
+                        <flux:text class="text-sm">Booking cannot be edited as payment has been received.</flux:text>
+                    </flux:callout>
+                @endif
+
                 @if ($booking->status === \App\BookingStatus::PendingApproval && auth()->user()->isAdmin())
                     <div class="space-y-3">
                         @if (auth()->user()->isSuperAdmin())

@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\PaymentController;
+use App\Livewire\Admin\Inquiries\EditBooking as AdminEditBooking;
 use App\Livewire\Admin\Inquiries\Index as InquiriesIndex;
 use App\Livewire\Admin\Inquiries\Show as InquiriesShow;
 use App\Livewire\Admin\StaffMembers\Index as StaffMembersIndex;
 use App\Livewire\Dashboard;
 use App\Livewire\Exhibitions\Booking;
 use App\Livewire\Exhibitions\Confirmation;
+use App\Livewire\Exhibitions\EditBooking;
 use App\Livewire\Exhibitions\ThankYou;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
@@ -25,6 +27,7 @@ Route::get('/', function () {
 Route::get('exhibitions/{exhibition}/booking', Booking::class)->name('exhibitions.booking.show');
 Route::get('exhibitions/{exhibition}/booking/confirmation', Confirmation::class)->name('exhibitions.booking.confirmation');
 Route::get('exhibitions/{exhibition}/booking/thank-you/{bookingCode}', ThankYou::class)->name('exhibitions.booking.thank-you');
+Route::get('edit-booking', EditBooking::class)->name('exhibitions.booking.edit');
 
 // Payment routes
 Route::prefix('payment')->name('payment.')->group(function () {
@@ -59,6 +62,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         Route::get('inquiries', InquiriesIndex::class)->name('inquiries.index');
         Route::get('inquiries/{booking}', InquiriesShow::class)->name('inquiries.show');
+        Route::get('inquiries/{booking}/edit', AdminEditBooking::class)->name('inquiries.edit');
         Route::get('staff-members', StaffMembersIndex::class)->name('staff-members.index');
     });
 });

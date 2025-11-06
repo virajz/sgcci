@@ -341,7 +341,7 @@ class Show extends Component
     {
         // In a real application, you would integrate with a payment gateway
         // For now, return a placeholder URL
-        return config('app.url') . '/payment/' . $this->booking->booking_code;
+        return config('app.url').'/payment/'.$this->booking->booking_code;
     }
 
     public function render()

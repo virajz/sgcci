@@ -75,7 +75,7 @@ class CCAvenueService
             'billing_state' => 'Gujarat', // Default to Gujarat for SGCCI
             'billing_zip' => '380009', // Default to SGCCI headquarters pincode
             'billing_country' => 'India',
-            'billing_tel' => str_replace(' ', '', $booking->phone_code . $booking->phone_number),
+            'billing_tel' => str_replace(' ', '', $booking->phone_code.$booking->phone_number),
             'billing_email' => $booking->email,
             'merchant_param1' => (string) $booking->id,
             'merchant_param2' => (string) $booking->exhibition_id,
@@ -110,7 +110,7 @@ class CCAvenueService
 
         $dataString = '';
         foreach ($merchantData as $key => $value) {
-            $dataString .= $key . '=' . $value . '&';
+            $dataString .= $key.'='.$value.'&';
         }
 
         return $this->encrypt(rtrim($dataString, '&'));
@@ -177,7 +177,7 @@ class CCAvenueService
     {
         $pad = $blockSize - (strlen($plainText) % $blockSize);
 
-        return $plainText . str_repeat(chr($pad), $pad);
+        return $plainText.str_repeat(chr($pad), $pad);
     }
 
     /**

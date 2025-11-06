@@ -245,8 +245,8 @@ class PaymentController extends Controller
                 if (! empty($overlappingStalls)) {
                     $booking->update([
                         'status' => BookingStatus::Cancelled,
-                        'rejection_reason' => 'Auto-cancelled: Stalls ' . implode(', ', $overlappingStalls) .
-                            ' were booked by another customer (Booking #' . $paidBooking->booking_code . ').',
+                        'rejection_reason' => 'Auto-cancelled: Stalls '.implode(', ', $overlappingStalls).
+                            ' were booked by another customer (Booking #'.$paidBooking->booking_code.').',
                     ]);
 
                     Log::info('Auto-cancelled conflicting booking', [
