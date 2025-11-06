@@ -139,5 +139,83 @@ test('blocked stalls appear as allotted in stall selector', function () {
 
     Volt::test('stall-selector')
         ->set('exhibitionId', $this->exhibition->id)
-        ->assertSet('bookedStalls', fn ($stalls) => $stalls['101'] === 'allotted');
+        ->assertSet('bookedStalls', fn($stalls) => $stalls['101'] === 'allotted');
+});
+
+test('admin can block cancelled stalls', function () {
+    actingAs($this->admin);
+
+    // Create cancelled booking
+    Booking::factory()->create([
+        'exhibition_id' => $this->exhibition->id,
+        'selected_stalls' => ['101'],
+        'status' => 'cancelled',
+    ]);
+
+    Volt::test('admin.stall-block-manager')
+        ->set('exhibitionId', $this->exhibition->id)
+        ->set('stallNumbers', '101')
+        ->call('blockStalls')
+        ->assertDispatched('stalls-blocked');
+
+    // Should have 2 bookings: the cancelled one and the new blocked one
+    expect(Booking::count())->toBe(2);
+    expect(Booking::where('is_manual_block', true)->count())->toBe(1);
+});
+
+test('admin can block rejected stalls', function () {
+    actingAs($this->admin);
+
+    // Create rejected booking
+    Booking::factory()->create([
+        'exhibition_id' => $this->exhibition->id,
+        'selected_stalls' => ['102'],
+        'status' => 'rejected',
+    ]);
+
+    Volt::test('admin.stall-block-manager')
+        ->set('exhibitionId', $this->exhibition->id)
+        ->set('stallNumbers', '102')
+        ->call('blockStalls')
+        ->assertDispatched('stalls-blocked');
+
+    expect(Booking::where('is_manual_block', true)->count())->toBe(1);
+});
+
+test('admin can block refunded stalls', function () {
+    actingAs($this->admin);
+
+    // Create refunded booking
+    Booking::factory()->create([
+        'exhibition_id' => $this->exhibition->id,
+        'selected_stalls' => ['103'],
+        'status' => 'refunded',
+    ]);
+
+    Volt::test('admin.stall-block-manager')
+        ->set('exhibitionId', $this->exhibition->id)
+        ->set('stallNumbers', '103')
+        ->call('blockStalls')
+        ->assertDispatched('stalls-blocked');
+
+    expect(Booking::where('is_manual_block', true)->count())->toBe(1);
+});
+
+test('admin can block expired stalls', function () {
+    actingAs($this->admin);
+
+    // Create expired booking
+    Booking::factory()->create([
+        'exhibition_id' => $this->exhibition->id,
+        'selected_stalls' => ['104'],
+        'status' => 'expired',
+    ]);
+
+    Volt::test('admin.stall-block-manager')
+        ->set('exhibitionId', $this->exhibition->id)
+        ->set('stallNumbers', '104')
+        ->call('blockStalls')
+        ->assertDispatched('stalls-blocked');
+
+    expect(Booking::where('is_manual_block', true)->count())->toBe(1);
 });

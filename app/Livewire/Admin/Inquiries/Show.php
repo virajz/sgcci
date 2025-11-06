@@ -20,6 +20,14 @@ class Show extends Component
 
     public string $rejectionReason = '';
 
+    public bool $showRefundModal = false;
+
+    public string $refundReason = '';
+
+    public bool $showReleaseModal = false;
+
+    public string $releaseReason = '';
+
     public function mount(Booking $booking): void
     {
         // Ensure user has admin privileges
@@ -278,23 +286,23 @@ class Show extends Component
 
     public function reEnableExpiredBooking(): void
     {
-        // Only admin or super admin can re-enable expired bookings
+        // Only admin or super admin can re-enable bookings
         if (! Auth::user()->isAdmin()) {
             Flux::toast(
                 heading: 'Unauthorized',
                 variant: 'danger',
-                text: 'Only admin can re-enable expired bookings.'
+                text: 'Only admin can re-enable bookings.'
             );
 
             return;
         }
 
-        // Only expired bookings can be re-enabled
-        if ($this->booking->status !== BookingStatus::Expired) {
+        // Only expired, cancelled, or rejected bookings can be re-enabled
+        if (! in_array($this->booking->status, [BookingStatus::Expired, BookingStatus::Cancelled, BookingStatus::Rejected])) {
             Flux::toast(
                 heading: 'Invalid Status',
                 variant: 'danger',
-                text: 'Only expired bookings can be re-enabled.'
+                text: 'Only expired, cancelled, or rejected bookings can be re-enabled.'
             );
 
             return;
@@ -332,7 +340,109 @@ class Show extends Component
         Flux::toast(
             heading: 'Booking Re-enabled!',
             variant: 'success',
-            text: 'The expired booking has been re-enabled and payment link sent to customer.'
+            text: 'The booking has been re-enabled and payment link sent to customer.'
+        );
+        $this->dispatch('booking-updated');
+    }
+
+    public function openRefundModal(): void
+    {
+        $this->showRefundModal = true;
+        $this->refundReason = '';
+    }
+
+    public function refundAndRelease(): void
+    {
+        // Only super admin can refund bookings
+        if (! Auth::user()->isSuperAdmin()) {
+            Flux::toast(
+                heading: 'Unauthorized',
+                variant: 'danger',
+                text: 'Only super admin can refund bookings.'
+            );
+            $this->showRefundModal = false;
+
+            return;
+        }
+
+        // Validate that booking has payment
+        if ($this->booking->amount_paid <= 0) {
+            Flux::toast(
+                heading: 'No Payment to Refund',
+                variant: 'danger',
+                text: 'This booking has no payment to refund.'
+            );
+            $this->showRefundModal = false;
+
+            return;
+        }
+
+        // Validate refund reason
+        $this->validate([
+            'refundReason' => ['required', 'string', 'min:10'],
+        ], [
+            'refundReason.required' => 'Please provide a reason for refund.',
+            'refundReason.min' => 'Please provide a detailed reason (minimum 10 characters).',
+        ]);
+
+        // Update booking status to refunded and release the stalls
+        $this->booking->update([
+            'status' => BookingStatus::Refunded,
+            'refund_reason' => $this->refundReason,
+            'refunded_by' => Auth::id(),
+            'refunded_at' => now(),
+        ]);
+
+        $this->showRefundModal = false;
+        Flux::toast(
+            heading: 'Booking Refunded & Stalls Released',
+            variant: 'success',
+            text: 'The booking has been refunded and the stalls are now available for other bookings.'
+        );
+        $this->dispatch('booking-updated');
+    }
+
+    public function openReleaseModal(): void
+    {
+        $this->showReleaseModal = true;
+        $this->releaseReason = '';
+    }
+
+    public function releaseStalls(): void
+    {
+        // Any admin can release stalls
+        if (! Auth::user()->isAdmin()) {
+            Flux::toast(
+                heading: 'Unauthorized',
+                variant: 'danger',
+                text: 'Only admin can release stalls.'
+            );
+            $this->showReleaseModal = false;
+
+            return;
+        }
+
+        // Validate release reason
+        $this->validate([
+            'releaseReason' => ['required', 'string', 'min:10'],
+        ], [
+            'releaseReason.required' => 'Please provide a reason for releasing stalls.',
+            'releaseReason.min' => 'Please provide a detailed reason (minimum 10 characters).',
+        ]);
+
+        // Update booking status to cancelled and release the stalls
+        $this->booking->update([
+            'status' => BookingStatus::Cancelled,
+            'rejection_reason' => $this->releaseReason,
+            'rejected_by' => Auth::id(),
+            'rejected_at' => now(),
+        ]);
+
+        $this->showReleaseModal = false;
+        Flux::toast(
+            heading: 'Stalls Released',
+            variant: 'success',
+            text: 'The stalls have been released and are now available for other bookings.'
         );
         $this->dispatch('booking-updated');
     }
@@ -341,7 +451,7 @@ class Show extends Component
     {
         // In a real application, you would integrate with a payment gateway
         // For now, return a placeholder URL
-        return config('app.url').'/payment/'.$this->booking->booking_code;
+        return config('app.url') . '/payment/' . $this->booking->booking_code;
     }
 
     public function render()

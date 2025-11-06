@@ -56,6 +56,9 @@ class Booking extends Model
         'rejection_reason',
         'rejected_by',
         'rejected_at',
+        'refund_reason',
+        'refunded_by',
+        'refunded_at',
         'payment_link',
         'payment_link_sent_at',
         'payment_due_at',
@@ -101,6 +104,7 @@ class Booking extends Model
             'admin_approved_at' => 'datetime',
             'super_admin_approved_at' => 'datetime',
             'rejected_at' => 'datetime',
+            'refunded_at' => 'datetime',
             'blocked_at' => 'datetime',
             'payment_link_sent_at' => 'datetime',
             'payment_due_at' => 'datetime',
@@ -320,7 +324,7 @@ class Booking extends Model
                     'width' => $size['width'],
                     'height' => $size['height'],
                     'area' => $size['area'],
-                    'size_display' => $size['width'].' x '.$size['height'],
+                    'size_display' => $size['width'] . ' x ' . $size['height'],
                     'price' => $size['area'] * $pricePerSqm,
                 ];
             } else {
@@ -487,6 +491,11 @@ class Booking extends Model
     public function rejectedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    public function refundedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'refunded_by');
     }
 
     public function blockedBy(): BelongsTo

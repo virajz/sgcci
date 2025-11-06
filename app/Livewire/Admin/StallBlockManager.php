@@ -80,9 +80,10 @@ class StallBlockManager extends Component
 
         $created = 0;
         foreach ($stalls as $stallNumber) {
-            // Check if stall is already blocked or booked
+            // Check if stall is already blocked or booked (excluding cancelled/rejected/refunded/expired)
             $exists = Booking::where('exhibition_id', $this->exhibitionId)
                 ->whereJsonContains('selected_stalls', $stallNumber)
+                ->whereNotIn('status', ['cancelled', 'rejected', 'refunded', 'expired'])
                 ->exists();
 
             if (! $exists) {

@@ -12,6 +12,7 @@ enum BookingStatus: string
     case Rejected = 'rejected';
     case Cancelled = 'cancelled';
     case Expired = 'expired';
+    case Refunded = 'refunded';
 
     public function label(): string
     {
@@ -24,6 +25,7 @@ enum BookingStatus: string
             self::Rejected => 'Rejected',
             self::Cancelled => 'Cancelled',
             self::Expired => 'Expired',
+            self::Refunded => 'Refunded',
         };
     }
 
@@ -38,6 +40,7 @@ enum BookingStatus: string
             self::Rejected => 'red',
             self::Cancelled => 'gray',
             self::Expired => 'red',
+            self::Refunded => 'purple',
         };
     }
 }

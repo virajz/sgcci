@@ -356,25 +356,76 @@
                             <span wire:loading wire:target="reEnableExpiredBooking">Re-enabling...</span>
                         </flux:button>
                     </div>
+                @elseif (in_array($booking->status, [\App\BookingStatus::Cancelled, \App\BookingStatus::Rejected]) &&
+                        auth()->user()->isAdmin())
+                    <div class="space-y-3">
+                        <flux:callout variant="warning" class="mb-4">
+                            @if ($booking->status === \App\BookingStatus::Cancelled)
+                                This booking has been cancelled. You can re-enable it to give the customer another
+                                chance.
+                            @else
+                                This booking has been rejected. You can re-enable it to give the customer another
+                                chance.
+                            @endif
+                        </flux:callout>
+
+                        <flux:button wire:click="reEnableExpiredBooking" variant="primary" class="w-full"
+                            icon="arrow-path" iconVariant="outline" wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="reEnableExpiredBooking">Re-enable Booking</span>
+                            <span wire:loading wire:target="reEnableExpiredBooking">Re-enabling...</span>
+                        </flux:button>
+                    </div>
+                @elseif (in_array($booking->status, [\App\BookingStatus::Allotted, \App\BookingStatus::PaymentCompleted]) &&
+                        auth()->user()->isAdmin())
+                    <div class="space-y-3">
+                        <flux:callout variant="info" class="mb-4">
+                            @if ($booking->status === \App\BookingStatus::Allotted)
+                                Stalls have been allotted and payment has been completed.
+                            @else
+                                Payment completed successfully.
+                            @endif
+                        </flux:callout>
+
+                        @if ($booking->amount_paid > 0 && auth()->user()->isSuperAdmin())
+                            <flux:button wire:click="openRefundModal" variant="danger" class="w-full"
+                                icon="receipt-refund" iconVariant="outline">
+                                Refund Payment
+                            </flux:button>
+                        @endif
+
+                        <flux:button wire:click="openReleaseModal" variant="outline" class="w-full" icon="lock-open"
+                            iconVariant="outline">
+                            Release Stalls
+                        </flux:button>
+                    </div>
                 @else
                     <flux:callout variant="info">
-                        @if ($booking->status === \App\BookingStatus::Rejected)
-                            This booking has been rejected.
-                        @elseif ($booking->status === \App\BookingStatus::Allotted)
-                            Stalls have been allotted and payment has been completed.
-                        @elseif ($booking->status === \App\BookingStatus::PaymentCompleted)
-                            Payment completed successfully.
-                        @elseif ($booking->status === \App\BookingStatus::Expired)
-                            This booking has expired.
+                        @if ($booking->status === \App\BookingStatus::Refunded)
+                            This booking has been refunded and stalls released.
                         @else
                             No actions available at this stage.
                         @endif
                     </flux:callout>
                 @endif
+
+                {{-- Release Stalls - Available to any admin, for any non-cancelled/non-refunded status --}}
+                @if (auth()->user()->isAdmin() &&
+                        !in_array($booking->status, [
+                            \App\BookingStatus::Cancelled,
+                            \App\BookingStatus::Refunded,
+                            \App\BookingStatus::Rejected,
+                        ]) &&
+                        !in_array($booking->status, [\App\BookingStatus::Allotted, \App\BookingStatus::PaymentCompleted]))
+                    <flux:separator class="my-4" />
+                    <flux:button wire:click="openReleaseModal" variant="outline" class="w-full" icon="lock-open"
+                        iconVariant="outline">
+                        Release Stalls
+                    </flux:button>
+                @endif
             </flux:card>
 
             {{-- Approval History --}}
-            @if ($booking->admin_approved_at || $booking->super_admin_approved_at || $booking->rejected_at)
+            @if ($booking->admin_approved_at || $booking->super_admin_approved_at || $booking->rejected_at || $booking->refunded_at)
                 <flux:card>
                     <flux:heading size="lg" class="mb-4">Approval History</flux:heading>
 
@@ -437,6 +488,26 @@
                                 @if ($booking->rejection_reason)
                                     <flux:callout variant="danger" class="mt-2">
                                         <flux:text class="text-sm">{{ $booking->rejection_reason }}</flux:text>
+                                    </flux:callout>
+                                @endif
+                            </div>
+                        @endif
+
+                        @if ($booking->refunded_at)
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <flux:icon.receipt-refund class="w-4 h-4 text-purple-500" />
+                                    <flux:subheading class="text-sm">Refunded & Stalls Released</flux:subheading>
+                                </div>
+                                <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">
+                                    {{ $booking->refundedBy->name }}
+                                </flux:text>
+                                <flux:text class="mb-2 text-xs text-zinc-500">
+                                    {{ $booking->refunded_at->format('M d, Y h:i A') }}
+                                </flux:text>
+                                @if ($booking->refund_reason)
+                                    <flux:callout variant="warning" class="mt-2">
+                                        <flux:text class="text-sm">{{ $booking->refund_reason }}</flux:text>
                                     </flux:callout>
                                 @endif
                             </div>
@@ -508,6 +579,76 @@
                 <flux:button type="submit" variant="danger" wire:loading.attr="disabled">
                     <span wire:loading.remove wire:target="reject">Confirm Rejection</span>
                     <span wire:loading wire:target="reject">Rejecting...</span>
+                </flux:button>
+            </div>
+        </form>
+    </flux:modal>
+
+    {{-- Refund Modal --}}
+    <flux:modal wire:model="showRefundModal" variant="flyout">
+        <form wire:submit="refundAndRelease">
+            <flux:heading size="lg" class="mb-4">Refund Payment</flux:heading>
+
+            <flux:subheading class="mb-4">
+                This action will mark the booking as refunded and release the stalls for other customers. Please provide
+                a reason for this refund.
+            </flux:subheading>
+
+            <flux:callout variant="warning" class="mb-4">
+                <flux:text class="text-sm font-semibold">
+                    Amount to Refund: ₹{{ number_format($booking->amount_paid, 2) }}
+                </flux:text>
+            </flux:callout>
+
+            <flux:field>
+                <flux:label>Refund Reason</flux:label>
+                <flux:textarea wire:model="refundReason" rows="4"
+                    placeholder="Enter the reason for refund (e.g., customer request, event cancelled)..." />
+                <flux:error name="refundReason" />
+            </flux:field>
+
+            <div class="flex justify-end gap-3 mt-6">
+                <flux:button type="button" variant="ghost" wire:click="$set('showRefundModal', false)">
+                    Cancel
+                </flux:button>
+                <flux:button type="submit" variant="danger" wire:loading.attr="disabled">
+                    <span wire:loading.remove wire:target="refundAndRelease">Confirm Refund</span>
+                    <span wire:loading wire:target="refundAndRelease">Processing...</span>
+                </flux:button>
+            </div>
+        </form>
+    </flux:modal>
+
+    {{-- Release Stalls Modal --}}
+    <flux:modal wire:model="showReleaseModal" variant="flyout">
+        <form wire:submit="releaseStalls">
+            <flux:heading size="lg" class="mb-4">Release Stalls</flux:heading>
+
+            <flux:subheading class="mb-4">
+                This action will cancel the booking and release the stalls for other customers. Please provide a reason
+                for releasing these stalls.
+            </flux:subheading>
+
+            <flux:callout variant="info" class="mb-4">
+                <flux:text class="text-sm">
+                    <strong>Stalls to be released:</strong> {{ implode(', ', $booking->selected_stalls) }}
+                </flux:text>
+            </flux:callout>
+
+            <flux:field>
+                <flux:label>Release Reason</flux:label>
+                <flux:textarea wire:model="releaseReason" rows="4"
+                    placeholder="Enter the reason for releasing stalls (e.g., customer cancellation, duplicate booking)..." />
+                <flux:error name="releaseReason" />
+            </flux:field>
+
+            <div class="flex justify-end gap-3 mt-6">
+                <flux:button type="button" variant="ghost" wire:click="$set('showReleaseModal', false)">
+                    Cancel
+                </flux:button>
+                <flux:button type="submit" variant="danger" wire:loading.attr="disabled">
+                    <span wire:loading.remove wire:target="releaseStalls">Confirm Release</span>
+                    <span wire:loading wire:target="releaseStalls">Processing...</span>
                 </flux:button>
             </div>
         </form>
