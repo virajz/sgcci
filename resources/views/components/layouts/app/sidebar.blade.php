@@ -26,6 +26,9 @@
                 <flux:navlist.item icon="users" :href="route('admin.staff-members.index')"
                     :current="request()->routeIs('admin.staff-members.*')" wire:navigate>{{ __('Staff Members') }}
                 </flux:navlist.item>
+                <flux:navlist.item icon="ticket" :href="route('admin.support-tickets.index')"
+                    :current="request()->routeIs('admin.support-tickets.*')" wire:navigate>{{ __('Support Tickets') }}
+                </flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>
 

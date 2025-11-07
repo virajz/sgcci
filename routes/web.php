@@ -1,10 +1,13 @@
 <?php
 
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\SupportTicketController;
 use App\Livewire\Admin\Inquiries\EditBooking as AdminEditBooking;
 use App\Livewire\Admin\Inquiries\Index as InquiriesIndex;
 use App\Livewire\Admin\Inquiries\Show as InquiriesShow;
 use App\Livewire\Admin\StaffMembers\Index as StaffMembersIndex;
+use App\Livewire\Admin\SupportTickets\Index as SupportTicketsIndex;
+use App\Livewire\Admin\SupportTickets\Show as SupportTicketsShow;
 use App\Livewire\Dashboard;
 use App\Livewire\Exhibitions\Booking;
 use App\Livewire\Exhibitions\Confirmation;
@@ -14,6 +17,7 @@ use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\TwoFactor;
+use App\Livewire\Support\CreateTicket;
 use App\Models\Exhibition;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -28,6 +32,11 @@ Route::get('exhibitions/{exhibition}/booking', Booking::class)->name('exhibition
 Route::get('exhibitions/{exhibition}/booking/confirmation', Confirmation::class)->name('exhibitions.booking.confirmation');
 Route::get('exhibitions/{exhibition}/booking/thank-you/{bookingCode}', ThankYou::class)->name('exhibitions.booking.thank-you');
 Route::get('edit-booking', EditBooking::class)->name('exhibitions.booking.edit');
+
+// Support Ticket routes
+Route::get('support-tickets/create', CreateTicket::class)->name('support-tickets.create');
+Route::post('support-tickets/upload', [SupportTicketController::class, 'upload'])->name('support-tickets.upload');
+Route::get('support-tickets/download/{path}', [SupportTicketController::class, 'download'])->name('support-tickets.download')->where('path', '.*');
 
 // Payment routes
 Route::prefix('payment')->name('payment.')->group(function () {
@@ -64,6 +73,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('inquiries/{booking}', InquiriesShow::class)->name('inquiries.show');
         Route::get('inquiries/{booking}/edit', AdminEditBooking::class)->name('inquiries.edit');
         Route::get('staff-members', StaffMembersIndex::class)->name('staff-members.index');
+        Route::get('support-tickets', SupportTicketsIndex::class)->name('support-tickets.index');
+        Route::get('support-tickets/{ticket}', SupportTicketsShow::class)->name('support-tickets.show');
     });
 });
 

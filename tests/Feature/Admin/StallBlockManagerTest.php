@@ -139,7 +139,7 @@ test('blocked stalls appear as allotted in stall selector', function () {
 
     Volt::test('stall-selector')
         ->set('exhibitionId', $this->exhibition->id)
-        ->assertSet('bookedStalls', fn($stalls) => $stalls['101'] === 'allotted');
+        ->assertSet('bookedStalls', fn ($stalls) => $stalls['101'] === 'allotted');
 });
 
 test('admin can block cancelled stalls', function () {

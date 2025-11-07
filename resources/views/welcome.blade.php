@@ -16,6 +16,9 @@
             <flux:button href="{{ route('exhibitions.booking.edit') }}" variant="filled" class="w-full">
                 Modify Booking
             </flux:button>
+            <flux:button href="{{ route('support-tickets.create') }}" variant="outline" class="w-full">
+                Create Support Ticket
+            </flux:button>
         @endisset
     </div>
     @fluxScripts

@@ -245,7 +245,7 @@ test('refund modal shows payment amount', function () {
     $this->actingAs($superAdmin)
         ->get(route('admin.inquiries.show', $booking))
         ->assertSuccessful()
-        ->assertSee('Amount to Refund: ₹' . number_format($amountPaid, 2));
+        ->assertSee('Amount to Refund: ₹'.number_format($amountPaid, 2));
 });
 
 test('refunded booking displays status badge', function () {

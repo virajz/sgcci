@@ -6,6 +6,7 @@ use App\BookingStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
 
 class Booking extends Model
@@ -324,7 +325,7 @@ class Booking extends Model
                     'width' => $size['width'],
                     'height' => $size['height'],
                     'area' => $size['area'],
-                    'size_display' => $size['width'] . ' x ' . $size['height'],
+                    'size_display' => $size['width'].' x '.$size['height'],
                     'price' => $size['area'] * $pricePerSqm,
                 ];
             } else {
@@ -501,5 +502,10 @@ class Booking extends Model
     public function blockedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'blocked_by');
+    }
+
+    public function supportTickets(): HasMany
+    {
+        return $this->hasMany(SupportTicket::class);
     }
 }
