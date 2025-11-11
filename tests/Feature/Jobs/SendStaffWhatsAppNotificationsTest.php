@@ -79,7 +79,7 @@ it('builds correct template params for booking_received campaign', function () {
     Queue::assertPushed(SendWhatsAppCampaign::class, 1);
 
     Queue::assertPushed(SendWhatsAppCampaign::class, function ($job) {
-        return $job->campaignName === 'booking_received';
+        return $job->campaignName === 'staff_booking_received';
     });
 });
 
@@ -159,4 +159,33 @@ it('only sends to active staff members', function () {
 
     // Should only dispatch 1 job for the active staff member
     Queue::assertPushed(SendWhatsAppCampaign::class, 1);
+});
+
+it('uses staff_booking_received template instead of booking_received', function () {
+    Queue::fake();
+
+    $exhibition = Exhibition::factory()->create(['title' => 'Auto Expo 2025']);
+    $booking = Booking::factory()->create([
+        'exhibition_id' => $exhibition->id,
+        'contact_person' => 'John Doe',
+        'booking_code' => 'TEST1234',
+        'selected_stalls' => ['A1', 'A2', 'B3'],
+        'total_area' => 45,
+        'total_with_gst' => 67500.00,
+    ]);
+
+    $staff = StaffMember::factory()->create([
+        'phone_code' => '+91',
+        'phone_number' => '9876543210',
+        'is_active' => true,
+    ]);
+
+    $job = new SendStaffWhatsAppNotifications($booking, 'booking_received');
+    $job->handle();
+
+    // Verify staff template is used with correct campaign name
+    Queue::assertPushed(SendWhatsAppCampaign::class, function ($job) use ($staff) {
+        return $job->campaignName === 'staff_booking_received'
+            && $job->phoneNumber === $staff->phone_number;
+    });
 });

@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Jobs\SendWhatsAppCampaign;
 use App\Livewire\Admin\Inquiries\EditBooking;
 use App\Models\Booking;
 use App\Models\Exhibition;
 use App\Models\User;
+use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 
 test('admin can access edit booking page', function () {
@@ -252,4 +254,68 @@ test('admin edit does not reset approval workflow', function () {
         ->and($booking->super_admin_approved_at)->not->toBeNull()
         ->and($booking->payment_link)->toBe('http://example.com/payment')
         ->and($booking->brand_name)->toBe('Updated Brand');
+});
+
+test('whatsapp message is sent when admin edits pending approval booking', function () {
+    config(['services.whatsapp.enabled' => true]);
+    Queue::fake();
+
+    $admin = User::factory()->admin()->create();
+    $exhibition = Exhibition::factory()->create();
+    $booking = Booking::factory()->create([
+        'exhibition_id' => $exhibition->id,
+        'brand_name' => 'Original Brand',
+        'contact_person' => 'John Doe',
+        'phone_code' => '+91',
+        'phone_number' => '98765 43210',
+        'email' => 'test@example.com',
+        'product_profile' => ['4-wheelers'],
+        'status' => \App\BookingStatus::PendingApproval,
+        'amount_paid' => 0,
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test(EditBooking::class, ['booking' => $booking])
+        ->set('brandName', 'Updated Brand')
+        ->set('productProfile', ['4-wheelers'])
+        ->call('updateBooking')
+        ->assertHasNoErrors();
+
+    Queue::assertPushed(SendWhatsAppCampaign::class, function ($job) use ($booking) {
+        return $job->campaignName === 'booking_received'
+            && $job->phoneCode === $booking->phone_code
+            && $job->phoneNumber === $booking->phone_number;
+    });
+});
+
+test('whatsapp message is not sent when admin edits approved booking', function () {
+    config(['services.whatsapp.enabled' => true]);
+    Queue::fake();
+
+    $admin = User::factory()->admin()->create();
+    $exhibition = Exhibition::factory()->create();
+    $booking = Booking::factory()->create([
+        'exhibition_id' => $exhibition->id,
+        'brand_name' => 'Original Brand',
+        'contact_person' => 'John Doe',
+        'phone_code' => '+91',
+        'phone_number' => '98765 43210',
+        'email' => 'test@example.com',
+        'product_profile' => ['4-wheelers'],
+        'status' => \App\BookingStatus::PaymentPending,
+        'admin_approved_by' => $admin->id,
+        'admin_approved_at' => now(),
+        'amount_paid' => 0,
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test(EditBooking::class, ['booking' => $booking])
+        ->set('brandName', 'Updated Brand')
+        ->set('productProfile', ['4-wheelers'])
+        ->call('updateBooking')
+        ->assertHasNoErrors();
+
+    Queue::assertNotPushed(SendWhatsAppCampaign::class);
 });

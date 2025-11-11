@@ -32,10 +32,13 @@ class SendStaffWhatsAppNotifications implements ShouldQueue
         // Build template params based on booking
         $templateParams = $this->buildTemplateParams();
 
+        // Determine the staff-specific campaign name
+        $staffCampaignName = $this->getStaffCampaignName();
+
         // Send WhatsApp notification to each active staff member
         foreach ($staffMembers as $staff) {
             SendWhatsAppCampaign::dispatch(
-                campaignName: $this->campaignName,
+                campaignName: $staffCampaignName,
                 phoneCode: $staff->phone_code,
                 phoneNumber: $staff->phone_number,
                 templateParams: $templateParams
@@ -44,12 +47,23 @@ class SendStaffWhatsAppNotifications implements ShouldQueue
     }
 
     /**
+     * Get staff-specific campaign name
+     */
+    protected function getStaffCampaignName(): string
+    {
+        return match ($this->campaignName) {
+            'booking_received' => 'staff_booking_received',
+            default => $this->campaignName,
+        };
+    }
+
+    /**
      * Build template parameters for WhatsApp message
      */
     protected function buildTemplateParams(): array
     {
         return match ($this->campaignName) {
-            'booking_received' => $this->buildBookingReceivedParams(),
+            'booking_received' => $this->buildStaffBookingReceivedParams(),
             'booking_confirmationpayment' => $this->buildBookingConfirmationPaymentParams(),
             'payment_success' => $this->buildPaymentSuccessParams(),
             default => [],
@@ -57,9 +71,9 @@ class SendStaffWhatsAppNotifications implements ShouldQueue
     }
 
     /**
-     * Build params for booking_received campaign
+     * Build params for staff_booking_received campaign
      */
-    protected function buildBookingReceivedParams(): array
+    protected function buildStaffBookingReceivedParams(): array
     {
         return [
             $this->booking->contact_person,                              // {{1}} Contact Person Name

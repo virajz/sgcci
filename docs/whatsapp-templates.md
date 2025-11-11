@@ -248,6 +248,45 @@ Best regards,
 
 ---
 
+---
+
+## Template 7: Staff - New Booking Received (Internal)
+
+**Template Name:** `staff_booking_received`
+**Category:** UTILITY
+**Language:** English
+
+### Message:
+
+```
+🔔 New Booking Alert
+
+Customer: {{1}}
+Exhibition: {{2}}
+Stalls Requested: {{3}}
+
+*Booking Details:*
+📋 Booking Code: *{{4}}*
+📍 Total Area: {{5}} sq m
+💰 Amount: ₹{{6}}
+
+⚠️ Status: Pending Review
+Action Required: Please review and approve/reject this booking in the admin panel.
+
+*SGCCI Admin System*
+```
+
+### Variables:
+
+1. `{{1}}` - Contact Person Name
+2. `{{2}}` - Exhibition Title
+3. `{{3}}` - Selected Stalls (comma-separated list)
+4. `{{4}}` - Booking Code
+5. `{{5}}` - Total Area
+6. `{{6}}` - Total Amount with GST
+
+---
+
 ## Implementation Notes
 
 ### WhatsApp Business API Format

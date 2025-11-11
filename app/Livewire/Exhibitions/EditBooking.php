@@ -3,6 +3,8 @@
 namespace App\Livewire\Exhibitions;
 
 use App\Http\Requests\UpdateBookingRequest;
+use App\Jobs\SendStaffWhatsAppNotifications;
+use App\Jobs\SendWhatsAppCampaign;
 use App\Models\Booking;
 use Flux\Flux;
 use Livewire\Attributes\Layout;
@@ -203,6 +205,31 @@ class EditBooking extends Component
         }
 
         $this->booking->update($updateData);
+
+        // Send WhatsApp message for updated booking (if status was reset to pending approval)
+        if (isset($updateData['status']) && $updateData['status'] === \App\BookingStatus::PendingApproval) {
+            if (config('services.whatsapp.enabled')) {
+                SendWhatsAppCampaign::dispatch(
+                    campaignName: 'booking_received',
+                    phoneCode: $this->booking->phone_code,
+                    phoneNumber: $this->booking->phone_number,
+                    templateParams: [
+                        $this->booking->contact_person,                              // {{1}} Contact Person Name
+                        $this->booking->exhibition->title,                           // {{2}} Exhibition Title
+                        implode(', ', $this->booking->selected_stalls),              // {{3}} Selected Stalls
+                        $this->booking->booking_code,                                // {{4}} Booking Code
+                        number_format($this->booking->total_area, 0),                // {{5}} Total Area
+                        number_format($this->booking->total_with_gst, 2),            // {{6}} Total Amount with GST
+                    ]
+                );
+
+                // Send WhatsApp notification to staff members
+                SendStaffWhatsAppNotifications::dispatch(
+                    booking: $this->booking,
+                    campaignName: 'booking_received'
+                );
+            }
+        }
 
         // Mark as successful and refresh
         $this->updateSuccessful = true;

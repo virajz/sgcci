@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Jobs\SendStaffWhatsAppNotifications;
+use App\Jobs\SendWhatsAppCampaign;
 use App\Livewire\Exhibitions\EditBooking;
 use App\Models\Booking;
 use App\Models\Exhibition;
 use App\Models\User;
+use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 
 test('edit booking page loads successfully', function () {
@@ -233,4 +236,77 @@ test('booking status resets to pending approval after edit', function () {
     expect($booking->status)->toBe(\App\BookingStatus::PendingApproval)
         ->and($booking->admin_approved_by)->toBeNull()
         ->and($booking->admin_approved_at)->toBeNull();
+});
+
+test('whatsapp message is sent when booking is updated and status resets', function () {
+    config(['services.whatsapp.enabled' => true]);
+    Queue::fake();
+
+    $exhibition = Exhibition::factory()->create();
+    $admin = User::factory()->admin()->create();
+
+    $booking = Booking::factory()->create([
+        'exhibition_id' => $exhibition->id,
+        'booking_code' => 'TEST1234',
+        'brand_name' => 'Test Brand',
+        'contact_person' => 'John Doe',
+        'phone_code' => '+91',
+        'phone_number' => '98765 43210',
+        'email' => 'test@example.com',
+        'product_profile' => ['4-wheelers'],
+        'status' => \App\BookingStatus::ApprovedByAdmin,
+        'admin_approved_by' => $admin->id,
+        'admin_approved_at' => now(),
+        'amount_paid' => 0,
+    ]);
+
+    Livewire::test(EditBooking::class)
+        ->set('bookingCode', 'TEST1234')
+        ->call('findBooking')
+        ->set('brandName', 'Updated Brand')
+        ->set('productProfile', ['4-wheelers'])
+        ->call('updateBooking')
+        ->assertHasNoErrors();
+
+    Queue::assertPushed(SendWhatsAppCampaign::class, function ($job) use ($booking) {
+        return $job->campaignName === 'booking_received'
+            && $job->phoneCode === $booking->phone_code
+            && $job->phoneNumber === $booking->phone_number;
+    });
+
+    Queue::assertPushed(SendStaffWhatsAppNotifications::class, function ($job) use ($booking) {
+        return $job->booking->id === $booking->id
+            && $job->campaignName === 'booking_received';
+    });
+});
+
+test('whatsapp message is not sent when booking update does not reset status', function () {
+    config(['services.whatsapp.enabled' => true]);
+    Queue::fake();
+
+    $exhibition = Exhibition::factory()->create();
+
+    $booking = Booking::factory()->create([
+        'exhibition_id' => $exhibition->id,
+        'booking_code' => 'TEST1234',
+        'brand_name' => 'Test Brand',
+        'contact_person' => 'John Doe',
+        'phone_code' => '+91',
+        'phone_number' => '98765 43210',
+        'email' => 'test@example.com',
+        'product_profile' => ['4-wheelers'],
+        'status' => \App\BookingStatus::PendingApproval,
+        'amount_paid' => 0,
+    ]);
+
+    Livewire::test(EditBooking::class)
+        ->set('bookingCode', 'TEST1234')
+        ->call('findBooking')
+        ->set('brandName', 'Updated Brand')
+        ->set('productProfile', ['4-wheelers'])
+        ->call('updateBooking')
+        ->assertHasNoErrors();
+
+    Queue::assertNotPushed(SendWhatsAppCampaign::class);
+    Queue::assertNotPushed(SendStaffWhatsAppNotifications::class);
 });

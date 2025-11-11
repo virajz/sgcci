@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Inquiries;
 
 use App\Http\Requests\UpdateBookingRequest;
+use App\Jobs\SendWhatsAppCampaign;
 use App\Models\Booking;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
@@ -150,6 +151,23 @@ class EditBooking extends Component
         ];
 
         $this->booking->update($updateData);
+
+        // Send WhatsApp notification to customer about booking update (only for pending approval)
+        if (config('services.whatsapp.enabled') && $this->booking->status === \App\BookingStatus::PendingApproval) {
+            SendWhatsAppCampaign::dispatch(
+                campaignName: 'booking_received',
+                phoneCode: $this->booking->phone_code,
+                phoneNumber: $this->booking->phone_number,
+                templateParams: [
+                    $this->booking->contact_person,                              // {{1}} Contact Person Name
+                    $this->booking->exhibition->title,                           // {{2}} Exhibition Title
+                    implode(', ', $this->booking->selected_stalls),              // {{3}} Selected Stalls
+                    $this->booking->booking_code,                                // {{4}} Booking Code
+                    number_format($this->booking->total_area, 0),                // {{5}} Total Area
+                    number_format($this->booking->total_with_gst, 2),            // {{6}} Total Amount with GST
+                ]
+            );
+        }
 
         Flux::toast(
             heading: 'Booking Updated!',
