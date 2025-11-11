@@ -85,9 +85,19 @@
                         <div class="space-y-2">
                             <template x-for="(file, index) in files" :key="index">
                                 <div class="flex items-center gap-3 p-3 rounded-lg bg-zinc-100 dark:bg-zinc-800">
-                                    <flux:icon.document variant="outline" class="w-5 h-5 text-zinc-500" />
-                                    <div class="flex-1">
-                                        <flux:text class="text-sm font-medium" x-text="getFileName(file)"></flux:text>
+                                    {{-- Image preview or document icon --}}
+                                    <div class="flex-shrink-0">
+                                        <template x-if="isImage(file)">
+                                            <img :src="getImageUrl(file)" :alt="getFileName(file)"
+                                                class="object-cover w-12 h-12 rounded">
+                                        </template>
+                                        <template x-if="!isImage(file)">
+                                            <flux:icon.document variant="outline" class="w-12 h-12 text-zinc-500" />
+                                        </template>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <flux:text class="text-sm font-medium truncate" x-text="getFileName(file)">
+                                        </flux:text>
                                     </div>
                                     <button type="button" @click="removeFile(index)"
                                         class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
@@ -234,8 +244,24 @@
                     this.$wire.call('removeDocument', index);
                 },
 
-                getFileName(path) {
-                    return path.split('/').pop();
+                getFileName(file) {
+                    if (typeof file === 'object' && file.filename) {
+                        return file.filename;
+                    }
+                    return typeof file === 'string' ? file.split('/').pop() : '';
+                },
+
+                isImage(file) {
+                    const filename = this.getFileName(file);
+                    const extension = filename.split('.').pop().toLowerCase();
+                    return ['jpg', 'jpeg', 'png'].includes(extension);
+                },
+
+                getImageUrl(file) {
+                    if (typeof file === 'object' && file.path) {
+                        return `/storage/${file.path}`;
+                    }
+                    return typeof file === 'string' ? `/storage/${file}` : '';
                 }
             }));
         });

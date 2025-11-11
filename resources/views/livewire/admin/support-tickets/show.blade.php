@@ -68,18 +68,23 @@
                             <div class="grid gap-4 sm:grid-cols-2">
                                 @foreach ($ticket->documents as $index => $document)
                                     @php
-                                        $extension = pathinfo($document, PATHINFO_EXTENSION);
+                                        // Handle both old format (string path) and new format (array with path and filename)
+                                        $path = is_array($document) ? $document['path'] : $document;
+                                        $filename = is_array($document) && isset($document['filename'])
+                                            ? $document['filename']
+                                            : basename($path);
+
+                                        $extension = pathinfo($path, PATHINFO_EXTENSION);
                                         $isPdf = strtolower($extension) === 'pdf';
                                         $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png']);
-                                        $filename = basename($document);
                                     @endphp
 
                                     <div class="border border-zinc-200 dark:border-zinc-700 rounded-lg overflow-hidden">
                                         @if ($isImage)
-                                            <a href="{{ Storage::url($document) }}" target="_blank" class="block group">
+                                            <a href="{{ Storage::url($path) }}" target="_blank" class="block group">
                                                 <div class="aspect-video bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-                                                    <img src="{{ Storage::url($document) }}"
-                                                        alt="Document {{ $index + 1 }}"
+                                                    <img src="{{ Storage::url($path) }}"
+                                                        alt="{{ $filename }}"
                                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform">
                                                 </div>
                                                 <div class="p-3">
@@ -87,7 +92,7 @@
                                                 </div>
                                             </a>
                                         @elseif ($isPdf)
-                                            <a href="{{ Storage::url($document) }}" target="_blank"
+                                            <a href="{{ Storage::url($path) }}" target="_blank"
                                                 class="block group">
                                                 <div
                                                     class="aspect-video bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
@@ -101,12 +106,12 @@
 
                                         <div class="flex gap-2 p-3 border-t border-zinc-200 dark:border-zinc-700">
                                             <flux:button size="sm" variant="outline"
-                                                href="{{ Storage::url($document) }}" target="_blank" class="flex-1"
+                                                href="{{ Storage::url($path) }}" target="_blank" class="flex-1"
                                                 icon="eye" iconVariant="micro">
                                                 View
                                             </flux:button>
                                             <flux:button size="sm" variant="outline"
-                                                href="{{ route('support-tickets.download', ['path' => $document]) }}"
+                                                href="{{ route('support-tickets.download', ['path' => $path]) }}"
                                                 class="flex-1" icon="arrow-down-tray" iconVariant="micro">
                                                 Download
                                             </flux:button>

@@ -53,16 +53,21 @@ class CreateTicket extends Component
     public function handleFileUpload(array $data): void
     {
         $path = $data['path'] ?? null;
+        $filename = $data['filename'] ?? null;
 
-        if ($path) {
-            $this->uploadedDocuments[] = $path;
+        if ($path && $filename) {
+            $this->uploadedDocuments[] = [
+                'path' => $path,
+                'filename' => $filename,
+            ];
         }
     }
 
     public function removeDocument(int $index): void
     {
         if (isset($this->uploadedDocuments[$index])) {
-            $path = $this->uploadedDocuments[$index];
+            $document = $this->uploadedDocuments[$index];
+            $path = is_array($document) ? $document['path'] : $document;
 
             // Delete the file from storage
             if (Storage::disk('public')->exists($path)) {
