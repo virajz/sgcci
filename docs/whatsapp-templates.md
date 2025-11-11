@@ -250,6 +250,50 @@ Best regards,
 
 ---
 
+## Template 6: Staff - Booking Approved & Payment Link Sent (Internal)
+
+**Template Name:** `staff_booking_confirmation_payment`
+**Campaign Name:** `staff_booking_confirmationpayment`
+**Category:** UTILITY
+**Language:** English
+
+### Message:
+
+```
+📋 Booking Approved
+
+Customer: {{1}}
+Exhibition: {{2}}
+Allotted Stalls: {{3}}
+
+*Booking Details:*
+📋 Booking Code: {{4}}
+📍 Total Area: {{5}} sq m
+💰 Amount: ₹{{6}}
+📅 Payment Due: {{7}}
+
+*Payment Link:* {{8}}
+
+⚠️ Status: Payment Pending
+Payment Deadline: {{9}}
+
+*SGCCI Admin System*
+```
+
+### Variables:
+
+1. `{{1}}` - Contact Person Name
+2. `{{2}}` - Exhibition Title
+3. `{{3}}` - Allotted Stalls (comma-separated list)
+4. `{{4}}` - Booking Code
+5. `{{5}}` - Total Area
+6. `{{6}}` - Total Amount with GST
+7. `{{7}}` - Payment Due Date
+8. `{{8}}` - Payment Link URL
+9. `{{9}}` - Payment Due Date (repeated)
+
+---
+
 ## Template 7: Staff - New Booking Received (Internal)
 
 **Template Name:** `staff_booking_received`
@@ -284,6 +328,43 @@ Action Required: Please review and approve/reject this booking in the admin pane
 4. `{{4}}` - Booking Code
 5. `{{5}}` - Total Area
 6. `{{6}}` - Total Amount with GST
+
+---
+
+## Template 8: Staff - Payment Received (Internal)
+
+**Template Name:** `staff_payment_success`
+**Campaign Name:** `invoicestatus`
+**Category:** UTILITY
+**Language:** English
+
+### Message:
+
+```
+💰 Payment Received
+
+Customer: {{1}}
+Exhibition: {{2}}
+Booking Code: {{3}}
+Amount Paid: ₹{{4}}
+Payment Date: {{5}}
+
+Confirmed Stalls: {{6}}
+
+Status: Payment Complete
+Next Step: Process stall allocation and send confirmation documents.
+
+*SGCCI Admin System*
+```
+
+### Variables:
+
+1. `{{1}}` - Contact Person Name
+2. `{{2}}` - Exhibition Title
+3. `{{3}}` - Booking Code
+4. `{{4}}` - Amount Paid
+5. `{{5}}` - Payment Date
+6. `{{6}}` - Confirmed Stalls (comma-separated list)
 
 ---
 

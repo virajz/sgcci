@@ -53,6 +53,8 @@ class SendStaffWhatsAppNotifications implements ShouldQueue
     {
         return match ($this->campaignName) {
             'booking_received' => 'staff_booking_received',
+            'booking_confirmationpayment' => 'staff_booking_confirmationpayment',
+            'payment_success' => 'invoicestatus',
             default => $this->campaignName,
         };
     }
@@ -64,8 +66,8 @@ class SendStaffWhatsAppNotifications implements ShouldQueue
     {
         return match ($this->campaignName) {
             'booking_received' => $this->buildStaffBookingReceivedParams(),
-            'booking_confirmationpayment' => $this->buildBookingConfirmationPaymentParams(),
-            'payment_success' => $this->buildPaymentSuccessParams(),
+            'booking_confirmationpayment' => $this->buildStaffBookingConfirmationPaymentParams(),
+            'payment_success' => $this->buildStaffPaymentSuccessParams(),
             default => [],
         };
     }
@@ -86,9 +88,9 @@ class SendStaffWhatsAppNotifications implements ShouldQueue
     }
 
     /**
-     * Build params for booking_confirmationpayment campaign
+     * Build params for staff_booking_confirmationpayment campaign
      */
-    protected function buildBookingConfirmationPaymentParams(): array
+    protected function buildStaffBookingConfirmationPaymentParams(): array
     {
         $paymentDueAt = $this->booking->payment_due_at ?? now()->addDays(7);
 
@@ -109,6 +111,21 @@ class SendStaffWhatsAppNotifications implements ShouldQueue
      * Build params for payment_success campaign
      */
     protected function buildPaymentSuccessParams(): array
+    {
+        return [
+            $this->booking->contact_person,                              // {{1}} Contact Person Name
+            $this->booking->exhibition->title,                           // {{2}} Exhibition Title
+            $this->booking->booking_code,                                // {{3}} Booking Code
+            number_format($this->booking->total_with_gst, 2),            // {{4}} Amount Paid
+            $this->booking->payment_completed_at?->format('M d, Y') ?? now()->format('M d, Y'), // {{5}} Payment Date
+            implode(', ', $this->booking->selected_stalls),              // {{6}} Confirmed Stalls
+        ];
+    }
+
+    /**
+     * Build params for staff_payment_success campaign
+     */
+    protected function buildStaffPaymentSuccessParams(): array
     {
         return [
             $this->booking->contact_person,                              // {{1}} Contact Person Name

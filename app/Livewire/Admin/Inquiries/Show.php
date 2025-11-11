@@ -97,6 +97,12 @@ class Show extends Component
                         $paymentDueAt->format('M d, Y'),                         // {{9}} Payment Due Date (repeated)
                     ]
                 );
+
+                // Send WhatsApp notification to staff members
+                \App\Jobs\SendStaffWhatsAppNotifications::dispatch(
+                    booking: $this->booking,
+                    campaignName: 'booking_confirmationpayment'
+                );
             }
 
             Flux::toast(
@@ -218,6 +224,12 @@ class Show extends Component
                     $paymentDueAt->format('M d, Y'),                         // {{9}} Payment Due Date (repeated)
                 ]
             );
+
+            // Send WhatsApp notification to staff members
+            \App\Jobs\SendStaffWhatsAppNotifications::dispatch(
+                booking: $this->booking,
+                campaignName: 'booking_confirmationpayment'
+            );
         }
 
         Flux::toast(
@@ -332,6 +344,12 @@ class Show extends Component
                     $this->booking->payment_link,                            // {{8}} Payment Link URL
                     $newPaymentDueAt->format('M d, Y'),                      // {{9}} Payment Due Date (repeated)
                 ]
+            );
+
+            // Send WhatsApp notification to staff members
+            \App\Jobs\SendStaffWhatsAppNotifications::dispatch(
+                booking: $this->booking,
+                campaignName: 'booking_confirmationpayment'
             );
         }
 
