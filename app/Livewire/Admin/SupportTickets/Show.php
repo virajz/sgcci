@@ -40,20 +40,20 @@ class Show extends Component
             'reviewed_at' => now(),
         ]);
 
-        // Update booking status to allow payment
+        // Update booking status to require super admin approval
         if (
             $this->ticket->booking->status === BookingStatus::Rejected ||
             $this->ticket->booking->status === BookingStatus::Cancelled ||
             $this->ticket->booking->status === BookingStatus::Refunded
         ) {
             $this->ticket->booking->update([
-                'status' => BookingStatus::PaymentPending,
+                'status' => BookingStatus::ApprovedByAdmin,
             ]);
         }
 
         $this->showApprovalModal = false;
 
-        session()->flash('message', 'Ticket approved successfully! Booking can now proceed with payment.');
+        session()->flash('message', 'Ticket approved successfully! Booking moved to admin approval queue.');
 
         $this->redirect(route('admin.support-tickets.index'));
     }

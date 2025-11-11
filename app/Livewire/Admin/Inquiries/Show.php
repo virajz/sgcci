@@ -86,22 +86,16 @@ class Show extends Component
                     phoneCode: $this->booking->phone_code,
                     phoneNumber: $this->booking->phone_number,
                     templateParams: [
-                        $this->booking->contact_person,                          // {{1}} Contact Person Name
-                        $this->booking->exhibition->title,                       // {{2}} Exhibition Title
+                        (string) $this->booking->contact_person,                 // {{1}} Contact Person Name
+                        (string) $this->booking->exhibition->title,              // {{2}} Exhibition Title
                         implode(', ', $this->booking->selected_stalls),          // {{3}} Allotted Stalls
-                        $this->booking->booking_code,                            // {{4}} Booking Code
-                        number_format($this->booking->total_area, 0),            // {{5}} Total Area
-                        number_format($this->booking->total_with_gst, 2),        // {{6}} Total Amount with GST
+                        (string) $this->booking->booking_code,                   // {{4}} Booking Code
+                        (string) number_format($this->booking->total_area, 0),   // {{5}} Total Area
+                        (string) number_format($this->booking->total_with_gst, 2), // {{6}} Total Amount with GST
                         $paymentDueAt->format('M d, Y'),                         // {{7}} Payment Due Date (first)
-                        $this->booking->payment_link,                            // {{8}} Payment Link URL
+                        (string) $this->booking->payment_link,                   // {{8}} Payment Link URL
                         $paymentDueAt->format('M d, Y'),                         // {{9}} Payment Due Date (repeated)
                     ]
-                );
-
-                // Send WhatsApp notification to staff members
-                \App\Jobs\SendStaffWhatsAppNotifications::dispatch(
-                    booking: $this->booking,
-                    campaignName: 'booking_confirmationpayment'
                 );
             }
 
@@ -158,8 +152,11 @@ class Show extends Component
 
         // Send WhatsApp notification for booking rejection
         if (config('services.whatsapp.enabled')) {
+            // Generate support ticket link with booking code pre-filled
+            $supportTicketUrl = route('support-tickets.create', ['ticket' => $this->booking->booking_code]);
+
             SendWhatsAppCampaign::dispatch(
-                campaignName: 'booking_reject',
+                campaignName: 'bookingrejected',
                 phoneCode: $this->booking->phone_code,
                 phoneNumber: $this->booking->phone_number,
                 templateParams: [
@@ -168,6 +165,7 @@ class Show extends Component
                     $this->booking->booking_code,                            // {{3}} Booking Code
                     implode(', ', $this->booking->selected_stalls),          // {{4}} Requested Stalls
                     $this->rejectionReason,                                  // {{5}} Rejection Reason
+                    $supportTicketUrl,                                       // {{6}} Support Ticket Link
                 ]
             );
         }
@@ -438,11 +436,31 @@ class Show extends Component
             'rejected_at' => now(),
         ]);
 
+        // Send WhatsApp notification for booking cancellation/release
+        if (config('services.whatsapp.enabled')) {
+            // Generate support ticket link with booking code pre-filled
+            $supportTicketUrl = route('support-tickets.create', ['ticket' => $this->booking->booking_code]);
+
+            SendWhatsAppCampaign::dispatch(
+                campaignName: 'bookingrejected',
+                phoneCode: $this->booking->phone_code,
+                phoneNumber: $this->booking->phone_number,
+                templateParams: [
+                    $this->booking->contact_person,                          // {{1}} Contact Person Name
+                    $this->booking->exhibition->title,                       // {{2}} Exhibition Title
+                    $this->booking->booking_code,                            // {{3}} Booking Code
+                    implode(', ', $this->booking->selected_stalls),          // {{4}} Requested Stalls
+                    $this->releaseReason,                                    // {{5}} Release/Rejection Reason
+                    $supportTicketUrl,                                       // {{6}} Support Ticket Link
+                ]
+            );
+        }
+
         $this->showReleaseModal = false;
         Flux::toast(
             heading: 'Stalls Released',
             variant: 'success',
-            text: 'The stalls have been released and are now available for other bookings.'
+            text: 'The stalls have been released and the customer has been notified.'
         );
         $this->dispatch('booking-updated');
     }
@@ -451,7 +469,7 @@ class Show extends Component
     {
         // In a real application, you would integrate with a payment gateway
         // For now, return a placeholder URL
-        return config('app.url').'/payment/'.$this->booking->booking_code;
+        return config('app.url') . '/payment/' . $this->booking->booking_code;
     }
 
     public function render()

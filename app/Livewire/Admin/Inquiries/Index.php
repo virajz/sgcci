@@ -30,6 +30,9 @@ class Index extends Component
         $tab = request()->query('tab');
         if ($tab && in_array($tab, ['all', 'pending_approval', 'approved_by_admin', 'payment_pending', 'payment_completed', 'manual_block', 'rejected', 'expired'])) {
             $this->statusFilter = $tab;
+        } elseif (! $tab && Auth::user()->isSuperAdmin()) {
+            // Super admin default tab is 'approved_by_admin' (bookings awaiting their approval)
+            $this->statusFilter = 'approved_by_admin';
         }
     }
 

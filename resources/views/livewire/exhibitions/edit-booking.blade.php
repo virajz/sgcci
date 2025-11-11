@@ -415,8 +415,8 @@
                                                 <flux:radio value="gold-member" label="Gold Member" />
                                                 <flux:radio value="chief-patron" label="Chief Patron" />
                                                 <flux:radio value="patron-member" label="Patron Member" />
-                                                <flux:radio value="life-member" label="Life Member" />
-                                                <flux:radio value="company-member" label="Company Member" />
+                                                {{-- <flux:radio value="life-member" label="Life Member" />
+                                                <flux:radio value="company-member" label="Company Member" /> --}}
                                             </flux:radio.group>
                                         </div>
                                     </div>

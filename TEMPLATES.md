@@ -101,6 +101,7 @@ _Reason:_
 {{5}}
 
 We appreciate your interest and encourage you to:
+• Submit a support ticket for review: {{6}}
 • Contact us for alternative options
 • Submit a new inquiry with different requirements
 
@@ -118,6 +119,7 @@ _SGCCI Team_
 3. {{3}} - Booking Code
 4. {{4}} - Requested Stalls
 5. {{5}} - Rejection Reason
+6. {{6}} - Support Ticket Link
 
 ---
 

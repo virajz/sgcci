@@ -178,7 +178,7 @@ All WhatsApp notification types now respect the `WHATSAPP_ENABLED` flag:
 | Booking Approval + Payment | `booking_confirmationpayment` | Admin approves booking             |
 | Payment Link Resend        | `booking_confirmationpayment` | Admin resends payment link         |
 | Payment Success            | `payment_success`             | Payment completed (auto or manual) |
-| Booking Rejection          | `booking_reject`              | Admin rejects booking              |
+| Booking Rejection          | `bookingrejected`             | Admin rejects booking              |
 
 ## Code Quality
 
