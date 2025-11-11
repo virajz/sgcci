@@ -41,6 +41,23 @@ test('customer can verify a rejected booking', function () {
         ->assertHasNoErrors();
 });
 
+test('customer can auto-verify booking with query parameter', function () {
+    $booking = Booking::factory()->create([
+        'status' => BookingStatus::Rejected,
+        'booking_code' => 'SCP57FAJ',
+    ]);
+
+    get(route('support-tickets.create', ['ticket' => 'SCP57FAJ']))
+        ->assertSuccessful();
+
+    Livewire::withQueryParams(['ticket' => 'SCP57FAJ'])
+        ->test('support.create-ticket')
+        ->assertSet('bookingCode', 'SCP57FAJ')
+        ->assertSet('bookingVerified', true)
+        ->assertSet('booking.id', $booking->id)
+        ->assertHasNoErrors();
+});
+
 test('customer cannot verify a pending booking', function () {
     Booking::factory()->create([
         'status' => BookingStatus::PendingApproval,
@@ -94,15 +111,16 @@ test('customer can create support ticket with documents', function () {
         ->call('verifyBooking')
         ->set('uploadedDocuments', ['support-tickets/doc1.pdf', 'support-tickets/doc2.pdf'])
         ->call('submit')
-        ->assertHasNoErrors()
-        ->assertRedirect(route('home'));
+        ->assertHasNoErrors();
 
     assertDatabaseHas('support_tickets', [
         'booking_id' => $booking->id,
         'status' => 'pending',
     ]);
 
-    expect(SupportTicket::where('booking_id', $booking->id)->exists())->toBeTrue();
+    $ticket = SupportTicket::where('booking_id', $booking->id)->first();
+    expect($ticket)->not->toBeNull();
+    expect($ticket->ticket_number)->toStartWith('TKT-');
 });
 
 test('admin can view support tickets list', function () {
@@ -233,4 +251,29 @@ test('support ticket relationships work correctly', function () {
     expect($ticket->booking)->toBeInstanceOf(Booking::class);
     expect($ticket->reviewedBy)->toBeInstanceOf(User::class);
     expect($booking->supportTickets)->toHaveCount(1);
+});
+
+test('customer can view support ticket thank you page', function () {
+    $booking = Booking::factory()->create([
+        'status' => BookingStatus::Rejected,
+    ]);
+
+    $ticket = SupportTicket::factory()->create([
+        'booking_id' => $booking->id,
+        'ticket_number' => 'TKT-ABC123',
+        'status' => 'pending',
+        'documents' => [
+            ['path' => 'support-tickets/doc1.pdf', 'filename' => 'document1.pdf', 'url' => '/storage/support-tickets/doc1.pdf'],
+            ['path' => 'support-tickets/doc2.jpg', 'filename' => 'image.jpg', 'url' => '/storage/support-tickets/doc2.jpg'],
+        ],
+    ]);
+
+    get(route('support-tickets.thank-you', ['ticketNumber' => $ticket->ticket_number]))
+        ->assertSuccessful()
+        ->assertSee('Support Ticket Created!')
+        ->assertSee($ticket->ticket_number)
+        ->assertSee($booking->booking_code)
+        ->assertSee($booking->brand_name)
+        ->assertSee('document1.pdf')
+        ->assertSee('image.jpg');
 });

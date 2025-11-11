@@ -18,6 +18,7 @@ use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\TwoFactor;
 use App\Livewire\Support\CreateTicket;
+use App\Livewire\Support\TicketThankYou;
 use App\Models\Exhibition;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -35,6 +36,7 @@ Route::get('edit-booking', EditBooking::class)->name('exhibitions.booking.edit')
 
 // Support Ticket routes
 Route::get('support-tickets/create', CreateTicket::class)->name('support-tickets.create');
+Route::get('support-tickets/thank-you/{ticketNumber}', TicketThankYou::class)->name('support-tickets.thank-you');
 Route::post('support-tickets/upload', [SupportTicketController::class, 'upload'])->name('support-tickets.upload');
 Route::get('support-tickets/download/{path}', [SupportTicketController::class, 'download'])->name('support-tickets.download')->where('path', '.*');
 

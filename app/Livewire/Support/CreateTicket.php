@@ -25,6 +25,17 @@ class CreateTicket extends Component
 
     public array $uploadedDocuments = [];
 
+    public function mount(): void
+    {
+        // Auto-verify booking if ticket code is provided in URL
+        $ticketCode = request()->query('ticket');
+
+        if ($ticketCode) {
+            $this->bookingCode = $ticketCode;
+            $this->verifyBooking();
+        }
+    }
+
     public function verifyBooking(): void
     {
         $this->validate([
@@ -100,9 +111,7 @@ class CreateTicket extends Component
             'status' => 'pending',
         ]);
 
-        session()->flash('message', 'Support ticket created successfully! Ticket Number: '.$ticket->ticket_number);
-
-        $this->redirect(route('home'));
+        $this->redirect(route('support-tickets.thank-you', ['ticketNumber' => $ticket->ticket_number]), navigate: true);
     }
 
     public function render()
