@@ -258,10 +258,13 @@
                 },
 
                 getImageUrl(file) {
-                    if (typeof file === 'object' && file.path) {
-                        return `/storage/${file.path}`;
+                    // If file object has URL (from backend), use it directly
+                    if (typeof file === 'object' && file.url) {
+                        return file.url;
                     }
-                    return typeof file === 'string' ? `/storage/${file}` : '';
+                    // Fallback to constructing URL from path
+                    const path = typeof file === 'object' && file.path ? file.path : file;
+                    return path ? `/storage/${path}` : '';
                 }
             }));
         });

@@ -54,11 +54,13 @@ class CreateTicket extends Component
     {
         $path = $data['path'] ?? null;
         $filename = $data['filename'] ?? null;
+        $url = $data['url'] ?? null;
 
         if ($path && $filename) {
             $this->uploadedDocuments[] = [
                 'path' => $path,
                 'filename' => $filename,
+                'url' => $url,
             ];
         }
     }

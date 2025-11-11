@@ -21,6 +21,7 @@ class SupportTicketController extends Controller
         return response()->json([
             'path' => $path,
             'filename' => $file->getClientOriginalName(),
+            'url' => Storage::disk('public')->url($path),
         ]);
     }
 

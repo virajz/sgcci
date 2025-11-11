@@ -19,9 +19,10 @@ test('can upload file and returns path and original filename', function () {
     ]);
 
     $response->assertSuccessful();
-    $response->assertJsonStructure(['path', 'filename']);
+    $response->assertJsonStructure(['path', 'filename', 'url']);
     expect($response->json('filename'))->toBe('investor.jpeg');
     expect($response->json('path'))->toContain('support-tickets/');
+    expect($response->json('url'))->toBeString();
 
     Storage::disk('public')->assertExists($response->json('path'));
 });
@@ -44,7 +45,7 @@ test('support ticket stores documents with original filename', function () {
         'booking_code' => $booking->booking_code,
     ]);
 
-    expect($uploadResponse->json())->toHaveKeys(['path', 'filename']);
+    expect($uploadResponse->json())->toHaveKeys(['path', 'filename', 'url']);
     expect($uploadResponse->json('filename'))->toBe('test-image.png');
 });
 
