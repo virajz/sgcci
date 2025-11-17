@@ -33,7 +33,7 @@ class StoreBookingRequest extends FormRequest
             'customCity' => ['required_if:city,Others', 'nullable', 'string', 'max:255'],
             'gstNumber' => ['nullable', 'string', 'max:15'],
             'productProfile' => ['required', 'array', 'min:1'],
-            'productProfile.*' => ['string'],
+            'productProfile.*' => ['string', 'in:4-wheelers,2-wheelers,automobile-ancillaries'],
             'hasExhibitedBefore' => ['boolean'],
             'participationYears' => ['nullable', 'array'],
             'participationYears.*' => ['string'],

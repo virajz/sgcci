@@ -1,6 +1,7 @@
 <div x-data="{
     selectedStalls: @entangle('selectedStalls').live,
     bookedStalls: @js($bookedStalls),
+    allowedProfiles: @js($allowedProfilesForSvg),
     svgElement: null,
     stallElements: [],
     viewBox: { x: 0, y: 0, width: 0, height: 0 },
@@ -12,10 +13,30 @@
     lastTouchDistance: 0,
     lastTouchCenter: { x: 0, y: 0 },
     pendingUpdate: false,
-    toggleStall(stallNumber) {
+    isStallAllowed(stallProfile) {
+        // If no profile restrictions, allow all stalls
+        if (!this.allowedProfiles || this.allowedProfiles.length === 0) {
+            return true;
+        }
+
+        // If stall has no profile, don't allow it when profiles are restricted
+        if (!stallProfile || stallProfile === '') {
+            return false;
+        }
+
+        // Check if the stall's profile is in the allowed profiles
+        return this.allowedProfiles.includes(stallProfile);
+    },
+    toggleStall(stallNumber, stallProfile) {
         // Don't allow selecting reserved or allotted stalls
         if (this.bookedStalls[stallNumber]) {
             $wire.dispatch('stall-unavailable', { stallNumber });
+            return;
+        }
+
+        // Don't allow selecting stalls with non-matching profiles
+        if (!this.isStallAllowed(stallProfile)) {
+            $wire.dispatch('stall-profile-mismatch', { stallNumber, stallProfile });
             return;
         }
 
@@ -39,15 +60,19 @@
     isAllotted(stallNumber) {
         return this.bookedStalls[stallNumber] === 'allotted';
     },
-    getStallColor(stallNumber) {
+    isDisabled(stallProfile) {
+        return !this.isStallAllowed(stallProfile);
+    },
+    getStallColor(stallNumber, stallProfile) {
         if (this.isSelected(stallNumber)) return '#0ea5e9'; // sky-500
         if (this.isReserved(stallNumber)) return '#ef4444'; // red-500
         if (this.isAllotted(stallNumber)) return '#71717a'; // zinc-500
+        if (this.isDisabled(stallProfile)) return '#3f3f46'; // zinc-700 (disabled)
         return null; // original color
     },
     updateStallHighlights() {
-        this.stallElements.forEach(({ stall, stallNumber, bgPath, textPaths }) => {
-            const color = this.getStallColor(stallNumber);
+        this.stallElements.forEach(({ stall, stallNumber, stallProfile, bgPath, textPaths }) => {
+            const color = this.getStallColor(stallNumber, stallProfile);
             const shouldColor = color !== null;
 
             // Store original color if not already stored
@@ -72,8 +97,8 @@
                     }
                 });
 
-                // Change cursor for reserved/allotted stalls
-                if (this.bookedStalls[stallNumber]) {
+                // Change cursor for reserved/allotted/disabled stalls
+                if (this.bookedStalls[stallNumber] || this.isDisabled(stallProfile)) {
                     stall.style.cursor = 'not-allowed';
                 } else {
                     stall.style.cursor = 'pointer';
@@ -318,6 +343,7 @@
 
                     stalls.forEach(stall => {
                         const stallNumber = stall.getAttribute('data-stall');
+                        const stallProfile = stall.getAttribute('data-stall-profile');
                         const bgPath = stall.querySelector('path[fill]:not([class]):not([stroke])');
                         const textPaths = Array.from(stall.querySelectorAll('path[class][fill]'));
 
@@ -325,6 +351,7 @@
                         component.stallElements.push({
                             stall,
                             stallNumber,
+                            stallProfile,
                             bgPath,
                             textPaths
                         });
@@ -333,13 +360,17 @@
 
                         stall.addEventListener('click', () => {
                             if (!component.hasMoved) {
-                                component.toggleStall(stallNumber);
+                                component.toggleStall(stallNumber, stallProfile);
                             }
                         });
                     });
 
                     // Watch for changes and update highlights
                     $watch('selectedStalls', () => {
+                        component.updateStallHighlights();
+                    });
+
+                    $watch('allowedProfiles', () => {
                         component.updateStallHighlights();
                     });
 
@@ -372,6 +403,10 @@
         <div class="flex items-center gap-2">
             <div class="w-4 h-4 rounded bg-zinc-500"></div>
             <flux:text class="text-sm">Allotted</flux:text>
+        </div>
+        <div x-show="allowedProfiles && allowedProfiles.length > 0" class="flex items-center gap-2">
+            <div class="w-4 h-4 rounded bg-zinc-700"></div>
+            <flux:text class="text-sm">Not Available</flux:text>
         </div>
     </div>
 </div>

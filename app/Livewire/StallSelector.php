@@ -12,10 +12,13 @@ class StallSelector extends Component
 
     public ?int $exhibitionId = null;
 
-    public function mount(array $selectedStalls = [], ?int $exhibitionId = null): void
+    public array $allowedProfiles = [];
+
+    public function mount(array $selectedStalls = [], ?int $exhibitionId = null, array $allowedProfiles = []): void
     {
         $this->selectedStalls = $selectedStalls;
         $this->exhibitionId = $exhibitionId;
+        $this->allowedProfiles = $allowedProfiles;
     }
 
     #[On('clear-stalls')]
@@ -72,10 +75,27 @@ class StallSelector extends Component
             ->toArray();
     }
 
+    public function getAllowedProfilesForSvgProperty(): array
+    {
+        // Map product profile values to SVG data-stall-profile attribute values
+        $profileMap = [
+            '4-wheelers' => '4-wheeler',
+            '2-wheelers' => '2-wheeler',
+            'automobile-ancillaries' => 'ancillary',
+        ];
+
+        return collect($this->allowedProfiles)
+            ->map(fn ($profile) => $profileMap[$profile] ?? null)
+            ->filter()
+            ->values()
+            ->toArray();
+    }
+
     public function render()
     {
         return view('livewire.stall-selector', [
             'bookedStalls' => $this->bookedStalls,
+            'allowedProfilesForSvg' => $this->allowedProfilesForSvg,
         ]);
     }
 }

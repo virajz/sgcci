@@ -4,17 +4,19 @@
     isSgcciMember: @entangle('isSgcciMember').live
 }">
     <flux:main class="w-full p-4 mx-auto space-y-6 sm:p-6 lg:p-8 lg:flex lg:flex-col lg:h-full lg:overflow-hidden">
-        <section class="flex items-center justify-between mb-6 lg:flex-shrink-0">
-            <img src="{{ asset('brand/sgcci-logo-fixed.svg') }}" alt="SGCCI Logo" class="w-full h-auto max-w-16">
-            <flux:heading size="xl" class="font-bold tracking-tight">Stall Booking</flux:heading>
-            <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="w-full h-auto max-w-32">
+        <section class="space-y-2 lg:flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <img src="{{ asset('brand/sgcci-logo-fixed.svg') }}" alt="SGCCI Logo" class="w-full h-auto max-w-16">
+                <flux:heading size="xl" class="font-bold tracking-tight">Stall Booking</flux:heading>
+                <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="w-full h-auto max-w-32">
+            </div>
         </section>
 
         <div class="grid grid-cols-1 gap-y-6 lg:grid-cols-3 lg:gap-8 lg:flex-1 lg:overflow-hidden">
             {{-- Map Section (Left) --}}
             <section class="lg:col-span-2 lg:overflow-y-auto lg:pr-4">
                 <div class="lg:sticky lg:top-0">
-                    @livewire('stall-selector', ['selectedStalls' => $selectedStalls, 'exhibitionId' => $exhibition->id])
+                    @livewire('stall-selector', ['selectedStalls' => $selectedStalls, 'exhibitionId' => $exhibition->id, 'allowedProfiles' => $productProfile])
                 </div>
             </section>
 
@@ -174,25 +176,6 @@
                                             </flux:field>
                                         </div>
                                     </div>
-                                </flux:accordion.content>
-                            </flux:accordion.item>
-
-                            {{-- Product Profile --}}
-                            <flux:accordion.item expanded>
-                                <flux:accordion.heading>Product Profile</flux:accordion.heading>
-                                <flux:accordion.content>
-                                    <flux:checkbox.group wire:model="productProfile" variant="cards"
-                                        class="grid gap-4 md:grid-cols-2">
-                                        @error('productProfile')
-                                            <flux:error class="col-span-2">{{ $message }}</flux:error>
-                                        @enderror
-                                        <flux:checkbox checked value="4-wheelers" label="4-Wheelers" />
-                                        <flux:checkbox value="2-wheelers" label="2-Wheelers" />
-                                        <flux:checkbox value="commercial-3-wheelers"
-                                            label="Commercial / 3-Wheelers" />
-                                        <flux:checkbox value="automobile-ancillaries"
-                                            label="Automobile Ancillaries" />
-                                    </flux:checkbox.group>
                                 </flux:accordion.content>
                             </flux:accordion.item>
 
@@ -358,8 +341,12 @@
                                 Application Form
                             </a>
                         </p>
-                        <div class="flex justify-end">
-                            <flux:button type="submit" variant="primary" class="w-full lg:w-fit"
+                        <div class="flex justify-between gap-3">
+                            <flux:button href="{{ route('exhibitions.product-profile.select', $exhibition) }}"
+                                variant="ghost" icon="arrow-left" class="flex-1 lg:flex-initial">
+                                Change Profile
+                            </flux:button>
+                            <flux:button type="submit" variant="primary" class="flex-1 lg:flex-initial"
                                 wire:loading.attr="disabled">
                                 <span wire:loading.remove wire:target="save">Continue</span>
                                 <span wire:loading wire:target="save">Submitting...</span>

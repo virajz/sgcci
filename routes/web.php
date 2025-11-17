@@ -12,6 +12,7 @@ use App\Livewire\Dashboard;
 use App\Livewire\Exhibitions\Booking;
 use App\Livewire\Exhibitions\Confirmation;
 use App\Livewire\Exhibitions\EditBooking;
+use App\Livewire\Exhibitions\ProductProfileSelection;
 use App\Livewire\Exhibitions\ThankYou;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
@@ -27,8 +28,9 @@ Route::get('/', function () {
     $exhibition = Exhibition::first();
 
     return view('welcome', compact('exhibition'));
-})->name('home');
+})->name('welcome');
 
+Route::get('exhibitions/{exhibition}/product-profile', ProductProfileSelection::class)->name('exhibitions.product-profile.select');
 Route::get('exhibitions/{exhibition}/booking', Booking::class)->name('exhibitions.booking.show');
 Route::get('exhibitions/{exhibition}/booking/confirmation', Confirmation::class)->name('exhibitions.booking.confirmation');
 Route::get('exhibitions/{exhibition}/booking/thank-you/{bookingCode}', ThankYou::class)->name('exhibitions.booking.thank-you');

@@ -169,6 +169,19 @@ class Booking extends Component
     {
         $this->exhibitionId = $exhibition->id;
 
+        // Get product profiles from session (set from product profile selection page)
+        $productProfiles = session('product_profiles', []);
+
+        // Redirect to product profile selection if not set
+        if (empty($productProfiles)) {
+            $this->redirect(route('exhibitions.product-profile.select', $exhibition), navigate: true);
+
+            return;
+        }
+
+        // Set product profiles from session
+        $this->productProfile = $productProfiles;
+
         // Restore data from session if available (user went back from confirmation)
         $sessionData = session('booking_data', []);
         if (! empty($sessionData)) {
@@ -182,7 +195,7 @@ class Booking extends Component
             $this->city = $sessionData['city'] ?? 'Surat';
             $this->customCity = $sessionData['customCity'] ?? '';
             $this->gstNumber = $sessionData['gstNumber'] ?? null;
-            $this->productProfile = $sessionData['productProfile'] ?? [];
+            $this->productProfile = $sessionData['productProfile'] ?? $this->productProfile;
             $this->hasExhibitedBefore = $sessionData['hasExhibitedBefore'] ?? false;
             $this->participationYears = $sessionData['participationYears'] ?? [];
             $this->isSgcciMember = $sessionData['isSgcciMember'] ?? false;
