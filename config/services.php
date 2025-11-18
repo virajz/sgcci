@@ -43,6 +43,17 @@ return [
         'source' => env('WHATSAPP_SOURCE', 'booking-system'),
     ],
 
+    'sms' => [
+        'enabled' => env('SMS_ENABLED', false),
+        'api_url' => env('SMS_API_URL', 'http://smsl.myappstores.com/api/mt/SendSMS'),
+        'username' => env('SMS_USERNAME'),
+        'password' => env('SMS_PASSWORD'),
+        'sender_id' => env('SMS_SENDER_ID', 'CHAMBR'),
+        'channel' => env('SMS_CHANNEL', 'Trans'),
+        'dcs' => env('SMS_DCS', 0),
+        'route' => env('SMS_ROUTE', 17),
+    ],
+
     'ccavenue' => [
         'merchant_id' => env('CCAVENUE_MERCHANT_ID'),
         'access_code' => env('CCAVENUE_ACCESS_CODE'),

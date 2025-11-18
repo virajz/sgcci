@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\BookingStatus;
+use App\Jobs\SendSmsMessage;
 use App\Jobs\SendWhatsAppCampaign;
 use App\Models\Booking;
 use App\Services\CCAvenueService;
@@ -145,37 +146,72 @@ class PaymentController extends Controller
                 'remaining' => $booking->remaining_amount,
             ]);
 
-            // Send WhatsApp notification ONLY if this is a NEW payment completion (prevent duplicates on refresh)
+            // Send notifications ONLY if this is a NEW payment completion (prevent duplicates on refresh)
             if (
                 $this->ccavenueService->isPaymentSuccessful($responseData)
-                && config('services.whatsapp.enabled')
                 && ! $wasAlreadyCompleted
                 && $paymentAmount > 0
             ) {
-                // Determine which WhatsApp template to use
+                // Determine which template to use
                 $isFullPayment = $booking->remaining_amount <= 0;
                 $campaignName = $isFullPayment ? 'payment_success' : 'partial_payment_success';
 
-                SendWhatsAppCampaign::dispatch(
-                    campaignName: $campaignName,
-                    phoneCode: $booking->phone_code,
-                    phoneNumber: $booking->phone_number,
-                    templateParams: [
-                        $booking->contact_person,                             // {{1}} Contact Person Name
-                        $booking->exhibition->title,                          // {{2}} Exhibition Title
-                        $booking->booking_code,                               // {{3}} Booking Code
-                        number_format($paymentAmount, 2),                     // {{4}} Amount Paid
-                        now()->format('M d, Y'),                              // {{5}} Payment Date
-                        implode(', ', $booking->selected_stalls),             // {{6}} Confirmed Stalls
-                        number_format((float) $booking->remaining_amount, 2), // {{7}} Remaining Amount (for partial)
-                    ]
-                );
+                // Send WhatsApp notification
+                if (config('services.whatsapp.enabled')) {
+                    SendWhatsAppCampaign::dispatch(
+                        campaignName: $campaignName,
+                        phoneCode: $booking->phone_code,
+                        phoneNumber: $booking->phone_number,
+                        templateParams: [
+                            $booking->contact_person,                             // {{1}} Contact Person Name
+                            $booking->exhibition->title,                          // {{2}} Exhibition Title
+                            $booking->booking_code,                               // {{3}} Booking Code
+                            number_format($paymentAmount, 2),                     // {{4}} Amount Paid
+                            now()->format('M d, Y'),                              // {{5}} Payment Date
+                            implode(', ', $booking->selected_stalls),             // {{6}} Confirmed Stalls
+                            number_format((float) $booking->remaining_amount, 2), // {{7}} Remaining Amount (for partial)
+                        ]
+                    );
 
-                // Send WhatsApp notification to staff members
-                \App\Jobs\SendStaffWhatsAppNotifications::dispatch(
-                    booking: $booking,
-                    campaignName: $campaignName
-                );
+                    // Send WhatsApp notification to staff members
+                    \App\Jobs\SendStaffWhatsAppNotifications::dispatch(
+                        booking: $booking,
+                        campaignName: $campaignName
+                    );
+                }
+
+                // Send SMS notification
+                if (config('services.sms.enabled')) {
+                    if ($isFullPayment) {
+                        // Full payment success SMS
+                        SendSmsMessage::dispatch(
+                            template: 'payment_success',
+                            phoneCode: $booking->phone_code,
+                            phoneNumber: $booking->phone_number,
+                            variables: [
+                                'contact_name' => explode(' ', trim($booking->contact_person))[0],
+                                'amount' => number_format($paymentAmount, 0, '', ''),
+                                'exhibition' => $this->abbreviateTitle($booking->exhibition->title),
+                                'booking_code' => $booking->booking_code,
+                                'date' => now()->format('d/m'),
+                            ]
+                        );
+                    } else {
+                        // Partial payment SMS
+                        SendSmsMessage::dispatch(
+                            template: 'partial_payment_received',
+                            phoneCode: $booking->phone_code,
+                            phoneNumber: $booking->phone_number,
+                            variables: [
+                                'contact_name' => explode(' ', trim($booking->contact_person))[0],
+                                'amount' => number_format($paymentAmount, 0, '', ''),
+                                'booking_code' => $booking->booking_code,
+                                'remaining' => number_format($booking->remaining_amount, 0, '', ''),
+                                'due_date' => $booking->payment_due_at?->format('d/m') ?? now()->addDays(7)->format('d/m'),
+                            ]
+                        );
+                    }
+                }
             }
 
             return view('payment.response', [
@@ -256,5 +292,17 @@ class PaymentController extends Controller
                     ]);
                 }
             });
+    }
+
+    /**
+     * Abbreviate exhibition title for SMS.
+     */
+    private function abbreviateTitle(string $title, int $maxLength = 20): string
+    {
+        if (strlen($title) <= $maxLength) {
+            return $title;
+        }
+
+        return substr($title, 0, $maxLength - 3).'...';
     }
 }

@@ -166,9 +166,7 @@
             <flux:callout variant="info">
                 <flux:heading size="lg">What's Next?</flux:heading>
                 <flux:text class="mt-2">
-                    Our team will review your booking and contact you shortly at {{ $booking->email }} with further
-                    details
-                    and payment information.
+                    Our team will review your booking and contact you shortly via phone or WhatsApp at {{ $booking->phone_code }} {{ $booking->phone_number }} with further details and payment information.
                 </flux:text>
             </flux:callout>
 
@@ -177,7 +175,7 @@
                     icon="arrow-left" iconVariant="outline">
                     Back to Booking
                 </flux:button>
-                <flux:button href="{{ route('home') }}" variant="primary" icon="home" iconVariant="outline">
+                <flux:button href="{{ route('welcome') }}" variant="primary" icon="home" iconVariant="outline">
                     Go to Homepage
                 </flux:button>
             </div>

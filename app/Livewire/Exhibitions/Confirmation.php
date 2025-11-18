@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Exhibitions;
 
+use App\Jobs\SendSmsMessage;
 use App\Jobs\SendWhatsAppCampaign;
 use App\Models\Booking as BookingModel;
 use App\Models\Exhibition;
@@ -104,6 +105,20 @@ class Confirmation extends Component
             );
         }
 
+        // Send SMS message for booking confirmation (in background)
+        if (config('services.sms.enabled')) {
+            SendSmsMessage::dispatch(
+                template: 'booking_received',
+                phoneCode: $booking->phone_code,
+                phoneNumber: $booking->phone_number,
+                variables: [
+                    'contact_name' => explode(' ', trim($booking->contact_person))[0],
+                    'exhibition' => $this->abbreviateTitle($this->exhibition->title),
+                    'booking_code' => $booking->booking_code,
+                ]
+            );
+        }
+
         // Mark token as used
         $usedTokens[] = $token;
         session(['used_booking_tokens' => $usedTokens]);
@@ -157,6 +172,18 @@ class Confirmation extends Component
             $this->bookingData['membershipType'] ?? null,
             $this->bookingData['spaceType'] ?? 'standard'
         );
+    }
+
+    /**
+     * Abbreviate exhibition title for SMS.
+     */
+    private function abbreviateTitle(string $title, int $maxLength = 20): string
+    {
+        if (strlen($title) <= $maxLength) {
+            return $title;
+        }
+
+        return substr($title, 0, $maxLength - 3).'...';
     }
 
     public function render()

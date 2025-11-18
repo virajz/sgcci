@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Inquiries;
 
 use App\BookingStatus;
+use App\Jobs\SendSmsMessage;
 use App\Jobs\SendWhatsAppCampaign;
 use App\Models\Booking;
 use Flux\Flux;
@@ -105,6 +106,22 @@ class Show extends Component
                 );
             }
 
+            // Send SMS notification for booking confirmation with payment link
+            if (config('services.sms.enabled')) {
+                SendSmsMessage::dispatch(
+                    template: 'booking_confirmation_payment',
+                    phoneCode: $this->booking->phone_code,
+                    phoneNumber: $this->booking->phone_number,
+                    variables: [
+                        'contact_name' => explode(' ', trim($this->booking->contact_person))[0],
+                        'exhibition' => $this->abbreviateTitle($this->booking->exhibition->title),
+                        'booking_code' => $this->booking->booking_code,
+                        'due_date' => $paymentDueAt->format('d/m'),
+                        'payment_link' => $this->booking->payment_link,
+                    ]
+                );
+            }
+
             Flux::toast(
                 heading: 'Booking Approved!',
                 variant: 'success',
@@ -176,6 +193,26 @@ class Show extends Component
             );
         }
 
+        // Send SMS notification for booking rejection
+        if (config('services.sms.enabled')) {
+            // Truncate rejection reason to fit within SMS character limit
+            $shortReason = strlen($this->rejectionReason) > 30
+                ? substr($this->rejectionReason, 0, 27).'...'
+                : $this->rejectionReason;
+
+            SendSmsMessage::dispatch(
+                template: 'booking_rejected',
+                phoneCode: $this->booking->phone_code,
+                phoneNumber: $this->booking->phone_number,
+                variables: [
+                    'contact_name' => explode(' ', trim($this->booking->contact_person))[0],
+                    'booking_code' => $this->booking->booking_code,
+                    'exhibition' => $this->abbreviateTitle($this->booking->exhibition->title),
+                    'reason' => $shortReason,
+                ]
+            );
+        }
+
         $this->showRejectModal = false;
         Flux::toast(
             heading: 'Booking Rejected',
@@ -232,10 +269,26 @@ class Show extends Component
             );
         }
 
+        // Send SMS notification for booking confirmation with payment link
+        if (config('services.sms.enabled')) {
+            SendSmsMessage::dispatch(
+                template: 'booking_confirmation_payment',
+                phoneCode: $this->booking->phone_code,
+                phoneNumber: $this->booking->phone_number,
+                variables: [
+                    'contact_name' => explode(' ', trim($this->booking->contact_person))[0],
+                    'exhibition' => $this->abbreviateTitle($this->booking->exhibition->title),
+                    'booking_code' => $this->booking->booking_code,
+                    'due_date' => $paymentDueAt->format('d/m'),
+                    'payment_link' => $this->booking->payment_link,
+                ]
+            );
+        }
+
         Flux::toast(
             heading: 'Payment Link Sent!',
             variant: 'success',
-            text: 'Payment link has been resent to the customer via WhatsApp.'
+            text: 'Payment link has been resent to the customer via WhatsApp and SMS.'
         );
         $this->dispatch('booking-updated');
     }
@@ -487,7 +540,19 @@ class Show extends Component
     {
         // In a real application, you would integrate with a payment gateway
         // For now, return a placeholder URL
-        return config('app.url') . '/payment/' . $this->booking->booking_code;
+        return config('app.url').'/payment/'.$this->booking->booking_code;
+    }
+
+    /**
+     * Abbreviate exhibition title for SMS.
+     */
+    private function abbreviateTitle(string $title, int $maxLength = 20): string
+    {
+        if (strlen($title) <= $maxLength) {
+            return $title;
+        }
+
+        return substr($title, 0, $maxLength - 3).'...';
     }
 
     public function render()
