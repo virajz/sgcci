@@ -30,6 +30,8 @@ Route::get('/', function () {
     return view('welcome', compact('exhibition'));
 })->name('welcome');
 
+Route::redirect('/home', '/')->name('home');
+
 Route::get('exhibitions/{exhibition}/product-profile', ProductProfileSelection::class)->name('exhibitions.product-profile.select');
 Route::get('exhibitions/{exhibition}/booking', Booking::class)->name('exhibitions.booking.show');
 Route::get('exhibitions/{exhibition}/booking/confirmation', Confirmation::class)->name('exhibitions.booking.confirmation');
