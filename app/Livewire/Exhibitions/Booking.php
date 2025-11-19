@@ -46,6 +46,8 @@ class Booking extends Component
 
     public string $membershipType = '';
 
+    public string $membershipNumber = '';
+
     public string $spaceType = 'standard';
 
     public function getExhibitionProperty(): Exhibition
@@ -157,6 +159,7 @@ class Booking extends Component
             'participationYears' => $this->participationYears,
             'isSgcciMember' => $this->isSgcciMember,
             'membershipType' => $this->membershipType,
+            'membershipNumber' => $this->membershipNumber,
             'spaceType' => $this->spaceType,
             'selectedStalls' => $this->selectedStalls,
         ]]);

@@ -270,6 +270,15 @@
                                                 {{-- <flux:radio value="life-member" label="Life Member" /> --}}
                                                 {{-- <flux:radio value="company-member" label="Company Member" /> --}}
                                             </flux:radio.group>
+
+                                            <div x-show="$wire.membershipType" x-cloak class="mt-6">
+                                                <flux:field>
+                                                    <flux:label>Membership Number</flux:label>
+                                                    <flux:input wire:model="membershipNumber"
+                                                        placeholder="Enter your membership number" />
+                                                    <flux:error name="membershipNumber" />
+                                                </flux:field>
+                                            </div>
                                         </div>
                                     </div>
                                 </flux:accordion.content>

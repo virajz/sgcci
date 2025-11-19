@@ -249,9 +249,17 @@
                     <div>
                         <flux:subheading class="mb-2 text-sm">SGCCI Membership</flux:subheading>
                         @if ($booking->is_sgcci_member && $booking->membership_type)
-                            <flux:badge variant="solid" color="blue">
-                                {{ ucwords(str_replace('-', ' ', $booking->membership_type)) }}
-                            </flux:badge>
+                            <div class="space-y-2">
+                                <flux:badge variant="solid" color="blue">
+                                    {{ ucwords(str_replace('-', ' ', $booking->membership_type)) }}
+                                </flux:badge>
+                                @if ($booking->membership_number)
+                                    <flux:text class="block text-sm">
+                                        <span class="text-zinc-600 dark:text-zinc-400">Number:</span>
+                                        <span class="font-semibold">{{ $booking->membership_number }}</span>
+                                    </flux:text>
+                                @endif
+                            </div>
                         @else
                             <flux:text class="text-zinc-500">Not a member</flux:text>
                         @endif

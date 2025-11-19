@@ -53,6 +53,8 @@ class EditBooking extends Component
 
     public string $membershipType = '';
 
+    public string $membershipNumber = '';
+
     public string $spaceType = 'standard';
 
     public function findBooking(): void
@@ -106,6 +108,7 @@ class EditBooking extends Component
         $this->participationYears = $booking->participation_years ?? [];
         $this->isSgcciMember = $booking->is_sgcci_member ?? false;
         $this->membershipType = $booking->membership_type ?? '';
+        $this->membershipNumber = $booking->membership_number ?? '';
         $this->spaceType = $booking->space_type;
 
         // Set custom city if needed
@@ -182,6 +185,7 @@ class EditBooking extends Component
             'participation_years' => $this->participationYears,
             'is_sgcci_member' => $this->isSgcciMember,
             'membership_type' => $this->membershipType,
+            'membership_number' => $this->membershipNumber,
             'space_type' => $this->spaceType,
             'price_per_sqm' => $pricing['price_per_sqm'],
             'total_price' => $pricing['total_price'],

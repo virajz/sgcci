@@ -31,6 +31,7 @@ class Booking extends Model
         'participation_years',
         'is_sgcci_member',
         'membership_type',
+        'membership_number',
         'selected_stalls',
         'space_type',
         'total_area',

@@ -39,6 +39,7 @@ class UpdateBookingRequest extends FormRequest
             'participationYears.*' => ['string'],
             'isSgcciMember' => ['boolean'],
             'membershipType' => ['nullable', 'string'],
+            'membershipNumber' => ['required_with:membershipType', 'string', 'max:100'],
             'spaceType' => ['required', 'string', 'in:standard,raw'],
         ];
     }
@@ -62,6 +63,7 @@ class UpdateBookingRequest extends FormRequest
             'productProfile.min' => 'Please select at least one product profile.',
             'spaceType.required' => 'Please select a space type.',
             'spaceType.in' => 'Invalid space type selected.',
+            'membershipNumber.required_with' => 'Please enter your membership number.',
         ];
     }
 }

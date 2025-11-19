@@ -78,6 +78,7 @@ class Confirmation extends Component
             'participation_years' => $this->bookingData['participationYears'],
             'is_sgcci_member' => $this->bookingData['isSgcciMember'],
             'membership_type' => $this->bookingData['membershipType'],
+            'membership_number' => $this->bookingData['membershipNumber'] ?? null,
             'space_type' => $this->bookingData['spaceType'] ?? 'standard',
             'selected_stalls' => $this->bookingData['selectedStalls'],
         ]);

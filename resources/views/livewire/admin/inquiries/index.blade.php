@@ -30,6 +30,7 @@
                         <flux:table.column>Brand Name</flux:table.column>
                         <flux:table.column>Contact Person</flux:table.column>
                         <flux:table.column>Phone</flux:table.column>
+                        <flux:table.column>Membership</flux:table.column>
                         <flux:table.column>Stalls</flux:table.column>
                         <flux:table.column>Amount</flux:table.column>
                         <flux:table.column>Status</flux:table.column>
@@ -56,6 +57,19 @@
 
                                 <flux:table.cell>
                                     <div class="text-sm">{{ $booking->phone_code }} {{ $booking->phone_number }}</div>
+                                </flux:table.cell>
+
+                                <flux:table.cell>
+                                    @if ($booking->is_sgcci_member && $booking->membership_number)
+                                        <div class="text-sm">
+                                            <div class="font-medium">{{ $booking->membership_number }}</div>
+                                            <div class="text-xs text-zinc-500">{{ ucwords(str_replace('-', ' ', $booking->membership_type)) }}</div>
+                                        </div>
+                                    @elseif ($booking->is_sgcci_member)
+                                        <div class="text-xs text-zinc-500">{{ ucwords(str_replace('-', ' ', $booking->membership_type)) }}</div>
+                                    @else
+                                        <div class="text-xs text-zinc-400">-</div>
+                                    @endif
                                 </flux:table.cell>
 
                                 <flux:table.cell>

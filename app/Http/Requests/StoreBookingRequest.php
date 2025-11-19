@@ -39,6 +39,7 @@ class StoreBookingRequest extends FormRequest
             'participationYears.*' => ['string'],
             'isSgcciMember' => ['boolean'],
             'membershipType' => ['nullable', 'string'],
+            'membershipNumber' => ['required_with:membershipType', 'string', 'max:100'],
             'spaceType' => ['required', 'string', 'in:standard,raw'],
             'selectedStalls' => ['required', 'array', 'min:1'],
             'selectedStalls.*' => ['string'],
@@ -66,6 +67,7 @@ class StoreBookingRequest extends FormRequest
             'spaceType.in' => 'Invalid space type selected.',
             'selectedStalls.required' => 'Please select at least one stall.',
             'selectedStalls.min' => 'Please select at least one stall.',
+            'membershipNumber.required_with' => 'Please enter your membership number.',
         ];
     }
 }
