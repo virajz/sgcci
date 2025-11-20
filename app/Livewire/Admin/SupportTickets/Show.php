@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\SupportTickets;
 
 use App\BookingStatus;
+use App\Jobs\SendWhatsAppCampaign;
 use App\Models\SupportTicket;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -76,6 +77,26 @@ class Show extends Component
             'reviewed_by' => Auth::id(),
             'reviewed_at' => now(),
         ]);
+
+        // Send WhatsApp notification for ticket rejection (same as stall release)
+        if (config('services.whatsapp.enabled')) {
+            // Generate support ticket link with booking code pre-filled
+            $supportTicketUrl = route('support-tickets.create', ['ticket' => $this->ticket->booking->booking_code]);
+
+            SendWhatsAppCampaign::dispatch(
+                campaignName: 'bookingrejected',
+                phoneCode: $this->ticket->booking->phone_code,
+                phoneNumber: $this->ticket->booking->phone_number,
+                templateParams: [
+                    $this->ticket->booking->contact_person,                  // {{1}} Contact Person Name
+                    $this->ticket->booking->exhibition->title,               // {{2}} Exhibition Title
+                    $this->ticket->booking->booking_code,                    // {{3}} Booking Code
+                    implode(', ', $this->ticket->booking->selected_stalls),  // {{4}} Requested Stalls
+                    $this->rejectionReason,                                  // {{5}} Rejection Reason
+                    $supportTicketUrl,                                       // {{6}} Support Ticket Link
+                ]
+            );
+        }
 
         $this->showRejectionModal = false;
 
