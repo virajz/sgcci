@@ -302,6 +302,27 @@ class Booking extends Model
             ];
         }
 
+        // Special size overrides for stalls not in SVG or requiring manual specification
+        $specialSizes = [
+            '6x3' => ['109', '130', '132', '134', '136', '157'],
+            // Add more size mappings as needed
+        ];
+
+        foreach ($specialSizes as $size => $stalls) {
+            [$width, $height] = explode('x', $size);
+            $width = (int) $width;
+            $height = (int) $height;
+            $area = $width * $height;
+
+            foreach ($stalls as $stallNumber) {
+                $stallSizes[$stallNumber] = [
+                    'width' => $width,
+                    'height' => $height,
+                    'area' => $area,
+                ];
+            }
+        }
+
         return $stallSizes;
     }
 
@@ -326,7 +347,7 @@ class Booking extends Model
                     'width' => $size['width'],
                     'height' => $size['height'],
                     'area' => $size['area'],
-                    'size_display' => $size['width'].' x '.$size['height'],
+                    'size_display' => $size['width'] . ' x ' . $size['height'],
                     'price' => $size['area'] * $pricePerSqm,
                 ];
             } else {
