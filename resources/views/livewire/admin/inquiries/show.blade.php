@@ -90,7 +90,7 @@
                                 <tr class="border-b dark:border-zinc-700">
                                     <td class="px-4 py-3 font-medium">{{ $item['stall_number'] }}</td>
                                     <td class="px-4 py-3 text-right">{{ $item['area'] }}</td>
-                                    <td class="px-4 py-3 text-right">₹750.00</td>
+                                    <td class="px-4 py-3 text-right">₹{{ number_format((float) $booking->price_per_sqm, 2) }}</td>
                                     <td class="px-4 py-3 font-medium text-right">
                                         ₹{{ number_format($item['price'], 2) }}</td>
                                 </tr>

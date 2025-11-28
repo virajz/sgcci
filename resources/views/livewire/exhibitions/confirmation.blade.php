@@ -104,7 +104,7 @@
                                         <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
                                             {{ $item['size_display'] }}</td>
                                         <td class="px-4 py-3 text-right">{{ $item['area'] }}</td>
-                                        <td class="px-4 py-3 text-right">₹750.00</td>
+                                        <td class="px-4 py-3 text-right">₹{{ number_format($this->pricing['price_per_sqm'], 2) }}</td>
                                         <td class="px-4 py-3 font-medium text-right">
                                             ₹{{ number_format($item['price'], 2) }}</td>
                                     </tr>
