@@ -89,7 +89,7 @@
 
                                         <flux:field>
                                             <flux:label badge="Optional">GST Number</flux:label>
-                                            <flux:input wire:model="gstNumber" type="text" mask="99aaaaa9999a9a9"
+                                            <flux:input wire:model="gstNumber" type="text" mask="99aaaaa9999a9a*"
                                                 x-mask:dynamic="$uppercase($input)" placeholder="22AAAAA0000A1Z5"
                                                 class="uppercase" />
                                             <flux:error name="gstNumber" />
@@ -188,7 +188,8 @@
                                         <flux:radio value="standard" label="Standard Space - ₹5,000/sq m">
                                             <x-slot:description>
                                                 Fully fabricated stall with walls, flooring, and basic amenities<br>
-                                                <strong>Applicable only for stalls: 6×3 (18 sq m) & 3×3 (9 sq m)</strong>
+                                                <strong>Applicable only for stalls: 6×3 (18 sq m) & 3×3 (9 sq
+                                                    m)</strong>
                                             </x-slot:description>
                                         </flux:radio>
                                         <flux:radio value="raw" label="Raw Space - ₹4,500/sq m"
