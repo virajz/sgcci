@@ -24,6 +24,19 @@ class Index extends Component
 
     public ?int $stallToRelease = null;
 
+    public array $visibleColumns = [
+        'booking_code' => true,
+        'brand_name' => true,
+        'contact_person' => true,
+        'phone' => true,
+        'membership' => true,
+        'stalls' => true,
+        'amount' => true,
+        'part_payment' => true,
+        'status' => true,
+        'date' => true,
+    ];
+
     public function mount(): void
     {
         // If tab parameter is provided in URL, use it
@@ -33,6 +46,12 @@ class Index extends Component
         } elseif (! $tab && Auth::user()->isSuperAdmin()) {
             // Super admin default tab is 'approved_by_admin' (bookings awaiting their approval)
             $this->statusFilter = 'approved_by_admin';
+        }
+
+        // Load column preferences from session
+        $savedColumns = session('admin.inquiries.visible_columns');
+        if ($savedColumns && is_array($savedColumns)) {
+            $this->visibleColumns = array_merge($this->visibleColumns, $savedColumns);
         }
     }
 
@@ -90,6 +109,56 @@ class Index extends Component
 
         $this->showConfirmReleaseModal = false;
         $this->stallToRelease = null;
+    }
+
+    public function updatedVisibleColumns(): void
+    {
+        $this->saveColumnPreferences();
+    }
+
+    public function resetColumns(): void
+    {
+        $this->visibleColumns = [
+            'booking_code' => true,
+            'brand_name' => true,
+            'contact_person' => true,
+            'phone' => true,
+            'membership' => true,
+            'stalls' => true,
+            'amount' => true,
+            'part_payment' => true,
+            'status' => true,
+            'date' => true,
+        ];
+        $this->saveColumnPreferences();
+
+        Flux::toast(
+            heading: 'Columns Reset',
+            variant: 'success',
+            text: 'All columns are now visible.'
+        );
+    }
+
+    protected function saveColumnPreferences(): void
+    {
+        session(['admin.inquiries.visible_columns' => $this->visibleColumns]);
+    }
+
+    public function getColumnLabel(string $column): string
+    {
+        return match ($column) {
+            'booking_code' => 'Booking Code',
+            'brand_name' => 'Brand Name',
+            'contact_person' => 'Contact Person',
+            'phone' => 'Phone',
+            'membership' => 'Membership',
+            'stalls' => 'Stalls',
+            'amount' => 'Amount',
+            'part_payment' => 'Part Payment',
+            'status' => 'Status',
+            'date' => 'Date',
+            default => ucfirst($column),
+        };
     }
 
     public function render()
