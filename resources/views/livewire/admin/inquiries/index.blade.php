@@ -33,6 +33,7 @@
                         <flux:table.column>Membership</flux:table.column>
                         <flux:table.column>Stalls</flux:table.column>
                         <flux:table.column>Amount</flux:table.column>
+                        <flux:table.column>Part Payment</flux:table.column>
                         <flux:table.column>Status</flux:table.column>
                         <flux:table.column>Date</flux:table.column>
                         <flux:table.column>Actions</flux:table.column>
@@ -89,6 +90,25 @@
                                             ₹{{ number_format((float) $booking->total_with_gst, 2) }}
                                         @endif
                                     </div>
+                                </flux:table.cell>
+
+                                <flux:table.cell>
+                                    @if ($booking->is_manual_block)
+                                        <div class="text-xs text-zinc-400">-</div>
+                                    @elseif ($booking->amount_paid > 0)
+                                        <div class="text-sm">
+                                            <div class="font-medium text-green-600 dark:text-green-400">
+                                                ₹{{ number_format((float) $booking->amount_paid, 2) }}
+                                            </div>
+                                            @if ($booking->remaining_amount > 0)
+                                                <div class="text-xs text-zinc-500">
+                                                    {{ number_format($booking->getPaymentPercentage(), 0) }}% paid
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <div class="text-xs text-zinc-400">Not paid</div>
+                                    @endif
                                 </flux:table.cell>
 
                                 <flux:table.cell>

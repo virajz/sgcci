@@ -136,3 +136,36 @@ test('inquiries index shows all bookings when tab is all', function () {
         ->assertSee('Pending Brand')
         ->assertSee('Completed Brand');
 });
+
+test('inquiries index displays part payment information', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $exhibition = Exhibition::factory()->create();
+
+    // Create booking with no payment
+    Booking::factory()->create([
+        'exhibition_id' => $exhibition->id,
+        'brand_name' => 'No Payment Brand',
+    ]);
+
+    // Create booking with partial payment (50%)
+    $partialBooking = Booking::factory()->create([
+        'exhibition_id' => $exhibition->id,
+        'brand_name' => 'Partial Payment Brand',
+    ]);
+    // Record a partial payment
+    $partialBooking->recordPayment($partialBooking->total_with_gst / 2, 'cash');
+
+    // Create booking with full payment
+    $fullBooking = Booking::factory()->create([
+        'exhibition_id' => $exhibition->id,
+        'brand_name' => 'Full Payment Brand',
+    ]);
+    // Record full payment
+    $fullBooking->recordPayment($fullBooking->total_with_gst, 'cash');
+
+    Livewire::actingAs($admin)
+        ->test('admin.inquiries.index')
+        ->assertSee('Part Payment')
+        ->assertSee('Not paid')
+        ->assertSee('50% paid');
+});
