@@ -29,7 +29,7 @@ class ExportDatabase extends Command
 
         // Create temporary file for export
         $tempFile = tempnam(sys_get_temp_dir(), 'db_export_');
-        $outputFile = $tempFile.'.'.($format === 'dump' ? 'dump' : 'sql');
+        $outputFile = $tempFile . '.' . ($format === 'dump' ? 'dump' : 'sql');
         rename($tempFile, $outputFile);
 
         $host = config('database.connections.pgsql.host');
@@ -41,15 +41,20 @@ class ExportDatabase extends Command
         $command = $this->buildCommand($format, $host, $port, $database, $username, $password, $outputFile);
 
         $this->line("Exporting database: {$database}");
+        $this->line("Command: {$command}");
 
         $exitCode = 0;
         $output = [];
-        exec($command.' 2>&1', $output, $exitCode);
+        exec($command . ' 2>&1', $output, $exitCode);
 
-        if ($exitCode !== 0 || ! file_exists($outputFile) || filesize($outputFile) === 0) {
+        if ($exitCode !== 0 || ! file_exists($outputFile) || filesize($outputFile) < 1000) {
             @unlink($outputFile);
             $this->error('Database export failed!');
+            $this->line("Exit code: {$exitCode}");
+            $this->line('File exists: ' . (file_exists($outputFile) ? 'yes' : 'no'));
+            $this->line('File size: ' . (file_exists($outputFile) ? filesize($outputFile) : 0) . ' bytes');
             if (! empty($output)) {
+                $this->line('Output:');
                 $this->line(implode("\n", $output));
             }
 
@@ -94,11 +99,34 @@ class ExportDatabase extends Command
     {
         $pgPassword = $password ? "PGPASSWORD='{$password}' " : '';
 
+        // Try to find pg_dump in common locations
+        $pgDumpPath = $this->findPgDump();
+
         if ($format === 'dump') {
-            return "{$pgPassword}pg_dump -h {$host} -p {$port} -U {$username} -d {$database} -Fc -f {$outputFile}";
+            return "{$pgPassword}{$pgDumpPath} -h {$host} -p {$port} -U {$username} -d {$database} -Fc -f {$outputFile}";
         }
 
-        return "{$pgPassword}pg_dump -h {$host} -p {$port} -U {$username} -d {$database} -f {$outputFile}";
+        return "{$pgPassword}{$pgDumpPath} -h {$host} -p {$port} -U {$username} -d {$database} -f {$outputFile}";
+    }
+
+    protected function findPgDump(): string
+    {
+        // Common locations for pg_dump
+        $possiblePaths = [
+            '/Users/Shared/DBngin/postgresql/17.0/bin/pg_dump', // DBngin
+            '/opt/homebrew/bin/pg_dump', // Homebrew Apple Silicon
+            '/usr/local/bin/pg_dump', // Homebrew Intel
+            '/usr/bin/pg_dump', // System
+            'pg_dump', // PATH fallback
+        ];
+
+        foreach ($possiblePaths as $path) {
+            if ($path === 'pg_dump' || file_exists($path)) {
+                return $path;
+            }
+        }
+
+        return 'pg_dump'; // Fallback to PATH
     }
 
     protected function generateFilename(string $format): string
@@ -113,17 +141,17 @@ class ExportDatabase extends Command
     protected function formatBytes(int $bytes): string
     {
         if ($bytes >= 1073741824) {
-            return number_format($bytes / 1073741824, 2).' GB';
+            return number_format($bytes / 1073741824, 2) . ' GB';
         }
 
         if ($bytes >= 1048576) {
-            return number_format($bytes / 1048576, 2).' MB';
+            return number_format($bytes / 1048576, 2) . ' MB';
         }
 
         if ($bytes >= 1024) {
-            return number_format($bytes / 1024, 2).' KB';
+            return number_format($bytes / 1024, 2) . ' KB';
         }
 
-        return $bytes.' bytes';
+        return $bytes . ' bytes';
     }
 }

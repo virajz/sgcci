@@ -39,9 +39,14 @@
         <div class="space-y-4">
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">Available Backups</h3>
-                <flux:button wire:click="$refresh" variant="ghost" size="sm" icon="arrow-path">
-                    Refresh
-                </flux:button>
+                <div class="flex items-center gap-2">
+                    <flux:button wire:click="openImportModal" variant="primary" size="sm" icon="arrow-up-tray">
+                        Import / Restore
+                    </flux:button>
+                    <flux:button wire:click="$refresh" variant="ghost" size="sm" icon="arrow-path">
+                        Refresh
+                    </flux:button>
+                </div>
             </div>
 
             @if (count($this->backups) > 0)
@@ -83,6 +88,10 @@
                                                 size="sm" icon="arrow-down-tray">
                                                 Download
                                             </flux:button>
+                                            <flux:button wire:click="restore('{{ $backup['name'] }}')" variant="outline"
+                                                size="sm" icon="arrow-path">
+                                                Restore
+                                            </flux:button>
                                             <flux:button wire:click="delete('{{ $backup['name'] }}')"
                                                 wire:confirm="Are you sure you want to delete this backup?"
                                                 variant="danger" size="sm" icon="trash">
@@ -107,6 +116,98 @@
         </div>
     </flux:card>
 
+    <!-- Import/Restore Modal -->
+    <flux:modal name="import-modal" :open="$showImportModal" wire:model="showImportModal" class="max-w-2xl">
+        <div class="space-y-6">
+            <div>
+                <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">Import / Restore Database</h2>
+                <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                    Upload a SQL file to restore your database
+                </p>
+            </div>
+
+            <div class="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20">
+                <div class="flex gap-3">
+                    <flux:icon.exclamation-triangle class="flex-shrink-0 size-5 text-amber-600 dark:text-amber-400" />
+                    <div class="text-sm text-amber-800 dark:text-amber-200">
+                        <p class="font-medium">Warning: This action will modify your database</p>
+                        <p class="mt-1">Make sure you have a recent backup before proceeding.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <flux:field label="Upload SQL File">
+                    <flux:input type="file" wire:model="uploadedFile" accept=".sql,.dump" />
+                    @error('uploadedFile')
+                        <flux:error>{{ $message }}</flux:error>
+                    @enderror
+                </flux:field>
+
+                <flux:checkbox wire:model="dropTables" label="Drop all existing tables before import">
+                    <flux:description>
+                        ⚠️ This will completely wipe your database before restoring. Use with caution!
+                    </flux:description>
+                </flux:checkbox>
+
+                <div wire:loading wire:target="uploadedFile" class="text-sm text-zinc-600 dark:text-zinc-400">
+                    Uploading file...
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2">
+                <flux:button wire:click="closeImportModal" variant="ghost">
+                    Cancel
+                </flux:button>
+                <flux:button wire:click="importUpload" wire:loading.attr="disabled" :disabled="!$uploadedFile"
+                    variant="danger">
+                    <span wire:loading.remove wire:target="importUpload">Import Database</span>
+                    <span wire:loading wire:target="importUpload">Importing...</span>
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    <!-- Restore Confirmation Modal -->
+    <flux:modal name="restore-modal" :open="$showRestoreModal" wire:model="showRestoreModal" class="max-w-lg">
+        <div class="space-y-6">
+            <div>
+                <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">Restore Database Backup</h2>
+                <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                    You are about to restore: <span class="font-mono font-medium">{{ $restoreFilename }}</span>
+                </p>
+            </div>
+
+            <div class="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20">
+                <div class="flex gap-3">
+                    <flux:icon.exclamation-triangle class="flex-shrink-0 size-5 text-amber-600 dark:text-amber-400" />
+                    <div class="text-sm text-amber-800 dark:text-amber-200">
+                        <p class="font-medium">Warning: This will modify your database</p>
+                        <p class="mt-1">This action will import the backup data into your current database. Any
+                            conflicting data may be overwritten.</p>
+                    </div>
+                </div>
+            </div>
+
+            <flux:checkbox wire:model="dropTables" label="Drop all existing tables before restore">
+                <flux:description>
+                    ⚠️ This will completely wipe your database before restoring. All active sessions will be replaced
+                    with those from the backup.
+                </flux:description>
+            </flux:checkbox>
+
+            <div class="flex justify-end gap-2">
+                <flux:button wire:click="closeRestoreModal" variant="ghost" wire:loading.attr="disabled">
+                    Cancel
+                </flux:button>
+                <flux:button wire:click="confirmRestore" variant="danger" wire:loading.attr="disabled">
+                    <span wire:loading.remove wire:target="confirmRestore">Restore Database</span>
+                    <span wire:loading wire:target="confirmRestore">Restoring...</span>
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
     @script
         <script>
             $wire.on('backup-created', () => {
@@ -130,6 +231,24 @@
                     variant: 'success'
                 });
                 $wire.$refresh();
+            });
+
+            $wire.on('import-success', () => {
+                // Reload immediately to avoid session errors
+                window.location.reload();
+            });
+
+            $wire.on('import-failed', (event) => {
+                window.Flux.toast({
+                    text: 'Import failed: ' + event.message,
+                    variant: 'danger',
+                    duration: 8000
+                });
+            });
+
+            $wire.on('prepare-restore', (event) => {
+                // When restoring from existing backup, we could show different UI
+                // For now, just open the modal
             });
         </script>
     @endscript

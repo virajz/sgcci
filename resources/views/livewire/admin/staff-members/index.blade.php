@@ -115,7 +115,7 @@
             </div>
 
             <flux:field>
-                <flux:checkbox wire:model="isActive">Active</flux:checkbox>
+                <flux:checkbox wire:model="isActive" label="Active" />
             </flux:field>
 
             <div class="flex gap-2">
@@ -154,7 +154,7 @@
             </div>
 
             <flux:field>
-                <flux:checkbox wire:model="isActive">Active</flux:checkbox>
+                <flux:checkbox wire:model="isActive" label="Active" />
             </flux:field>
 
             <div class="flex gap-2">

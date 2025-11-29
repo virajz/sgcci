@@ -29,9 +29,11 @@
                 <flux:navlist.item icon="ticket" :href="route('admin.support-tickets.index')"
                     :current="request()->routeIs('admin.support-tickets.*')" wire:navigate>{{ __('Support Tickets') }}
                 </flux:navlist.item>
-                <flux:navlist.item icon="circle-stack" :href="route('admin.database-backups')"
-                    :current="request()->routeIs('admin.database-backups')" wire:navigate>{{ __('Database Backups') }}
-                </flux:navlist.item>
+                @if(auth()->user()->email === 'viraj@sgcci.in')
+                    <flux:navlist.item icon="circle-stack" :href="route('admin.database-backups')"
+                        :current="request()->routeIs('admin.database-backups')" wire:navigate>{{ __('Database Backups') }}
+                    </flux:navlist.item>
+                @endif
             </flux:navlist.group>
         </flux:navlist>
 
