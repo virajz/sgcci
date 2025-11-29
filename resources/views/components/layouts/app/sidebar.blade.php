@@ -29,6 +29,9 @@
                 <flux:navlist.item icon="ticket" :href="route('admin.support-tickets.index')"
                     :current="request()->routeIs('admin.support-tickets.*')" wire:navigate>{{ __('Support Tickets') }}
                 </flux:navlist.item>
+                <flux:navlist.item icon="circle-stack" :href="route('admin.database-backups')"
+                    :current="request()->routeIs('admin.database-backups')" wire:navigate>{{ __('Database Backups') }}
+                </flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>
 
@@ -61,7 +64,8 @@
                 <flux:menu.separator />
 
                 <flux:menu.radio.group>
-                    <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>{{ __('Settings') }}
+                    <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>
+                        {{ __('Settings') }}
                     </flux:menu.item>
                 </flux:menu.radio.group>
 

@@ -1,7 +1,10 @@
 <div class="space-y-6" x-data="{ statusFilter: @entangle('statusFilter').live }">
     <div class="flex items-center justify-between mb-6">
         <flux:heading size="xl">Booking Inquiries</flux:heading>
-        <livewire:admin.stall-block-manager />
+        <div class="flex items-center gap-2">
+            <livewire:admin.inquiries.export-bookings />
+            <livewire:admin.stall-block-manager />
+        </div>
     </div>
 
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SupportTicketController;
+use App\Livewire\Admin\DatabaseBackups;
 use App\Livewire\Admin\Inquiries\EditBooking as AdminEditBooking;
 use App\Livewire\Admin\Inquiries\Index as InquiriesIndex;
 use App\Livewire\Admin\Inquiries\Show as InquiriesShow;
@@ -81,7 +82,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('staff-members', StaffMembersIndex::class)->name('staff-members.index');
         Route::get('support-tickets', SupportTicketsIndex::class)->name('support-tickets.index');
         Route::get('support-tickets/{ticket}', SupportTicketsShow::class)->name('support-tickets.show');
+        Route::get('database-backups', DatabaseBackups::class)->name('database-backups');
     });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
