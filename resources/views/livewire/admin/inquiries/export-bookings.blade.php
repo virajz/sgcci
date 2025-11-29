@@ -38,12 +38,12 @@
                         <flux:checkbox wire:model.live="selectedStatuses" value="approved_by_admin" label="Approved by Admin" />
                         <flux:checkbox wire:model.live="selectedStatuses" value="allotted" label="Allotted" />
                         <flux:checkbox wire:model.live="selectedStatuses" value="payment_pending" label="Payment Pending" />
+                        <flux:checkbox wire:model.live="selectedStatuses" value="part_payment_received" label="Part Payment Received" />
                         <flux:checkbox wire:model.live="selectedStatuses" value="payment_completed" label="Payment Completed" />
                         <flux:checkbox wire:model.live="selectedStatuses" value="rejected" label="Rejected" />
                         <flux:checkbox wire:model.live="selectedStatuses" value="cancelled" label="Cancelled" />
                         <flux:checkbox wire:model.live="selectedStatuses" value="expired" label="Expired" />
                         <flux:checkbox wire:model.live="selectedStatuses" value="refunded" label="Refunded" />
-                        <flux:checkbox wire:model.live="selectedStatuses" value="manual_block" label="Manual Block" />
                     </div>
                 </flux:field>
 

@@ -59,13 +59,14 @@ class ExportBookings extends Component
         if (! empty($this->selectedStatuses)) {
             $query->where(function ($q) {
                 foreach ($this->selectedStatuses as $status) {
-                    if ($status === 'manual_block') {
-                        $q->orWhere('is_manual_block', true);
-                    } else {
-                        $q->orWhere(function ($subQuery) use ($status) {
-                            $subQuery->where('status', $status)
-                                ->where('is_manual_block', false);
+                    if ($status === 'part_payment_received') {
+                        // Part payment: amount_paid > 0 AND remaining_amount > 0
+                        $q->orWhere(function ($subQuery) {
+                            $subQuery->where('amount_paid', '>', 0)
+                                ->where('remaining_amount', '>', 0);
                         });
+                    } else {
+                        $q->orWhere('status', $status);
                     }
                 }
             });
@@ -89,13 +90,14 @@ class ExportBookings extends Component
         if (! empty($this->selectedStatuses)) {
             $query->where(function ($q) {
                 foreach ($this->selectedStatuses as $status) {
-                    if ($status === 'manual_block') {
-                        $q->orWhere('is_manual_block', true);
-                    } else {
-                        $q->orWhere(function ($subQuery) use ($status) {
-                            $subQuery->where('status', $status)
-                                ->where('is_manual_block', false);
+                    if ($status === 'part_payment_received') {
+                        // Part payment: amount_paid > 0 AND remaining_amount > 0
+                        $q->orWhere(function ($subQuery) {
+                            $subQuery->where('amount_paid', '>', 0)
+                                ->where('remaining_amount', '>', 0);
                         });
+                    } else {
+                        $q->orWhere('status', $status);
                     }
                 }
             });
@@ -156,19 +158,25 @@ class ExportBookings extends Component
         }
 
         if ($this->includePaymentInfo) {
-            array_push($headers, 'Amount Paid', 'Remaining Amount', 'Payment Status', 'Payment Date');
+            array_push($headers, 'Amount Paid', 'Remaining Amount', 'Payment Status', 'Payment Date', 'Last Payment Date');
         }
 
         fputcsv($handle, $headers);
 
         // Add data rows
         foreach ($bookings as $booking) {
+            // Determine the status label
+            $statusLabel = $booking->status->label();
+            if ($booking->hasPartialPayment()) {
+                $statusLabel = 'Part Payment Received';
+            }
+
             $row = [
                 $booking->booking_code,
                 $booking->brand_name,
                 $booking->facia_name ?? '',
                 $booking->trophy_name ?? '',
-                $booking->is_manual_block ? 'Manual Block' : $booking->status->label(),
+                $statusLabel,
                 implode(', ', $booking->selected_stalls),
                 $booking->total_area,
                 ucfirst($booking->space_type),
@@ -202,12 +210,20 @@ class ExportBookings extends Component
             }
 
             if ($this->includePaymentInfo) {
+                // Get last payment date from payment_history JSON array
+                $lastPaymentDate = '';
+                if (!empty($booking->payment_history) && is_array($booking->payment_history)) {
+                    $lastPayment = end($booking->payment_history);
+                    $lastPaymentDate = $lastPayment['recorded_at'] ?? '';
+                }
+                
                 array_push(
                     $row,
                     $booking->amount_paid,
                     $booking->remaining_amount,
                     $booking->isPaymentCompleted() ? 'Completed' : ($booking->amount_paid > 0 ? 'Partial' : 'Pending'),
-                    $booking->payment_completed_at?->format('Y-m-d H:i:s') ?? ''
+                    $booking->payment_completed_at?->format('Y-m-d H:i:s') ?? '',
+                    $lastPaymentDate
                 );
             }
 
