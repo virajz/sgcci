@@ -213,10 +213,11 @@ class ExportBookings extends Component
                 // Get last payment date from payment_history JSON array
                 $lastPaymentDate = '';
                 if (!empty($booking->payment_history) && is_array($booking->payment_history)) {
-                    $lastPayment = end($booking->payment_history);
+                    $paymentHistory = $booking->payment_history;
+                    $lastPayment = end($paymentHistory);
                     $lastPaymentDate = $lastPayment['recorded_at'] ?? '';
                 }
-                
+
                 array_push(
                     $row,
                     $booking->amount_paid,
