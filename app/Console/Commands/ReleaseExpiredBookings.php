@@ -33,6 +33,7 @@ class ReleaseExpiredBookings extends Command
             ->where('status', BookingStatus::PaymentPending)
             ->whereNotNull('payment_due_at')
             ->where('payment_due_at', '<', now())
+            ->where('amount_paid', 0) // Safety: Only release if NO payment has been made
             ->get();
 
         if ($expiredBookings->isEmpty()) {

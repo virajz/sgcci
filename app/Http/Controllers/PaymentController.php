@@ -125,12 +125,14 @@ class PaymentController extends Controller
                 if ($newRemainingAmount <= 0) {
                     $updateData['payment_completed_at'] = now();
                     $updateData['status'] = BookingStatus::PaymentCompleted;
+                    $updateData['payment_due_at'] = null;
 
                     // Cancel any older pending bookings for the same stalls to prevent double-booking
                     $this->cancelConflictingBookings($booking);
                 } else {
-                    // Partial payment - set status to PaymentPending
+                    // Partial payment - clear the 3-day auto-release deadline since customer has shown commitment
                     $updateData['status'] = BookingStatus::PaymentPending;
+                    $updateData['payment_due_at'] = null;
                 }
             }
 

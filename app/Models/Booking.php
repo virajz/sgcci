@@ -347,7 +347,7 @@ class Booking extends Model
                     'width' => $size['width'],
                     'height' => $size['height'],
                     'area' => $size['area'],
-                    'size_display' => $size['width'] . ' x ' . $size['height'],
+                    'size_display' => $size['width'].' x '.$size['height'],
                     'price' => $size['area'] * $pricePerSqm,
                 ];
             } else {
@@ -452,6 +452,7 @@ class Booking extends Model
             'amount_paid' => $newAmountPaid,
             'remaining_amount' => $newRemainingAmount,
             'payment_history' => $history,
+            'payment_due_at' => null, // Clear 3-day auto-release deadline once any payment is received
         ];
 
         // If payment is now complete
