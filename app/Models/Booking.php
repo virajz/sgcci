@@ -348,7 +348,7 @@ class Booking extends Model
                     'width' => $size['width'],
                     'height' => $size['height'],
                     'area' => $size['area'],
-                    'size_display' => $size['width'].' x '.$size['height'],
+                    'size_display' => $size['width'] . ' x ' . $size['height'],
                     'price' => $size['area'] * $pricePerSqm,
                 ];
             } else {

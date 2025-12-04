@@ -185,7 +185,7 @@ class Confirmation extends Component
             return $title;
         }
 
-        return substr($title, 0, $maxLength - 3).'...';
+        return substr($title, 0, $maxLength - 3) . '...';
     }
 
     public function render()

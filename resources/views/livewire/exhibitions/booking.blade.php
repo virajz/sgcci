@@ -358,7 +358,7 @@
                         <flux:field variant="inline">
                             <flux:checkbox wire:model="agreeToTerms" required>
                             </flux:checkbox>
-                            <flux:label>I agree to the terms in the
+                            <flux:label>I agree to the terms in the &nbsp;
                                 <a href="{{ asset('Application-Form-Auto-Expo-26.pdf') }}" target="_blank"
                                     class="underline transition-colors hover:text-primary-600 dark:hover:text-primary-400">
                                     Application Form
