@@ -136,6 +136,7 @@ class ExportBookings extends Component
             'Brand Name',
             'Facia Name',
             'Trophy Name',
+            'Company Profile',
             'Status',
             'Stalls',
             'Total Area (sqm)',
@@ -176,6 +177,7 @@ class ExportBookings extends Component
                 $booking->brand_name,
                 $booking->facia_name ?? '',
                 $booking->trophy_name ?? '',
+                $booking->company_profile ?? '',
                 $statusLabel,
                 implode(', ', $booking->selected_stalls),
                 $booking->total_area,
@@ -212,7 +214,7 @@ class ExportBookings extends Component
             if ($this->includePaymentInfo) {
                 // Get last payment date from payment_history JSON array
                 $lastPaymentDate = '';
-                if (!empty($booking->payment_history) && is_array($booking->payment_history)) {
+                if (! empty($booking->payment_history) && is_array($booking->payment_history)) {
                     $paymentHistory = $booking->payment_history;
                     $lastPayment = end($paymentHistory);
                     $lastPaymentDate = $lastPayment['recorded_at'] ?? '';

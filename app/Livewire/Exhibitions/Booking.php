@@ -22,6 +22,8 @@ class Booking extends Component
 
     public string $trophyName = '';
 
+    public string $companyProfile = '';
+
     public string $contactPerson = '';
 
     public string $phoneCode = '+91';
@@ -149,6 +151,7 @@ class Booking extends Component
             'brandName' => $this->brandName,
             'faciaName' => $this->faciaName,
             'trophyName' => $this->trophyName,
+            'companyProfile' => $this->companyProfile,
             'contactPerson' => $this->contactPerson,
             'phoneCode' => $this->phoneCode,
             'phoneNumber' => $this->phoneNumber,
@@ -193,6 +196,7 @@ class Booking extends Component
             $this->brandName = $sessionData['brandName'] ?? '';
             $this->faciaName = $sessionData['faciaName'] ?? '';
             $this->trophyName = $sessionData['trophyName'] ?? '';
+            $this->companyProfile = $sessionData['companyProfile'] ?? '';
             $this->contactPerson = $sessionData['contactPerson'] ?? '';
             $this->phoneCode = $sessionData['phoneCode'] ?? '+91';
             $this->phoneNumber = $sessionData['phoneNumber'] ?? '';

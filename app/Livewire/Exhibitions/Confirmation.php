@@ -67,6 +67,7 @@ class Confirmation extends Component
             'brand_name' => $this->bookingData['brandName'],
             'facia_name' => $this->bookingData['faciaName'] ?? null,
             'trophy_name' => $this->bookingData['trophyName'] ?? null,
+            'company_profile' => $this->bookingData['companyProfile'] ?? null,
             'contact_person' => $this->bookingData['contactPerson'],
             'phone_code' => $this->bookingData['phoneCode'],
             'phone_number' => $this->bookingData['phoneNumber'],

@@ -175,6 +175,13 @@
                                                 <flux:error name="trophyName" />
                                             </flux:field>
                                         </div>
+
+                                        <flux:field class="mt-6">
+                                            <flux:label badge="Optional">Company Profile</flux:label>
+                                            <flux:textarea wire:model="companyProfile" rows="4"
+                                                placeholder="Brief description of your company and products..." />
+                                            <flux:error name="companyProfile" />
+                                        </flux:field>
                                     </div>
                                 </flux:accordion.content>
                             </flux:accordion.item>

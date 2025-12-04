@@ -20,6 +20,7 @@ class Booking extends Model
         'brand_name',
         'facia_name',
         'trophy_name',
+        'company_profile',
         'contact_person',
         'phone_code',
         'phone_number',
