@@ -43,6 +43,7 @@ class StoreBookingRequest extends FormRequest
             'spaceType' => ['required', 'string', 'in:standard,raw'],
             'selectedStalls' => ['required', 'array', 'min:1'],
             'selectedStalls.*' => ['string'],
+            'agreeToTerms' => ['required', 'accepted'],
         ];
     }
 
@@ -68,6 +69,8 @@ class StoreBookingRequest extends FormRequest
             'selectedStalls.required' => 'Please select at least one stall.',
             'selectedStalls.min' => 'Please select at least one stall.',
             'membershipNumber.required_with' => 'Please enter your membership number.',
+            'agreeToTerms.required' => 'You must agree to the terms and conditions.',
+            'agreeToTerms.accepted' => 'You must agree to the terms and conditions.',
         ];
     }
 }

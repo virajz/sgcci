@@ -347,14 +347,18 @@
                     </div>
 
                     {{-- Sticky submit button --}}
-                    <div class="pt-4 mt-6 space-y-3 lg:flex-shrink-0 lg:sticky lg:bottom-0">
-                        <p class="text-xs text-center text-zinc-600 dark:text-zinc-400">
-                            By continuing, you agree to the terms in the
-                            <a href="{{ asset('Application-Form-Auto-Expo-26.pdf') }}" target="_blank"
-                                class="underline transition-colors hover:text-primary-600 dark:hover:text-primary-400">
-                                Application Form
-                            </a>
-                        </p>
+                    <div class="pt-4 mt-6 space-y-4 lg:flex-shrink-0 lg:sticky lg:bottom-0">
+                        <flux:field variant="inline">
+                            <flux:checkbox wire:model="agreeToTerms" required>
+                            </flux:checkbox>
+                            <flux:label>I agree to the terms in the
+                                <a href="{{ asset('Application-Form-Auto-Expo-26.pdf') }}" target="_blank"
+                                    class="underline transition-colors hover:text-primary-600 dark:hover:text-primary-400">
+                                    Application Form
+                                </a>
+                            </flux:label>
+                            <flux:error name="agreeToTerms" />
+                        </flux:field>
                         <div class="flex justify-between gap-3">
                             <flux:button href="{{ route('exhibitions.product-profile.select', $exhibition) }}"
                                 variant="ghost" icon="arrow-left" class="flex-1 lg:flex-initial">

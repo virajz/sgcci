@@ -50,6 +50,8 @@ class Booking extends Component
 
     public string $spaceType = 'standard';
 
+    public bool $agreeToTerms = false;
+
     public function getExhibitionProperty(): Exhibition
     {
         return Exhibition::findOrFail($this->exhibitionId);
