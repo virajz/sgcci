@@ -179,7 +179,7 @@
                                         <flux:field class="mt-6">
                                             <flux:label badge="Optional">Company Profile</flux:label>
                                             <flux:textarea wire:model="companyProfile" rows="4"
-                                                placeholder="Brief description of your company and products..." />
+                                                placeholder="Describe your company profile and offering (minimum 50 characters if provided)" />
                                             <flux:error name="companyProfile" />
                                         </flux:field>
                                     </div>
