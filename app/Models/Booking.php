@@ -27,6 +27,8 @@ class Booking extends Model
         'phone_number',
         'email',
         'website',
+        'address',
+        'billing_address',
         'city',
         'gst_number',
         'product_profile',

@@ -152,6 +152,45 @@
             </div>
         </flux:card>
 
+        {{-- Address Fields --}}
+        <flux:card class="p-8">
+            <flux:heading size="lg" class="mb-6">Address Information</flux:heading>
+
+            <div class="space-y-4">
+                @if ($errors->any())
+                    <flux:callout variant="danger">
+                        <ul class="space-y-1 list-disc list-inside">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </flux:callout>
+                @endif
+
+                <flux:field>
+                    <flux:label>Address</flux:label>
+                    <flux:textarea wire:model.live="address" rows="3"
+                        placeholder="Enter your company address" />
+                    <flux:error name="address" />
+                </flux:field>
+
+                <flux:field variant="inline">
+                    <flux:checkbox wire:model.live="sameAsBillingAddress">
+                    </flux:checkbox>
+                    <flux:label>Same as Billing Address</flux:label>
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>Billing Address</flux:label>
+                    <flux:textarea wire:model="billingAddress" rows="3"
+                        placeholder="Enter billing address"
+                        :disabled="$sameAsBillingAddress"
+                        class="{{ $sameAsBillingAddress ? 'opacity-60 cursor-not-allowed' : '' }}" />
+                    <flux:error name="billingAddress" />
+                </flux:field>
+            </div>
+        </flux:card>
+
         <flux:callout variant="info" class="mb-6">
             <flux:text>
                 By confirming, you agree to the terms and conditions in the

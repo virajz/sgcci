@@ -18,6 +18,12 @@ class Confirmation extends Component
 
     public array $bookingData = [];
 
+    public string $address = '';
+
+    public string $billingAddress = '';
+
+    public bool $sameAsBillingAddress = true;
+
     public function getExhibitionProperty(): Exhibition
     {
         return Exhibition::findOrFail($this->exhibitionId);
@@ -41,8 +47,33 @@ class Confirmation extends Component
         $this->redirect(route('exhibitions.booking.show', $this->exhibition), navigate: true);
     }
 
+    public function updatedSameAsBillingAddress(): void
+    {
+        // Sync billing address with address when checkbox is checked
+        if ($this->sameAsBillingAddress) {
+            $this->billingAddress = $this->address;
+        }
+    }
+
+    public function updatedAddress(): void
+    {
+        // Auto-sync billing address when same as billing is checked
+        if ($this->sameAsBillingAddress) {
+            $this->billingAddress = $this->address;
+        }
+    }
+
     public function confirm(): void
     {
+        // Validate address fields
+        $this->validate([
+            'address' => ['required', 'string', 'max:1000'],
+            'billingAddress' => ['required', 'string', 'max:1000'],
+        ], [
+            'address.required' => 'Please enter your address.',
+            'billingAddress.required' => 'Please enter your billing address.',
+        ]);
+
         // Check if booking token exists and hasn't been used
         $token = $this->bookingData['token'] ?? null;
         if (! $token) {
@@ -74,6 +105,8 @@ class Confirmation extends Component
             'phone_number' => $this->bookingData['phoneNumber'],
             'email' => $this->bookingData['email'],
             'website' => $this->bookingData['website'] ?? null,
+            'address' => $this->address,
+            'billing_address' => $this->billingAddress,
             'city' => $this->bookingData['city'],
             'gst_number' => $this->bookingData['gstNumber'] ?? null,
             'product_profile' => $this->bookingData['productProfile'],
