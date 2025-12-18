@@ -393,6 +393,10 @@
     <!-- Legend -->
     <div class="flex flex-wrap justify-center gap-4 px-4">
         <div class="flex items-center gap-2">
+            <div class="w-4 h-4 rounded bg-yellow-300"></div>
+            <flux:text class="text-sm">Available</flux:text>
+        </div>
+        <div class="flex items-center gap-2">
             <div class="w-4 h-4 rounded bg-sky-500"></div>
             <flux:text class="text-sm">Selected</flux:text>
         </div>
