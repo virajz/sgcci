@@ -69,9 +69,11 @@ class Confirmation extends Component
             'trophy_name' => $this->bookingData['trophyName'] ?? null,
             'company_profile' => $this->bookingData['companyProfile'] ?? null,
             'contact_person' => $this->bookingData['contactPerson'],
+            'designation' => $this->bookingData['designation'] ?? null,
             'phone_code' => $this->bookingData['phoneCode'],
             'phone_number' => $this->bookingData['phoneNumber'],
             'email' => $this->bookingData['email'],
+            'website' => $this->bookingData['website'] ?? null,
             'city' => $this->bookingData['city'],
             'gst_number' => $this->bookingData['gstNumber'] ?? null,
             'product_profile' => $this->bookingData['productProfile'],
@@ -185,7 +187,7 @@ class Confirmation extends Component
             return $title;
         }
 
-        return substr($title, 0, $maxLength - 3) . '...';
+        return substr($title, 0, $maxLength - 3).'...';
     }
 
     public function render()

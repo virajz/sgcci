@@ -26,11 +26,15 @@ class Booking extends Component
 
     public string $contactPerson = '';
 
+    public string $designation = '';
+
     public string $phoneCode = '+91';
 
     public string $phoneNumber = '';
 
     public string $email = '';
+
+    public string $website = '';
 
     public string $city = 'Surat';
 
@@ -153,9 +157,11 @@ class Booking extends Component
             'trophyName' => $this->trophyName,
             'companyProfile' => $this->companyProfile,
             'contactPerson' => $this->contactPerson,
+            'designation' => $this->designation,
             'phoneCode' => $this->phoneCode,
             'phoneNumber' => $this->phoneNumber,
             'email' => $this->email,
+            'website' => $this->website,
             'city' => $cityToSave,
             'customCity' => $this->customCity,
             'gstNumber' => $this->gstNumber,
@@ -198,9 +204,11 @@ class Booking extends Component
             $this->trophyName = $sessionData['trophyName'] ?? '';
             $this->companyProfile = $sessionData['companyProfile'] ?? '';
             $this->contactPerson = $sessionData['contactPerson'] ?? '';
+            $this->designation = $sessionData['designation'] ?? '';
             $this->phoneCode = $sessionData['phoneCode'] ?? '+91';
             $this->phoneNumber = $sessionData['phoneNumber'] ?? '';
             $this->email = $sessionData['email'] ?? '';
+            $this->website = $sessionData['website'] ?? '';
             $this->city = $sessionData['city'] ?? 'Surat';
             $this->customCity = $sessionData['customCity'] ?? '';
             $this->gstNumber = $sessionData['gstNumber'] ?? null;

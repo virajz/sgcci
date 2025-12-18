@@ -101,6 +101,13 @@
                                                 error="{{ $errors->first('contactPerson') }}" />
 
                                             <flux:field>
+                                                <flux:label badge="Optional">Designation</flux:label>
+                                                <flux:input wire:model="designation" type="text"
+                                                    placeholder="e.g., Manager, Director" />
+                                                <flux:error name="designation" />
+                                            </flux:field>
+
+                                            <flux:field>
                                                 <flux:label>Phone Number</flux:label>
                                                 <flux:input.group>
                                                     <flux:select wire:model="phoneCode" variant="listbox"
@@ -117,6 +124,13 @@
 
                                             <flux:input wire:model="email" type="email" label="Email"
                                                 placeholder="you@example.com" error="{{ $errors->first('email') }}" />
+
+                                            <flux:field>
+                                                <flux:label badge="Optional">Website</flux:label>
+                                                <flux:input wire:model="website" type="url"
+                                                    placeholder="https://www.example.com" />
+                                                <flux:error name="website" />
+                                            </flux:field>
 
                                             <flux:select x-model="city" variant="listbox" searchable
                                                 label="Select City">

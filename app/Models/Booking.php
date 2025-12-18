@@ -22,9 +22,11 @@ class Booking extends Model
         'trophy_name',
         'company_profile',
         'contact_person',
+        'designation',
         'phone_code',
         'phone_number',
         'email',
+        'website',
         'city',
         'gst_number',
         'product_profile',
@@ -348,7 +350,7 @@ class Booking extends Model
                     'width' => $size['width'],
                     'height' => $size['height'],
                     'area' => $size['area'],
-                    'size_display' => $size['width'] . ' x ' . $size['height'],
+                    'size_display' => $size['width'].' x '.$size['height'],
                     'price' => $size['area'] * $pricePerSqm,
                 ];
             } else {
