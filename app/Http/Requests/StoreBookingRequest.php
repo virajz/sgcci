@@ -26,6 +26,9 @@ class StoreBookingRequest extends FormRequest
             'faciaName' => ['nullable', 'string', 'max:255'],
             'trophyName' => ['nullable', 'string', 'max:255'],
             'companyProfile' => ['nullable', 'string', 'min:50', 'max:1000'],
+            'companyLogo' => ['required', 'array'],
+            'companyLogo.path' => ['required', 'string'],
+            'companyLogo.filename' => ['required', 'string'],
             'contactPerson' => ['required', 'string', 'max:255'],
             'designation' => ['nullable', 'string', 'max:255'],
             'phoneCode' => ['required', 'string', 'max:10'],
@@ -73,6 +76,8 @@ class StoreBookingRequest extends FormRequest
             'selectedStalls.min' => 'Please select at least one stall.',
             'membershipNumber.required_with' => 'Please enter your membership number.',
             'companyProfile.min' => 'Company profile must be at least 50 characters.',
+            'companyLogo.required' => 'Please upload your company logo.',
+            'companyLogo.path.required' => 'Company logo upload failed. Please try again.',
             'agreeToTerms.required' => 'You must agree to the terms and conditions.',
             'agreeToTerms.accepted' => 'You must agree to the terms and conditions.',
         ];

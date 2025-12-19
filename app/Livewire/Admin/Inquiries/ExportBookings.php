@@ -124,7 +124,7 @@ class ExportBookings extends Component
         }
 
         // Generate CSV
-        $filename = 'bookings_export_' . now()->format('Y-m-d_His') . '.csv';
+        $filename = 'bookings_export_'.now()->format('Y-m-d_His').'.csv';
         $handle = fopen('php://temp', 'r+');
 
         // Add BOM for proper UTF-8 encoding in Excel
@@ -196,7 +196,7 @@ class ExportBookings extends Component
                     $row,
                     $booking->contact_person,
                     $booking->email,
-                    $booking->phone_code . ' ' . $booking->phone_number,
+                    $booking->phone_code.' '.$booking->phone_number,
                     $booking->city ?? '',
                     $booking->gst_number ?? ''
                 );
@@ -250,7 +250,7 @@ class ExportBookings extends Component
             echo $csv;
         }, $filename, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 

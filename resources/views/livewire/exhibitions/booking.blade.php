@@ -196,6 +196,67 @@
                                                 placeholder="Describe your company profile and offering (minimum 50 characters if provided)" />
                                             <flux:error name="companyProfile" />
                                         </flux:field>
+
+                                        {{-- Company Logo Upload --}}
+                                        <div class="mt-6" x-data="logoUploader(@entangle('companyLogo'))">
+                                            <flux:label>Company Logo</flux:label>
+                                            <flux:text class="mb-3 text-sm text-zinc-600 dark:text-zinc-400">Upload your company logo (AI, CDR, or PSD format, max 20MB)</flux:text>
+
+                                            <div x-show="!logo.filename" style="display: block;"
+                                                class="p-8 text-center border-2 border-dashed rounded-lg border-zinc-300 dark:border-zinc-600"
+                                                @dragover.prevent="isDragging = true" @dragleave.prevent="isDragging = false"
+                                                @drop.prevent="handleDrop"
+                                                :class="{ 'border-blue-500 bg-blue-50 dark:bg-blue-950': isDragging }">
+                                                <input type="file" x-ref="fileInput" @change="handleFileSelect" accept=".ai,.cdr,.psd"
+                                                    class="hidden">
+
+                                                <div class="space-y-2">
+                                                    <flux:icon.cloud-arrow-up variant="outline" class="w-12 h-12 mx-auto text-zinc-400" />
+                                                    <div class="text-sm text-zinc-600 dark:text-zinc-400">
+                                                        <button type="button" @click="$refs.fileInput.click()"
+                                                            class="font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400">
+                                                            Click to upload
+                                                        </button>
+                                                        or drag and drop
+                                                    </div>
+                                                    <flux:text class="text-xs">AI, CDR, PSD up to 20MB</flux:text>
+                                                </div>
+                                            </div>
+
+                                            {{-- Upload Progress --}}
+                                            <div x-show="uploading" class="space-y-2">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="flex-1">
+                                                        <div class="w-full h-2 rounded-full bg-zinc-200 dark:bg-zinc-700">
+                                                            <div class="h-2 transition-all duration-300 bg-blue-600 rounded-full"
+                                                                :style="`width: ${progress}%`"></div>
+                                                        </div>
+                                                    </div>
+                                                    <flux:text class="text-sm" x-text="`${progress}%`"></flux:text>
+                                                </div>
+                                                <flux:text class="text-sm text-zinc-600 dark:text-zinc-400" x-text="currentFileName">
+                                                </flux:text>
+                                            </div>
+
+                                            {{-- Uploaded File Display --}}
+                                            <div x-show="logo.filename" class="p-3 rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                                                <div class="flex items-center gap-3">
+                                                    <flux:icon.document variant="outline" class="w-12 h-12 text-zinc-500" />
+                                                    <div class="flex-1 min-w-0">
+                                                        <flux:text class="text-sm font-medium truncate" x-text="logo.filename">
+                                                        </flux:text>
+                                                    </div>
+                                                    <button type="button" @click="removeLogo()"
+                                                        class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                                                        <flux:icon.x-mark variant="micro" class="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            @error('companyLogo')
+                                                <flux:text class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</flux:text>
+                                            @enderror
+                                        </div>
                                     </div>
                                 </flux:accordion.content>
                             </flux:accordion.item>
@@ -397,3 +458,109 @@
         </div>
     </flux:main>
 </div>
+
+@push('scripts')
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('logoUploader', (companyLogo) => ({
+                logo: companyLogo || {},
+                uploading: false,
+                progress: 0,
+                currentFileName: '',
+                isDragging: false,
+
+                init() {
+                    this.$watch('logo', value => {
+                        companyLogo = value;
+                    });
+                },
+
+                handleFileSelect(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        this.uploadFile(file);
+                    }
+                },
+
+                handleDrop(event) {
+                    this.isDragging = false;
+                    const file = event.dataTransfer.files[0];
+                    if (file) {
+                        this.uploadFile(file);
+                    }
+                },
+
+                async uploadFile(file) {
+                    if (file.size > 20 * 1024 * 1024) {
+                        alert(`File "${file.name}" is too large. Maximum size is 20MB.`);
+                        return;
+                    }
+
+                    const allowedTypes = ['application/postscript', 'application/illustrator', 'image/vnd.adobe.photoshop', 'application/x-photoshop'];
+                    const extension = file.name.split('.').pop().toLowerCase();
+                    const allowedExtensions = ['ai', 'cdr', 'psd'];
+
+                    if (!allowedExtensions.includes(extension)) {
+                        alert(
+                            `File "${file.name}" has an invalid type. Only AI, CDR, and PSD files are allowed.`
+                        );
+                        return;
+                    }
+
+                    this.uploading = true;
+                    this.progress = 0;
+                    this.currentFileName = file.name;
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('logo', file);
+
+                        const response = await fetch('/booking/upload-logo', {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector(
+                                    'meta[name="csrf-token"]').content,
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.message || 'Upload failed');
+                        }
+
+                        const data = await response.json();
+
+                        if (data.path) {
+                            this.progress = 100;
+                            await this.$wire.call('handleLogoUpload', data);
+                        }
+
+                        setTimeout(() => {
+                            this.uploading = false;
+                            this.progress = 0;
+                            this.currentFileName = '';
+                        }, 500);
+
+                    } catch (error) {
+                        console.error('Upload error:', error);
+                        alert(`Failed to upload "${file.name}": ${error.message}`);
+                        this.uploading = false;
+                        this.progress = 0;
+                        this.currentFileName = '';
+                    }
+
+                    // Reset input
+                    if (this.$refs.fileInput) {
+                        this.$refs.fileInput.value = '';
+                    }
+                },
+
+                removeLogo() {
+                    this.$wire.call('removeLogo');
+                }
+            }));
+        });
+    </script>
+@endpush

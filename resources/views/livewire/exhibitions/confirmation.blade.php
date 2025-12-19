@@ -65,6 +65,16 @@
                                     {{ $bookingData['gstNumber'] }}</flux:text>
                             </div>
                         @endif
+                        @if (!empty($bookingData['companyLogo']['filename']))
+                            <div>
+                                <flux:subheading class="text-sm">Company Logo</flux:subheading>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <flux:icon.document variant="outline" class="w-5 h-5 text-zinc-500" />
+                                    <flux:text class="font-semibold text-black dark:text-white">
+                                        {{ $bookingData['companyLogo']['filename'] }}</flux:text>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
 

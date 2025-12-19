@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SupportTicketController;
 use App\Livewire\Admin\DatabaseBackups;
@@ -38,6 +39,8 @@ Route::get('exhibitions/{exhibition}/booking', Booking::class)->name('exhibition
 Route::get('exhibitions/{exhibition}/booking/confirmation', Confirmation::class)->name('exhibitions.booking.confirmation');
 Route::get('exhibitions/{exhibition}/booking/thank-you/{bookingCode}', ThankYou::class)->name('exhibitions.booking.thank-you');
 Route::get('edit-booking', EditBooking::class)->name('exhibitions.booking.edit');
+Route::post('booking/upload-logo', [BookingController::class, 'uploadLogo'])->name('booking.upload-logo');
+Route::get('booking/download-logo/{path}', [BookingController::class, 'downloadLogo'])->name('booking.download-logo')->where('path', '.*');
 
 // Support Ticket routes
 Route::get('support-tickets/create', CreateTicket::class)->name('support-tickets.create');
@@ -86,4 +89,4 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

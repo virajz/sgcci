@@ -7,6 +7,7 @@ use App\Jobs\SendStaffWhatsAppNotifications;
 use App\Jobs\SendWhatsAppCampaign;
 use App\Models\Booking;
 use Flux\Flux;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -29,13 +30,25 @@ class EditBooking extends Component
 
     public string $trophyName = '';
 
+    public array $companyLogo = [];
+
     public string $contactPerson = '';
+
+    public string $designation = '';
 
     public string $phoneCode = '+91';
 
     public string $phoneNumber = '';
 
     public string $email = '';
+
+    public string $website = '';
+
+    public string $address = '';
+
+    public string $billingAddress = '';
+
+    public bool $sameAsBillingAddress = true;
 
     public string $city = 'Surat';
 
@@ -97,10 +110,25 @@ class EditBooking extends Component
         $this->brandName = $booking->brand_name;
         $this->faciaName = $booking->facia_name ?? '';
         $this->trophyName = $booking->trophy_name ?? '';
+
+        // Set company logo if exists
+        if ($booking->company_logo) {
+            $this->companyLogo = [
+                'path' => $booking->company_logo,
+                'filename' => $booking->company_logo_original_name ?? basename($booking->company_logo),
+                'url' => Storage::disk('public')->url($booking->company_logo),
+            ];
+        }
+
         $this->contactPerson = $booking->contact_person;
+        $this->designation = $booking->designation ?? '';
         $this->phoneCode = $booking->phone_code;
         $this->phoneNumber = $booking->phone_number;
         $this->email = $booking->email;
+        $this->website = $booking->website ?? '';
+        $this->address = $booking->address ?? '';
+        $this->billingAddress = $booking->billing_address ?? '';
+        $this->sameAsBillingAddress = ($booking->address === $booking->billing_address);
         $this->city = $booking->city;
         $this->gstNumber = $booking->gst_number;
         $this->productProfile = $booking->product_profile ?? [];
@@ -119,6 +147,22 @@ class EditBooking extends Component
         }
     }
 
+    public function updatedSameAsBillingAddress(): void
+    {
+        // Sync billing address with address when checkbox is checked
+        if ($this->sameAsBillingAddress) {
+            $this->billingAddress = $this->address;
+        }
+    }
+
+    public function updatedAddress(): void
+    {
+        // Auto-sync billing address when same as billing is checked
+        if ($this->sameAsBillingAddress) {
+            $this->billingAddress = $this->address;
+        }
+    }
+
     public function updatedPricing()
     {
         return Booking::calculatePricing(
@@ -129,6 +173,43 @@ class EditBooking extends Component
             $this->membershipType,
             $this->spaceType
         );
+    }
+
+    public function handleLogoUpload(array $data): void
+    {
+        $path = $data['path'] ?? null;
+        $filename = $data['filename'] ?? null;
+        $url = $data['url'] ?? null;
+
+        if ($path && $filename) {
+            // Delete old logo if exists
+            if (! empty($this->companyLogo) && isset($this->companyLogo['path'])) {
+                $oldPath = $this->companyLogo['path'];
+                if (Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+            }
+
+            $this->companyLogo = [
+                'path' => $path,
+                'filename' => $filename,
+                'url' => $url,
+            ];
+        }
+    }
+
+    public function removeLogo(): void
+    {
+        if (! empty($this->companyLogo)) {
+            $path = is_array($this->companyLogo) ? $this->companyLogo['path'] : $this->companyLogo;
+
+            // Delete the file from storage
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+
+            $this->companyLogo = [];
+        }
     }
 
     public function updateBooking(): void
@@ -169,15 +250,29 @@ class EditBooking extends Component
             $this->spaceType
         );
 
+        // Get logo path and original filename
+        $logoPath = null;
+        $logoOriginalName = null;
+        if (! empty($this->companyLogo) && isset($this->companyLogo['path'])) {
+            $logoPath = $this->companyLogo['path'];
+            $logoOriginalName = $this->companyLogo['filename'] ?? null;
+        }
+
         // Reset approval status if booking was previously approved
         $updateData = [
             'brand_name' => $this->brandName,
             'facia_name' => $this->faciaName,
             'trophy_name' => $this->trophyName,
+            'company_logo' => $logoPath,
+            'company_logo_original_name' => $logoOriginalName,
             'contact_person' => $this->contactPerson,
+            'designation' => $this->designation,
             'phone_code' => $this->phoneCode,
             'phone_number' => $this->phoneNumber,
             'email' => $this->email,
+            'website' => $this->website,
+            'address' => $this->address,
+            'billing_address' => $this->billingAddress,
             'city' => $cityToSave,
             'gst_number' => $this->gstNumber,
             'product_profile' => $this->productProfile,

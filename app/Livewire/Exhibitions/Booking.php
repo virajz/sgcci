@@ -5,6 +5,7 @@ namespace App\Livewire\Exhibitions;
 use App\Http\Requests\StoreBookingRequest;
 use App\Models\Booking as BookingModel;
 use App\Models\Exhibition;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
@@ -23,6 +24,8 @@ class Booking extends Component
     public string $trophyName = '';
 
     public string $companyProfile = '';
+
+    public array $companyLogo = [];
 
     public string $contactPerson = '';
 
@@ -138,6 +141,35 @@ class Booking extends Component
         unset($this->pricing);
     }
 
+    public function handleLogoUpload(array $data): void
+    {
+        $path = $data['path'] ?? null;
+        $filename = $data['filename'] ?? null;
+        $url = $data['url'] ?? null;
+
+        if ($path && $filename) {
+            $this->companyLogo = [
+                'path' => $path,
+                'filename' => $filename,
+                'url' => $url,
+            ];
+        }
+    }
+
+    public function removeLogo(): void
+    {
+        if (! empty($this->companyLogo)) {
+            $path = is_array($this->companyLogo) ? $this->companyLogo['path'] : $this->companyLogo;
+
+            // Delete the file from storage
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+
+            $this->companyLogo = [];
+        }
+    }
+
     public function save(): void
     {
         $validated = $this->validate((new StoreBookingRequest)->rules());
@@ -156,6 +188,7 @@ class Booking extends Component
             'faciaName' => $this->faciaName,
             'trophyName' => $this->trophyName,
             'companyProfile' => $this->companyProfile,
+            'companyLogo' => $this->companyLogo,
             'contactPerson' => $this->contactPerson,
             'designation' => $this->designation,
             'phoneCode' => $this->phoneCode,
@@ -203,6 +236,7 @@ class Booking extends Component
             $this->faciaName = $sessionData['faciaName'] ?? '';
             $this->trophyName = $sessionData['trophyName'] ?? '';
             $this->companyProfile = $sessionData['companyProfile'] ?? '';
+            $this->companyLogo = $sessionData['companyLogo'] ?? [];
             $this->contactPerson = $sessionData['contactPerson'] ?? '';
             $this->designation = $sessionData['designation'] ?? '';
             $this->phoneCode = $sessionData['phoneCode'] ?? '+91';

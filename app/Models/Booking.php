@@ -21,6 +21,8 @@ class Booking extends Model
         'facia_name',
         'trophy_name',
         'company_profile',
+        'company_logo',
+        'company_logo_original_name',
         'contact_person',
         'designation',
         'phone_code',
@@ -120,6 +122,28 @@ class Booking extends Model
             'partial_payment_deadline' => 'date',
             'last_payment_reminder_sent_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Get the logo file size in human-readable format.
+     */
+    public function getLogoFileSizeAttribute(): ?string
+    {
+        if (! $this->company_logo) {
+            return null;
+        }
+
+        $path = storage_path('app/public/'.$this->company_logo);
+
+        if (! file_exists($path)) {
+            return null;
+        }
+
+        $bytes = filesize($path);
+        $units = ['B', 'KB', 'MB', 'GB'];
+        $factor = floor((strlen((string) $bytes) - 1) / 3);
+
+        return sprintf('%.2f %s', $bytes / pow(1024, $factor), $units[$factor]);
     }
 
     protected static function boot(): void

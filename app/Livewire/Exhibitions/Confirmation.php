@@ -92,6 +92,14 @@ class Confirmation extends Component
             return;
         }
 
+        // Get logo path and original filename from booking data
+        $logoPath = null;
+        $logoOriginalName = null;
+        if (! empty($this->bookingData['companyLogo']) && isset($this->bookingData['companyLogo']['path'])) {
+            $logoPath = $this->bookingData['companyLogo']['path'];
+            $logoOriginalName = $this->bookingData['companyLogo']['filename'] ?? null;
+        }
+
         // Create the booking
         $booking = BookingModel::create([
             'exhibition_id' => $this->exhibition->id,
@@ -99,6 +107,8 @@ class Confirmation extends Component
             'facia_name' => $this->bookingData['faciaName'] ?? null,
             'trophy_name' => $this->bookingData['trophyName'] ?? null,
             'company_profile' => $this->bookingData['companyProfile'] ?? null,
+            'company_logo' => $logoPath,
+            'company_logo_original_name' => $logoOriginalName,
             'contact_person' => $this->bookingData['contactPerson'],
             'designation' => $this->bookingData['designation'] ?? null,
             'phone_code' => $this->bookingData['phoneCode'],

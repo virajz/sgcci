@@ -29,7 +29,7 @@ class ExportDatabase extends Command
 
         // Create temporary file for export
         $tempFile = tempnam(sys_get_temp_dir(), 'db_export_');
-        $outputFile = $tempFile . '.' . ($format === 'dump' ? 'dump' : 'sql');
+        $outputFile = $tempFile.'.'.($format === 'dump' ? 'dump' : 'sql');
         rename($tempFile, $outputFile);
 
         $host = config('database.connections.pgsql.host');
@@ -45,14 +45,14 @@ class ExportDatabase extends Command
 
         $exitCode = 0;
         $output = [];
-        exec($command . ' 2>&1', $output, $exitCode);
+        exec($command.' 2>&1', $output, $exitCode);
 
         if ($exitCode !== 0 || ! file_exists($outputFile) || filesize($outputFile) < 1000) {
             @unlink($outputFile);
             $this->error('Database export failed!');
             $this->line("Exit code: {$exitCode}");
-            $this->line('File exists: ' . (file_exists($outputFile) ? 'yes' : 'no'));
-            $this->line('File size: ' . (file_exists($outputFile) ? filesize($outputFile) : 0) . ' bytes');
+            $this->line('File exists: '.(file_exists($outputFile) ? 'yes' : 'no'));
+            $this->line('File size: '.(file_exists($outputFile) ? filesize($outputFile) : 0).' bytes');
             if (! empty($output)) {
                 $this->line('Output:');
                 $this->line(implode("\n", $output));
@@ -141,17 +141,17 @@ class ExportDatabase extends Command
     protected function formatBytes(int $bytes): string
     {
         if ($bytes >= 1073741824) {
-            return number_format($bytes / 1073741824, 2) . ' GB';
+            return number_format($bytes / 1073741824, 2).' GB';
         }
 
         if ($bytes >= 1048576) {
-            return number_format($bytes / 1048576, 2) . ' MB';
+            return number_format($bytes / 1048576, 2).' MB';
         }
 
         if ($bytes >= 1024) {
-            return number_format($bytes / 1024, 2) . ' KB';
+            return number_format($bytes / 1024, 2).' KB';
         }
 
-        return $bytes . ' bytes';
+        return $bytes.' bytes';
     }
 }

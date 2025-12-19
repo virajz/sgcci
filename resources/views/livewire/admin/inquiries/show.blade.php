@@ -58,6 +58,54 @@
                             <flux:text class="font-mono font-semibold">{{ $booking->gst_number }}</flux:text>
                         </div>
                     @endif
+                    @if ($booking->designation)
+                        <div>
+                            <flux:subheading class="mb-1 text-sm">Designation</flux:subheading>
+                            <flux:text class="font-semibold">{{ $booking->designation }}</flux:text>
+                        </div>
+                    @endif
+                    @if ($booking->website)
+                        <div>
+                            <flux:subheading class="mb-1 text-sm">Website</flux:subheading>
+                            <flux:text class="font-semibold">
+                                <a href="{{ $booking->website }}" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400">
+                                    {{ $booking->website }}
+                                </a>
+                            </flux:text>
+                        </div>
+                    @endif
+                    @if ($booking->address)
+                        <div class="md:col-span-2">
+                            <flux:subheading class="mb-1 text-sm">Address</flux:subheading>
+                            <flux:text class="font-semibold">{{ $booking->address }}</flux:text>
+                        </div>
+                    @endif
+                    @if ($booking->billing_address)
+                        <div class="md:col-span-2">
+                            <flux:subheading class="mb-1 text-sm">Billing Address</flux:subheading>
+                            <flux:text class="font-semibold">{{ $booking->billing_address }}</flux:text>
+                        </div>
+                    @endif
+                    @if ($booking->company_logo)
+                        <div class="md:col-span-2">
+                            <flux:subheading class="mb-1 text-sm">Company Logo</flux:subheading>
+                            <div class="flex items-center gap-3 p-3 mt-2 rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                                <flux:icon.document variant="outline" class="w-8 h-8 text-zinc-500" />
+                                <div class="flex-1">
+                                    <flux:text class="text-sm font-medium">
+                                        {{ $booking->company_logo_original_name ?? basename($booking->company_logo) }}
+                                    </flux:text>
+                                    <flux:text class="text-xs text-zinc-600 dark:text-zinc-400">
+                                        {{ $booking->logo_file_size }}
+                                    </flux:text>
+                                </div>
+                                <flux:button href="{{ route('booking.download-logo', ['path' => $booking->company_logo]) }}"
+                                    variant="ghost" size="sm" icon="arrow-down-tray" target="_blank">
+                                    Download
+                                </flux:button>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </flux:card>
 

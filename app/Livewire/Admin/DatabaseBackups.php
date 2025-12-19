@@ -46,7 +46,7 @@ class DatabaseBackups extends Component
                 $this->dispatch('backup-created');
             } else {
                 $output = Artisan::output();
-                throw new \Exception('Export failed: ' . $output);
+                throw new \Exception('Export failed: '.$output);
             }
 
             $this->isExporting = false;
@@ -131,6 +131,7 @@ class DatabaseBackups extends Component
             $this->isImporting = false;
         }
     }
+
     public function importUpload(): void
     {
         $this->validate([
@@ -164,6 +165,7 @@ class DatabaseBackups extends Component
             $this->isImporting = false;
         }
     }
+
     public function openImportModal(): void
     {
         $this->uploadedFile = null;
@@ -191,7 +193,7 @@ class DatabaseBackups extends Component
         $files = Storage::disk($disk)->files('backups');
 
         return collect($files)
-            ->filter(fn($file) => str_ends_with($file, '.sql') || str_ends_with($file, '.dump'))
+            ->filter(fn ($file) => str_ends_with($file, '.sql') || str_ends_with($file, '.dump'))
             ->map(function ($file) use ($disk) {
                 return [
                     'name' => basename($file),
@@ -231,18 +233,18 @@ class DatabaseBackups extends Component
     public function formatBytes(int $bytes): string
     {
         if ($bytes >= 1073741824) {
-            return number_format($bytes / 1073741824, 2) . ' GB';
+            return number_format($bytes / 1073741824, 2).' GB';
         }
 
         if ($bytes >= 1048576) {
-            return number_format($bytes / 1048576, 2) . ' MB';
+            return number_format($bytes / 1048576, 2).' MB';
         }
 
         if ($bytes >= 1024) {
-            return number_format($bytes / 1024, 2) . ' KB';
+            return number_format($bytes / 1024, 2).' KB';
         }
 
-        return $bytes . ' bytes';
+        return $bytes.' bytes';
     }
 
     public function render(): mixed
