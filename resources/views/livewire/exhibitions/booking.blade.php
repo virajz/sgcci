@@ -459,108 +459,106 @@
     </flux:main>
 </div>
 
-@push('scripts')
+@script
     <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('logoUploader', (companyLogo) => ({
-                logo: companyLogo || {},
-                uploading: false,
-                progress: 0,
-                currentFileName: '',
-                isDragging: false,
+        Alpine.data('logoUploader', (companyLogo) => ({
+            logo: companyLogo || {},
+            uploading: false,
+            progress: 0,
+            currentFileName: '',
+            isDragging: false,
 
-                init() {
-                    this.$watch('logo', value => {
-                        companyLogo = value;
+            init() {
+                this.$watch('logo', value => {
+                    companyLogo = value;
+                });
+            },
+
+            handleFileSelect(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    this.uploadFile(file);
+                }
+            },
+
+            handleDrop(event) {
+                this.isDragging = false;
+                const file = event.dataTransfer.files[0];
+                if (file) {
+                    this.uploadFile(file);
+                }
+            },
+
+            async uploadFile(file) {
+                if (file.size > 20 * 1024 * 1024) {
+                    alert(`File "${file.name}" is too large. Maximum size is 20MB.`);
+                    return;
+                }
+
+                const allowedTypes = ['application/postscript', 'application/illustrator', 'image/vnd.adobe.photoshop', 'application/x-photoshop'];
+                const extension = file.name.split('.').pop().toLowerCase();
+                const allowedExtensions = ['ai', 'cdr', 'psd'];
+
+                if (!allowedExtensions.includes(extension)) {
+                    alert(
+                        `File "${file.name}" has an invalid type. Only AI, CDR, and PSD files are allowed.`
+                    );
+                    return;
+                }
+
+                this.uploading = true;
+                this.progress = 0;
+                this.currentFileName = file.name;
+
+                try {
+                    const formData = new FormData();
+                    formData.append('logo', file);
+
+                    const response = await fetch('/booking/upload-logo', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector(
+                                'meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        }
                     });
-                },
 
-                handleFileSelect(event) {
-                    const file = event.target.files[0];
-                    if (file) {
-                        this.uploadFile(file);
-                    }
-                },
-
-                handleDrop(event) {
-                    this.isDragging = false;
-                    const file = event.dataTransfer.files[0];
-                    if (file) {
-                        this.uploadFile(file);
-                    }
-                },
-
-                async uploadFile(file) {
-                    if (file.size > 20 * 1024 * 1024) {
-                        alert(`File "${file.name}" is too large. Maximum size is 20MB.`);
-                        return;
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Upload failed');
                     }
 
-                    const allowedTypes = ['application/postscript', 'application/illustrator', 'image/vnd.adobe.photoshop', 'application/x-photoshop'];
-                    const extension = file.name.split('.').pop().toLowerCase();
-                    const allowedExtensions = ['ai', 'cdr', 'psd'];
+                    const data = await response.json();
 
-                    if (!allowedExtensions.includes(extension)) {
-                        alert(
-                            `File "${file.name}" has an invalid type. Only AI, CDR, and PSD files are allowed.`
-                        );
-                        return;
+                    if (data.path) {
+                        this.progress = 100;
+                        await this.$wire.call('handleLogoUpload', data);
                     }
 
-                    this.uploading = true;
-                    this.progress = 0;
-                    this.currentFileName = file.name;
-
-                    try {
-                        const formData = new FormData();
-                        formData.append('logo', file);
-
-                        const response = await fetch('/booking/upload-logo', {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector(
-                                    'meta[name="csrf-token"]').content,
-                                'Accept': 'application/json'
-                            }
-                        });
-
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.message || 'Upload failed');
-                        }
-
-                        const data = await response.json();
-
-                        if (data.path) {
-                            this.progress = 100;
-                            await this.$wire.call('handleLogoUpload', data);
-                        }
-
-                        setTimeout(() => {
-                            this.uploading = false;
-                            this.progress = 0;
-                            this.currentFileName = '';
-                        }, 500);
-
-                    } catch (error) {
-                        console.error('Upload error:', error);
-                        alert(`Failed to upload "${file.name}": ${error.message}`);
+                    setTimeout(() => {
                         this.uploading = false;
                         this.progress = 0;
                         this.currentFileName = '';
-                    }
+                    }, 500);
 
-                    // Reset input
-                    if (this.$refs.fileInput) {
-                        this.$refs.fileInput.value = '';
-                    }
-                },
-
-                removeLogo() {
-                    this.$wire.call('removeLogo');
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    alert(`Failed to upload "${file.name}": ${error.message}`);
+                    this.uploading = false;
+                    this.progress = 0;
+                    this.currentFileName = '';
                 }
-            }));
-        });
+
+                // Reset input
+                if (this.$refs.fileInput) {
+                    this.$refs.fileInput.value = '';
+                }
+            },
+
+            removeLogo() {
+                this.$wire.call('removeLogo');
+            }
+        }));
     </script>
-@endpush
+@endscript

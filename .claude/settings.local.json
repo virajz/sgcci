@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(php artisan make:livewire:*)",
-      "Bash(php artisan test:*)"
+      "Bash(php artisan test:*)",
+      "Bash(vendor/bin/pint:*)"
     ],
     "deny": [],
     "ask": []
