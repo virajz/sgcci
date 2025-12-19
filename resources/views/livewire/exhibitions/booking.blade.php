@@ -199,7 +199,7 @@
 
                                         {{-- Company Logo Upload --}}
                                         <div class="mt-6" x-data="logoUploader(@entangle('companyLogo'))">
-                                            <flux:label>Company Logo</flux:label>
+                                            <flux:label badge="Optional">Company Logo</flux:label>
                                             <flux:text class="mb-3 text-sm text-zinc-600 dark:text-zinc-400">Upload your company logo (AI, CDR, or PSD format, max 20MB)</flux:text>
 
                                             <div x-show="!logo.filename" style="display: block;"
