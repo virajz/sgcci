@@ -43,14 +43,74 @@
                         <flux:text class="mt-2">
                             This booking cannot be edited as payment has already been received.
                         </flux:text>
-                        <flux:text class="mt-4">
-                            <strong>Booking Code:</strong> {{ $booking->booking_code }}<br>
-                            <strong>Amount Paid:</strong> ₹{{ number_format($booking->amount_paid, 2) }}
-                        </flux:text>
-                        <flux:text class="mt-4">
-                            If you need to make changes to this booking, please contact support for assistance.
-                        </flux:text>
                     </flux:callout>
+
+                    {{-- Booking Details --}}
+                    <div class="mt-6 space-y-4">
+                        <flux:heading size="base" class="font-semibold">Booking Details</flux:heading>
+
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Booking Code</flux:text>
+                                <flux:text class="font-semibold">{{ $booking->booking_code }}</flux:text>
+                            </div>
+
+                            <div>
+                                <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Company Name</flux:text>
+                                <flux:text class="font-semibold">{{ $booking->brand_name }}</flux:text>
+                            </div>
+
+                            <div>
+                                <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Contact Person</flux:text>
+                                <flux:text class="font-semibold">{{ $booking->contact_person }}</flux:text>
+                            </div>
+
+                            <div>
+                                <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Space Type</flux:text>
+                                <flux:text class="font-semibold">{{ ucfirst($booking->space_type) }}</flux:text>
+                            </div>
+                        </div>
+
+                        {{-- Stalls Selected --}}
+                        <div>
+                            <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Stalls Selected</flux:text>
+                            <flux:text class="font-semibold">
+                                {{ implode(', ', $booking->selected_stalls) }}
+                            </flux:text>
+                        </div>
+
+                        {{-- Payment Information --}}
+                        <div class="pt-4 mt-4 border-t border-zinc-200 dark:border-zinc-700">
+                            <flux:heading size="base" class="mb-3 font-semibold">Payment Information</flux:heading>
+
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div>
+                                    <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Total Amount</flux:text>
+                                    <flux:text class="font-semibold">₹{{ number_format($booking->total_with_gst, 2) }}
+                                    </flux:text>
+                                </div>
+
+                                <div>
+                                    <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Amount Paid</flux:text>
+                                    <flux:text class="font-semibold text-green-600 dark:text-green-400">
+                                        ₹{{ number_format($booking->amount_paid, 2) }}</flux:text>
+                                </div>
+
+                                @if ($booking->remaining_amount > 0)
+                                    <div>
+                                        <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Remaining Amount
+                                        </flux:text>
+                                        <flux:text class="font-semibold text-amber-600 dark:text-amber-400">
+                                            ₹{{ number_format($booking->remaining_amount, 2) }}</flux:text>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <flux:text class="mt-6 text-sm">
+                        If you need to make changes to this booking, please contact support for assistance.
+                    </flux:text>
 
                     <div class="flex justify-center gap-3 mt-8">
                         <flux:button href="{{ route('home') }}" variant="primary" icon="home"
@@ -373,18 +433,20 @@
                                         {{-- Company Logo Upload --}}
                                         <div class="mt-6" x-data="logoUploader(@entangle('companyLogo'))">
                                             <flux:label>Company Logo</flux:label>
-                                            <flux:text class="mb-3 text-sm text-zinc-600 dark:text-zinc-400">Upload your company logo (AI, CDR, or PSD format, max 20MB)</flux:text>
+                                            <flux:text class="mb-3 text-sm text-zinc-600 dark:text-zinc-400">Upload
+                                                your company logo (AI, CDR, or PSD format, max 20MB)</flux:text>
 
                                             <div x-show="!logo.filename" style="display: block;"
                                                 class="p-8 text-center border-2 border-dashed rounded-lg border-zinc-300 dark:border-zinc-600"
-                                                @dragover.prevent="isDragging = true" @dragleave.prevent="isDragging = false"
-                                                @drop.prevent="handleDrop"
+                                                @dragover.prevent="isDragging = true"
+                                                @dragleave.prevent="isDragging = false" @drop.prevent="handleDrop"
                                                 :class="{ 'border-blue-500 bg-blue-50 dark:bg-blue-950': isDragging }">
-                                                <input type="file" x-ref="fileInput" @change="handleFileSelect" accept=".ai,.cdr,.psd"
-                                                    class="hidden">
+                                                <input type="file" x-ref="fileInput" @change="handleFileSelect"
+                                                    accept=".ai,.cdr,.psd" class="hidden">
 
                                                 <div class="space-y-2">
-                                                    <flux:icon.cloud-arrow-up variant="outline" class="w-12 h-12 mx-auto text-zinc-400" />
+                                                    <flux:icon.cloud-arrow-up variant="outline"
+                                                        class="w-12 h-12 mx-auto text-zinc-400" />
                                                     <div class="text-sm text-zinc-600 dark:text-zinc-400">
                                                         <button type="button" @click="$refs.fileInput.click()"
                                                             class="font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400">
@@ -400,23 +462,28 @@
                                             <div x-show="uploading" class="space-y-2">
                                                 <div class="flex items-center gap-2">
                                                     <div class="flex-1">
-                                                        <div class="w-full h-2 rounded-full bg-zinc-200 dark:bg-zinc-700">
+                                                        <div
+                                                            class="w-full h-2 rounded-full bg-zinc-200 dark:bg-zinc-700">
                                                             <div class="h-2 transition-all duration-300 bg-blue-600 rounded-full"
                                                                 :style="`width: ${progress}%`"></div>
                                                         </div>
                                                     </div>
                                                     <flux:text class="text-sm" x-text="`${progress}%`"></flux:text>
                                                 </div>
-                                                <flux:text class="text-sm text-zinc-600 dark:text-zinc-400" x-text="currentFileName">
+                                                <flux:text class="text-sm text-zinc-600 dark:text-zinc-400"
+                                                    x-text="currentFileName">
                                                 </flux:text>
                                             </div>
 
                                             {{-- Uploaded File Display --}}
-                                            <div x-show="logo.filename" class="p-3 rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                                            <div x-show="logo.filename"
+                                                class="p-3 rounded-lg bg-zinc-100 dark:bg-zinc-800">
                                                 <div class="flex items-center gap-3">
-                                                    <flux:icon.document variant="outline" class="w-12 h-12 text-zinc-500" />
+                                                    <flux:icon.document variant="outline"
+                                                        class="w-12 h-12 text-zinc-500" />
                                                     <div class="flex-1 min-w-0">
-                                                        <flux:text class="text-sm font-medium truncate" x-text="logo.filename">
+                                                        <flux:text class="text-sm font-medium truncate"
+                                                            x-text="logo.filename">
                                                         </flux:text>
                                                     </div>
                                                     <button type="button" @click="removeLogo()"
@@ -427,7 +494,8 @@
                                             </div>
 
                                             @error('companyLogo')
-                                                <flux:text class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</flux:text>
+                                                <flux:text class="mt-2 text-sm text-red-600 dark:text-red-400">
+                                                    {{ $message }}</flux:text>
                                             @enderror
                                         </div>
                                     </div>
@@ -462,7 +530,8 @@
                                         <flux:radio value="standard" label="Standard Space - ₹5,000/sq m">
                                             <x-slot:description>
                                                 Fully fabricated stall with walls, flooring, and basic amenities<br>
-                                                <strong>Applicable only for stalls: 6×3 (18 sq m) & 3×3 (9 sq m)</strong>
+                                                <strong>Applicable only for stalls: 6×3 (18 sq m) & 3×3 (9 sq
+                                                    m)</strong>
                                             </x-slot:description>
                                         </flux:radio>
                                         <flux:radio value="raw" label="Raw Space - ₹4,500/sq m"
@@ -640,7 +709,9 @@
                         return;
                     }
 
-                    const allowedTypes = ['application/postscript', 'application/illustrator', 'image/vnd.adobe.photoshop', 'application/x-photoshop'];
+                    const allowedTypes = ['application/postscript', 'application/illustrator',
+                        'image/vnd.adobe.photoshop', 'application/x-photoshop'
+                    ];
                     const extension = file.name.split('.').pop().toLowerCase();
                     const allowedExtensions = ['ai', 'cdr', 'psd'];
 
