@@ -342,10 +342,9 @@
                                 This booking is pending initial admin verification. Admins should verify first.
                             </flux:callout>
                         @else
-                            <flux:button wire:click="approve" variant="primary" class="w-full" icon="check"
-                                iconVariant="outline" wire:loading.attr="disabled">
-                                <span wire:loading.remove wire:target="approve">Verify & Approve</span>
-                                <span wire:loading wire:target="approve">Processing...</span>
+                            <flux:button wire:click="$set('showVerifyModal', true)" variant="primary" class="w-full"
+                                icon="check" iconVariant="outline">
+                                Verify & Approve
                             </flux:button>
                         @endif
                     </div>
@@ -355,10 +354,9 @@
                             This booking has been verified by an admin. You can now allot the stalls.
                         </flux:callout>
 
-                        <flux:button wire:click="approve" variant="primary" class="w-full" icon="check"
-                            iconVariant="outline" wire:loading.attr="disabled">
-                            <span wire:loading.remove wire:target="approve">Approve & Send Payment Link</span>
-                            <span wire:loading wire:target="approve">Processing...</span>
+                        <flux:button wire:click="$set('showPaymentLinkModal', true)" variant="primary" class="w-full"
+                            icon="check" iconVariant="outline">
+                            Approve & Send Payment Link
                         </flux:button>
 
                         <flux:button wire:click="openRejectModal" variant="danger" class="w-full" icon="x-mark"
@@ -608,6 +606,88 @@
             @endif
         </div>
     </div>
+
+    {{-- Verify & Approve Modal --}}
+    <flux:modal wire:model="showVerifyModal">
+        <form wire:submit="approve">
+            <flux:heading size="lg" class="mb-4">Verify & Approve Booking</flux:heading>
+
+            <flux:subheading class="mb-4">
+                Are you sure you want to verify and approve this booking? This action will move the booking to the next
+                stage for super admin review.
+            </flux:subheading>
+
+            <flux:callout variant="info" class="mb-4">
+                <div class="space-y-1">
+                    <flux:text class="text-sm font-semibold">
+                        Booking: #{{ $booking->booking_code }}
+                    </flux:text>
+                    <flux:text class="text-sm">
+                        Brand: {{ $booking->brand_name }}
+                    </flux:text>
+                    <flux:text class="text-sm">
+                        Total Amount: ₹{{ number_format((float) $booking->total_with_gst, 2) }}
+                    </flux:text>
+                </div>
+            </flux:callout>
+
+            <div class="flex justify-end gap-3 mt-6">
+                <flux:button type="button" variant="ghost" wire:click="$set('showVerifyModal', false)">
+                    Cancel
+                </flux:button>
+                <flux:button type="submit" variant="primary" wire:loading.attr="disabled">
+                    <span wire:loading.remove wire:target="approve">Confirm Approval</span>
+                    <span wire:loading wire:target="approve">Processing...</span>
+                </flux:button>
+            </div>
+        </form>
+    </flux:modal>
+
+    {{-- Send Payment Link Modal --}}
+    <flux:modal wire:model="showPaymentLinkModal">
+        <form wire:submit="approve">
+            <flux:heading size="lg" class="mb-4">Send Payment Link</flux:heading>
+
+            <flux:subheading class="mb-4">
+                Are you sure you want to approve this booking and send the payment link to the customer? This action
+                will allot the selected stalls and send a payment link via email.
+            </flux:subheading>
+
+            <flux:callout variant="info" class="mb-4">
+                <div class="space-y-1">
+                    <flux:text class="text-sm font-semibold">
+                        Booking: #{{ $booking->booking_code }}
+                    </flux:text>
+                    <flux:text class="text-sm">
+                        Customer: {{ $booking->contact_person }} ({{ $booking->email }})
+                    </flux:text>
+                    <flux:text class="text-sm">
+                        Stalls: {{ implode(', ', $booking->selected_stalls) }}
+                    </flux:text>
+                    <flux:text class="text-sm">
+                        Total Amount: ₹{{ number_format((float) $booking->total_with_gst, 2) }}
+                    </flux:text>
+                </div>
+            </flux:callout>
+
+            <flux:callout variant="warning" class="mb-4">
+                <flux:text class="text-sm">
+                    The customer will receive a payment link and will have until
+                    {{ now()->addDays(7)->format('M d, Y') }} to complete the payment.
+                </flux:text>
+            </flux:callout>
+
+            <div class="flex justify-end gap-3 mt-6">
+                <flux:button type="button" variant="ghost" wire:click="$set('showPaymentLinkModal', false)">
+                    Cancel
+                </flux:button>
+                <flux:button type="submit" variant="primary" wire:loading.attr="disabled">
+                    <span wire:loading.remove wire:target="approve">Confirm & Send Link</span>
+                    <span wire:loading wire:target="approve">Processing...</span>
+                </flux:button>
+            </div>
+        </form>
+    </flux:modal>
 
     {{-- Reject Modal --}}
     <flux:modal wire:model="showRejectModal" variant="flyout">

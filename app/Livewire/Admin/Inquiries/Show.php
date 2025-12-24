@@ -29,6 +29,14 @@ class Show extends Component
 
     public string $releaseReason = '';
 
+    public bool $showApprovalConfirmModal = false;
+
+    public bool $showPaymentLinkConfirmModal = false;
+
+    public bool $showVerifyModal = false;
+
+    public bool $showPaymentLinkModal = false;
+
     public function mount(Booking $booking): void
     {
         // Ensure user has admin privileges
@@ -56,6 +64,8 @@ class Show extends Component
                 'admin_approved_by' => $user->id,
                 'admin_approved_at' => now(),
             ]);
+
+            $this->showVerifyModal = false;
 
             Flux::toast(
                 heading: 'Booking Verified!',
@@ -121,6 +131,8 @@ class Show extends Component
                     ]
                 );
             }
+
+            $this->showPaymentLinkModal = false;
 
             Flux::toast(
                 heading: 'Booking Approved!',
