@@ -68,7 +68,8 @@
                         <div>
                             <flux:subheading class="mb-1 text-sm">Website</flux:subheading>
                             <flux:text class="font-semibold">
-                                <a href="{{ $booking->website }}" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400">
+                                <a href="{{ $booking->website }}" target="_blank"
+                                    class="text-blue-600 hover:underline dark:text-blue-400">
                                     {{ $booking->website }}
                                 </a>
                             </flux:text>
@@ -99,7 +100,8 @@
                                         {{ $booking->logo_file_size }}
                                     </flux:text>
                                 </div>
-                                <flux:button href="{{ route('booking.download-logo', ['path' => $booking->company_logo]) }}"
+                                <flux:button
+                                    href="{{ route('booking.download-logo', ['path' => $booking->company_logo]) }}"
                                     variant="ghost" size="sm" icon="arrow-down-tray" target="_blank">
                                     Download
                                 </flux:button>
@@ -138,7 +140,8 @@
                                 <tr class="border-b dark:border-zinc-700">
                                     <td class="px-4 py-3 font-medium">{{ $item['stall_number'] }}</td>
                                     <td class="px-4 py-3 text-right">{{ $item['area'] }}</td>
-                                    <td class="px-4 py-3 text-right">₹{{ number_format((float) $booking->price_per_sqm, 2) }}</td>
+                                    <td class="px-4 py-3 text-right">
+                                        ₹{{ number_format((float) $booking->price_per_sqm, 2) }}</td>
                                     <td class="px-4 py-3 font-medium text-right">
                                         ₹{{ number_format($item['price'], 2) }}</td>
                                 </tr>
@@ -322,21 +325,15 @@
             <flux:card>
                 <flux:heading size="lg" class="mb-4">Actions</flux:heading>
 
-                {{-- Edit Booking Button (Available to all admins, only if no payment received) --}}
-                @if ($booking->amount_paid <= 0)
-                    <div class="mb-4">
-                        <flux:button href="{{ route('admin.inquiries.edit', $booking) }}" variant="outline"
-                            class="w-full" icon="pencil" iconVariant="outline">
-                            Edit Booking Details
-                        </flux:button>
-                    </div>
 
-                    <flux:separator class="my-4" />
-                @else
-                    <flux:callout variant="info" class="mb-4">
-                        <flux:text class="text-sm">Booking cannot be edited as payment has been received.</flux:text>
-                    </flux:callout>
-                @endif
+                <div class="mb-4">
+                    <flux:button href="{{ route('admin.inquiries.edit', $booking) }}" variant="outline"
+                        class="w-full" icon="pencil" iconVariant="outline">
+                        Edit Booking Details
+                    </flux:button>
+                </div>
+
+                <flux:separator class="my-4" />
 
                 @if ($booking->status === \App\BookingStatus::PendingApproval && auth()->user()->isAdmin())
                     <div class="space-y-3">
