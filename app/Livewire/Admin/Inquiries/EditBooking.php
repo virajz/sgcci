@@ -75,19 +75,6 @@ class EditBooking extends Component
             abort(403, 'Unauthorized access.');
         }
 
-        // Check if payment has been received
-        if ($booking->amount_paid > 0) {
-            Flux::toast(
-                heading: 'Cannot Edit Booking',
-                variant: 'danger',
-                text: 'This booking cannot be edited as payment has already been received.'
-            );
-
-            $this->redirect(route('admin.inquiries.show', $booking), navigate: true);
-
-            return;
-        }
-
         $this->booking = $booking;
 
         // Populate form fields
@@ -255,19 +242,6 @@ class EditBooking extends Component
 
     public function updateBooking(): void
     {
-        // Double check payment status before updating
-        if ($this->booking->amount_paid > 0) {
-            Flux::toast(
-                heading: 'Cannot Edit Booking',
-                variant: 'danger',
-                text: 'This booking cannot be edited as payment has already been received.'
-            );
-
-            $this->redirect(route('admin.inquiries.show', $this->booking), navigate: true);
-
-            return;
-        }
-
         $this->validate();
 
         // Use custom city if "Others" is selected
