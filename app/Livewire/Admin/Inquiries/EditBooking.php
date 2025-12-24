@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Admin\Inquiries;
 
-use App\Http\Requests\UpdateBookingRequest;
 use App\Jobs\SendWhatsAppCampaign;
 use App\Models\Booking;
 use Flux\Flux;
@@ -48,6 +47,26 @@ class EditBooking extends Component
     public string $membershipNumber = '';
 
     public string $spaceType = 'standard';
+
+    public string $stallsInput = '';
+
+    public array $selectedStalls = [];
+
+    public float $totalArea = 0;
+
+    public float $pricePerSqm = 0;
+
+    public float $totalPrice = 0;
+
+    public float $discountPercentage = 0;
+
+    public float $discountAmount = 0;
+
+    public float $priceAfterDiscount = 0;
+
+    public float $gstAmount = 0;
+
+    public float $totalWithGst = 0;
 
     public function mount(Booking $booking): void
     {
@@ -95,6 +114,143 @@ class EditBooking extends Component
             $this->city = 'Others';
             $this->customCity = $booking->city;
         }
+
+        // Initialize stall selection
+        $this->selectedStalls = $booking->selected_stalls ?? [];
+        $this->stallsInput = implode(', ', $this->selectedStalls);
+
+        // Calculate initial pricing
+        $this->calculatePricing();
+    }
+
+    public function updatedStallsInput(): void
+    {
+        // Parse the comma-separated input and clean it
+        $stalls = array_map('trim', explode(',', $this->stallsInput));
+        $stalls = array_filter($stalls, fn ($stall) => ! empty($stall));
+        $stalls = array_values(array_unique($stalls));
+
+        $this->selectedStalls = $stalls;
+
+        // Recalculate pricing with new stalls
+        $this->calculatePricing();
+    }
+
+    public function updatedSpaceType(): void
+    {
+        $this->calculatePricing();
+    }
+
+    public function updatedHasExhibitedBefore(): void
+    {
+        if (! $this->hasExhibitedBefore) {
+            $this->participationYears = [];
+        }
+
+        $this->calculatePricing();
+    }
+
+    public function updatedParticipationYears(): void
+    {
+        $this->calculatePricing();
+    }
+
+    public function updatedIsSgcciMember(): void
+    {
+        if (! $this->isSgcciMember) {
+            $this->membershipType = '';
+            $this->membershipNumber = '';
+        }
+
+        $this->calculatePricing();
+    }
+
+    public function updatedMembershipType(): void
+    {
+        $this->calculatePricing();
+    }
+
+    protected function calculatePricing(): void
+    {
+        if (empty($this->selectedStalls)) {
+            $this->totalArea = 0;
+            $this->pricePerSqm = 0;
+            $this->totalPrice = 0;
+            $this->discountPercentage = 0;
+            $this->discountAmount = 0;
+            $this->priceAfterDiscount = 0;
+            $this->gstAmount = 0;
+            $this->totalWithGst = 0;
+
+            return;
+        }
+
+        $pricing = Booking::calculatePricing(
+            $this->selectedStalls,
+            $this->hasExhibitedBefore,
+            $this->participationYears,
+            $this->isSgcciMember,
+            $this->membershipType,
+            $this->spaceType
+        );
+
+        $this->totalArea = $pricing['total_area'];
+        $this->pricePerSqm = $pricing['price_per_sqm'];
+        $this->totalPrice = $pricing['total_price'];
+        $this->discountPercentage = $pricing['discount_percentage'];
+        $this->discountAmount = $pricing['discount_amount'];
+        $this->priceAfterDiscount = $pricing['price_after_discount'];
+        $this->gstAmount = $pricing['gst_amount'];
+        $this->totalWithGst = $pricing['total_with_gst'];
+    }
+
+    protected function rules(): array
+    {
+        return [
+            'brandName' => ['required', 'string', 'max:255'],
+            'faciaName' => ['nullable', 'string', 'max:255'],
+            'trophyName' => ['nullable', 'string', 'max:255'],
+            'contactPerson' => ['required', 'string', 'max:255'],
+            'phoneCode' => ['required', 'string', 'max:10'],
+            'phoneNumber' => ['required', 'string', 'max:20'],
+            'email' => ['required', 'email', 'max:255'],
+            'city' => ['required', 'string', 'max:255'],
+            'customCity' => ['required_if:city,Others', 'nullable', 'string', 'max:255'],
+            'gstNumber' => ['nullable', 'string', 'max:15'],
+            'productProfile' => ['required', 'array', 'min:1'],
+            'productProfile.*' => ['string'],
+            'hasExhibitedBefore' => ['boolean'],
+            'participationYears' => ['nullable', 'array'],
+            'participationYears.*' => ['string'],
+            'isSgcciMember' => ['boolean'],
+            'membershipType' => ['nullable', 'string'],
+            'membershipNumber' => ['required_with:membershipType', 'string', 'max:100'],
+            'spaceType' => ['required', 'string', 'in:standard,raw'],
+            'stallsInput' => ['required', 'string'],
+            'selectedStalls' => ['required', 'array', 'min:1'],
+            'selectedStalls.*' => ['string'],
+        ];
+    }
+
+    protected function messages(): array
+    {
+        return [
+            'brandName.required' => 'Please enter your brand or dealership name.',
+            'contactPerson.required' => 'Please enter the contact person name.',
+            'phoneNumber.required' => 'Please enter a phone number.',
+            'email.required' => 'Please enter an email address.',
+            'email.email' => 'Please enter a valid email address.',
+            'city.required' => 'Please select a city.',
+            'customCity.required_if' => 'Please enter your city name.',
+            'productProfile.required' => 'Please select at least one product profile.',
+            'productProfile.min' => 'Please select at least one product profile.',
+            'spaceType.required' => 'Please select a space type.',
+            'spaceType.in' => 'Invalid space type selected.',
+            'membershipNumber.required_with' => 'Please enter your membership number.',
+            'stallsInput.required' => 'Please enter at least one stall number.',
+            'selectedStalls.required' => 'Please enter at least one stall number.',
+            'selectedStalls.min' => 'Please enter at least one stall number.',
+        ];
     }
 
     public function updateBooking(): void
@@ -112,20 +268,10 @@ class EditBooking extends Component
             return;
         }
 
-        $this->validate((new UpdateBookingRequest)->rules());
+        $this->validate();
 
         // Use custom city if "Others" is selected
         $cityToSave = $this->city === 'Others' ? $this->customCity : $this->city;
-
-        // Recalculate pricing with new values
-        $pricing = Booking::calculatePricing(
-            $this->booking->selected_stalls,
-            $this->hasExhibitedBefore,
-            $this->participationYears,
-            $this->isSgcciMember,
-            $this->membershipType,
-            $this->spaceType
-        );
 
         // Update booking data without resetting approval workflow (admin edits don't require re-approval)
         $updateData = [
@@ -145,13 +291,15 @@ class EditBooking extends Component
             'membership_type' => $this->membershipType,
             'membership_number' => $this->membershipNumber,
             'space_type' => $this->spaceType,
-            'price_per_sqm' => $pricing['price_per_sqm'],
-            'total_price' => $pricing['total_price'],
-            'discount_percentage' => $pricing['discount_percentage'],
-            'discount_amount' => $pricing['discount_amount'],
-            'price_after_discount' => $pricing['price_after_discount'],
-            'gst_amount' => $pricing['gst_amount'],
-            'total_with_gst' => $pricing['total_with_gst'],
+            'selected_stalls' => $this->selectedStalls,
+            'total_area' => $this->totalArea,
+            'price_per_sqm' => $this->pricePerSqm,
+            'total_price' => $this->totalPrice,
+            'discount_percentage' => $this->discountPercentage,
+            'discount_amount' => $this->discountAmount,
+            'price_after_discount' => $this->priceAfterDiscount,
+            'gst_amount' => $this->gstAmount,
+            'total_with_gst' => $this->totalWithGst,
         ];
 
         $this->booking->update($updateData);

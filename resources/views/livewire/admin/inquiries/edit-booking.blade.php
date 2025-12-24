@@ -13,20 +13,65 @@
     </div>
 
     <flux:card>
-        {{-- Display Selected Stalls (Read-only) --}}
-        <flux:callout variant="info" class="mb-6">
-            <div class="flex items-center justify-between">
-                <flux:heading size="lg">Selected Stalls ({{ count($booking->selected_stalls) }})</flux:heading>
-            </div>
-            <div class="flex flex-wrap gap-2 mt-2">
-                @foreach ($booking->selected_stalls as $stall)
-                    <flux:badge size="lg" variant="solid" color="sky">{{ $stall }}</flux:badge>
-                @endforeach
-            </div>
-            <flux:text class="mt-2 text-sm">
-                Stall selection cannot be modified. Contact system administrator if stall changes are required.
-            </flux:text>
-        </flux:callout>
+        {{-- Display and Edit Selected Stalls --}}
+        <div class="mb-6">
+            <flux:heading size="lg" class="mb-4">Selected Stalls ({{ count($selectedStalls) }})</flux:heading>
+
+            <flux:field>
+                <flux:label>Stall Numbers</flux:label>
+                <flux:input
+                    wire:model.live.debounce.500ms="stallsInput"
+                    placeholder="101, 102, 103, 104"
+                    description="Enter stall numbers separated by commas (e.g., 101, 102, 103). Prices will update automatically based on stall sizes."
+                />
+                <flux:error name="stallsInput" />
+            </flux:field>
+
+            @if (count($selectedStalls) > 0)
+                <div class="flex flex-wrap gap-2 mt-4">
+                    @foreach ($selectedStalls as $stall)
+                        <flux:badge size="lg" variant="solid" color="sky">{{ $stall }}</flux:badge>
+                    @endforeach
+                </div>
+
+                @if ($totalArea > 0)
+                    <flux:callout variant="info" class="mt-4">
+                        <div class="grid gap-2 text-sm">
+                            <div class="flex justify-between">
+                                <span>Total Area:</span>
+                                <strong>{{ number_format($totalArea, 2) }} sq m</strong>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Price per sq m:</span>
+                                <strong>₹{{ number_format($pricePerSqm, 2) }}</strong>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Total Price:</span>
+                                <strong>₹{{ number_format($totalPrice, 2) }}</strong>
+                            </div>
+                            @if ($discountPercentage > 0)
+                                <div class="flex justify-between text-green-600 dark:text-green-400">
+                                    <span>Discount ({{ number_format($discountPercentage, 2) }}%):</span>
+                                    <strong>-₹{{ number_format($discountAmount, 2) }}</strong>
+                                </div>
+                            @endif
+                            <div class="flex justify-between">
+                                <span>Price after Discount:</span>
+                                <strong>₹{{ number_format($priceAfterDiscount, 2) }}</strong>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>GST (18%):</span>
+                                <strong>₹{{ number_format($gstAmount, 2) }}</strong>
+                            </div>
+                            <div class="flex justify-between pt-2 text-base border-t dark:border-zinc-600">
+                                <span>Total with GST:</span>
+                                <strong class="text-sky-600 dark:text-sky-400">₹{{ number_format($totalWithGst, 2) }}</strong>
+                            </div>
+                        </div>
+                    </flux:callout>
+                @endif
+            @endif
+        </div>
 
         <form wire:submit="updateBooking" class="space-y-6" x-data="{
             city: @entangle('city').live,
