@@ -102,7 +102,7 @@
                                 </div>
                                 <flux:button
                                     href="{{ route('booking.download-logo', ['path' => $booking->company_logo]) }}"
-                                    variant="ghost" size="sm" icon="arrow-down-tray" target="_blank">
+                                    variant="ghost" size="sm" icon="arrow-down-tray">
                                     Download
                                 </flux:button>
                             </div>

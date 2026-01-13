@@ -40,6 +40,21 @@ class BookingController extends Controller
             abort(404);
         }
 
-        return response()->download(Storage::disk('public')->path($path));
+        // Find the booking with this logo path to get the original filename
+        $booking = \App\Models\Booking::where('company_logo', $path)->first();
+
+        // Use the original filename if available, otherwise use the stored filename
+        $filename = $booking?->company_logo_original_name ?? basename($path);
+
+        $headers = [
+            'Content-Type' => Storage::disk('public')->mimeType($path),
+            'Content-Disposition' => 'attachment; filename="'.str_replace('"', '\\"', $filename).'"',
+        ];
+
+        return response()->stream(function () use ($path) {
+            $stream = Storage::disk('public')->readStream($path);
+            fpassthru($stream);
+            fclose($stream);
+        }, 200, $headers);
     }
 }
