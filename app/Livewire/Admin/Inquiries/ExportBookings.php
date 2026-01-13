@@ -63,10 +63,14 @@ class ExportBookings extends Component
                         // Part payment: amount_paid > 0 AND remaining_amount > 0
                         $q->orWhere(function ($subQuery) {
                             $subQuery->where('amount_paid', '>', 0)
-                                ->where('remaining_amount', '>', 0);
+                                ->where('remaining_amount', '>', 0)
+                                ->where('is_manual_block', false);
                         });
                     } else {
-                        $q->orWhere('status', $status);
+                        $q->orWhere(function ($subQuery) use ($status) {
+                            $subQuery->where('status', $status)
+                                ->where('is_manual_block', false);
+                        });
                     }
                 }
             });
@@ -94,10 +98,14 @@ class ExportBookings extends Component
                         // Part payment: amount_paid > 0 AND remaining_amount > 0
                         $q->orWhere(function ($subQuery) {
                             $subQuery->where('amount_paid', '>', 0)
-                                ->where('remaining_amount', '>', 0);
+                                ->where('remaining_amount', '>', 0)
+                                ->where('is_manual_block', false);
                         });
                     } else {
-                        $q->orWhere('status', $status);
+                        $q->orWhere(function ($subQuery) use ($status) {
+                            $subQuery->where('status', $status)
+                                ->where('is_manual_block', false);
+                        });
                     }
                 }
             });
