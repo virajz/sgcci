@@ -20,6 +20,9 @@
             </flux:navlist.group>
 
             <flux:navlist.group :heading="__('Management')" class="grid">
+                <flux:navlist.item icon="building-office" :href="route('admin.exhibitions.index')"
+                    :current="request()->routeIs('admin.exhibitions.*')" wire:navigate>{{ __('Exhibitions') }}
+                </flux:navlist.item>
                 <flux:navlist.item icon="clipboard-document-list" :href="route('admin.inquiries.index')"
                     :current="request()->routeIs('admin.inquiries.*')" wire:navigate>{{ __('Inquiries') }}
                 </flux:navlist.item>

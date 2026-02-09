@@ -4,6 +4,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SupportTicketController;
 use App\Livewire\Admin\DatabaseBackups;
+use App\Livewire\Admin\Exhibitions\Index as ExhibitionsIndex;
 use App\Livewire\Admin\Inquiries\EditBooking as AdminEditBooking;
 use App\Livewire\Admin\Inquiries\Index as InquiriesIndex;
 use App\Livewire\Admin\Inquiries\Show as InquiriesShow;
@@ -16,6 +17,7 @@ use App\Livewire\Exhibitions\Confirmation;
 use App\Livewire\Exhibitions\EditBooking;
 use App\Livewire\Exhibitions\ProductProfileSelection;
 use App\Livewire\Exhibitions\ThankYou;
+use App\Livewire\Exhibitions\VisitorsRegistration;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -79,6 +81,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Admin routes
     Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
+        Route::get('exhibitions', ExhibitionsIndex::class)->name('exhibitions.index');
         Route::get('inquiries', InquiriesIndex::class)->name('inquiries.index');
         Route::get('inquiries/{booking}', InquiriesShow::class)->name('inquiries.show');
         Route::get('inquiries/{booking}/edit', AdminEditBooking::class)->name('inquiries.edit');
@@ -88,5 +91,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('database-backups', DatabaseBackups::class)->name('database-backups');
     });
 });
+
+// Public visitor registration (no auth required)
+Route::get('{exhibition:slug}/visitors-registration', VisitorsRegistration::class)->name('visitors-registration');
 
 require __DIR__.'/auth.php';

@@ -3,7 +3,9 @@
     "allow": [
       "Bash(php artisan make:livewire:*)",
       "Bash(php artisan test:*)",
-      "Bash(vendor/bin/pint:*)"
+      "Bash(vendor/bin/pint:*)",
+      "Bash(php artisan view:clear:*)",
+      "Bash(php artisan view:cache:*)"
     ],
     "deny": [],
     "ask": []
