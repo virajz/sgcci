@@ -58,7 +58,7 @@
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <flux:field>
                         <flux:label>State <span class="text-red-500">*</span></flux:label>
-                        <flux:select wire:model.live="state" placeholder="Select State">
+                        <flux:select variant="listbox" wire:model.live="state" placeholder="Select State">
                             @foreach ($states as $stateOption)
                                 <flux:select.option value="{{ $stateOption }}">{{ $stateOption }}</flux:select.option>
                             @endforeach
@@ -68,7 +68,7 @@
 
                     <flux:field>
                         <flux:label>City <span class="text-red-500">*</span></flux:label>
-                        <flux:select wire:model="city" placeholder="Select City">
+                        <flux:select variant="listbox" wire:model="city" placeholder="Select City">
                             @foreach ($this->cities as $cityOption)
                                 <flux:select.option value="{{ $cityOption }}">{{ $cityOption }}</flux:select.option>
                             @endforeach
@@ -88,7 +88,7 @@
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <flux:field>
                         <flux:label>Business Segments <span class="text-red-500">*</span></flux:label>
-                        <flux:select wire:model.live="businessSegment" placeholder="Select Business Segment">
+                        <flux:select variant="listbox" wire:model.live="businessSegment" placeholder="Select Business Segment">
                             @foreach ($businessSegments as $segment)
                                 <flux:select.option value="{{ $segment }}">{{ $segment }}</flux:select.option>
                             @endforeach
@@ -98,7 +98,7 @@
 
                     <flux:field>
                         <flux:label>Sub Business Segments <span class="text-red-500">*</span></flux:label>
-                        <flux:select wire:model="subBusinessSegment" placeholder="Select Sub Business Segment">
+                        <flux:select variant="listbox" wire:model="subBusinessSegment" placeholder="Select Sub Business Segment">
                             @foreach ($this->subSegments as $subSegment)
                                 <flux:select.option value="{{ $subSegment }}">{{ $subSegment }}</flux:select.option>
                             @endforeach
