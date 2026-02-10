@@ -52,6 +52,12 @@ class Index extends Component
     #[Validate('required|date|after_or_equal:startDate')]
     public string $endDate = '';
 
+    #[Validate('required|string|in:free,paid')]
+    public string $entryType = 'free';
+
+    #[Validate('nullable|numeric|min:1|required_if:entryType,paid')]
+    public ?string $entryAmount = null;
+
     public function updatingSearch(): void
     {
         $this->resetPage();
@@ -59,7 +65,7 @@ class Index extends Component
 
     public function openAddModal(): void
     {
-        $this->reset(['title', 'description', 'startDate', 'endDate']);
+        $this->reset(['title', 'description', 'startDate', 'endDate', 'entryType', 'entryAmount']);
         $this->showAddModal = true;
     }
 
@@ -72,6 +78,8 @@ class Index extends Component
             'description' => $this->description,
             'start_date' => $this->startDate,
             'end_date' => $this->endDate,
+            'entry_type' => $this->entryType,
+            'entry_amount' => $this->entryType === 'paid' ? $this->entryAmount : null,
             'created_by' => Auth::id(),
         ]);
 
@@ -82,7 +90,7 @@ class Index extends Component
         );
 
         $this->showAddModal = false;
-        $this->reset(['title', 'description', 'startDate', 'endDate']);
+        $this->reset(['title', 'description', 'startDate', 'endDate', 'entryType', 'entryAmount']);
     }
 
     public function openEditModal(int $exhibitionId): void
@@ -94,6 +102,8 @@ class Index extends Component
         $this->description = $exhibition->description ?? '';
         $this->startDate = $exhibition->start_date->format('Y-m-d');
         $this->endDate = $exhibition->end_date->format('Y-m-d');
+        $this->entryType = $exhibition->entry_type?->value ?? 'free';
+        $this->entryAmount = $exhibition->entry_amount ? (string) $exhibition->entry_amount : null;
 
         $this->showEditModal = true;
     }
@@ -109,6 +119,8 @@ class Index extends Component
             'description' => $this->description,
             'start_date' => $this->startDate,
             'end_date' => $this->endDate,
+            'entry_type' => $this->entryType,
+            'entry_amount' => $this->entryType === 'paid' ? $this->entryAmount : null,
         ]);
 
         Flux::toast(
@@ -118,7 +130,7 @@ class Index extends Component
         );
 
         $this->showEditModal = false;
-        $this->reset(['exhibitionToEdit', 'title', 'description', 'startDate', 'endDate']);
+        $this->reset(['exhibitionToEdit', 'title', 'description', 'startDate', 'endDate', 'entryType', 'entryAmount']);
     }
 
     public function confirmDelete(int $exhibitionId): void

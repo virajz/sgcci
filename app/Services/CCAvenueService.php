@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Booking;
+use App\Models\ExhibitionVisitor;
 use Illuminate\Support\Facades\Log;
 
 class CCAvenueService
@@ -107,6 +108,48 @@ class CCAvenueService
     public function generateEncryptedRequest(Booking $booking): string
     {
         $merchantData = $this->preparePaymentData($booking);
+
+        $dataString = '';
+        foreach ($merchantData as $key => $value) {
+            $dataString .= $key.'='.$value.'&';
+        }
+
+        return $this->encrypt(rtrim($dataString, '&'));
+    }
+
+    /**
+     * Prepare payment data for visitor registration.
+     */
+    public function prepareVisitorPaymentData(ExhibitionVisitor $visitor): array
+    {
+        return [
+            'merchant_id' => $this->merchantId,
+            'order_id' => $visitor->registration_code,
+            'amount' => number_format((float) $visitor->payment_amount, 2, '.', ''),
+            'currency' => config('services.ccavenue.currency', 'INR'),
+            'redirect_url' => config('services.ccavenue.visitor_redirect_url'),
+            'cancel_url' => config('services.ccavenue.visitor_cancel_url'),
+            'language' => 'EN',
+            'billing_name' => $visitor->name,
+            'billing_address' => $visitor->city,
+            'billing_city' => $visitor->city,
+            'billing_state' => $visitor->state,
+            'billing_zip' => '000000',
+            'billing_country' => 'India',
+            'billing_tel' => $visitor->phone_number,
+            'billing_email' => $visitor->email ?? 'noreply@sgcci.in',
+            'merchant_param1' => (string) $visitor->id,
+            'merchant_param2' => (string) $visitor->exhibition_id,
+            'merchant_param3' => 'visitor_registration',
+        ];
+    }
+
+    /**
+     * Generate encrypted request for visitor payment.
+     */
+    public function generateEncryptedVisitorRequest(ExhibitionVisitor $visitor): string
+    {
+        $merchantData = $this->prepareVisitorPaymentData($visitor);
 
         $dataString = '';
         foreach ($merchantData as $key => $value) {

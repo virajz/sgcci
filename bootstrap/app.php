@@ -19,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'payment/response',
             'payment/cancel',
+            'visitor-payment/response',
+            'visitor-payment/cancel',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

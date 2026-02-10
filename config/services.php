@@ -62,6 +62,8 @@ return [
         'currency' => env('CCAVENUE_CURRENCY', 'INR'),
         'redirect_url' => env('CCAVENUE_REDIRECT_URL'),
         'cancel_url' => env('CCAVENUE_CANCEL_URL'),
+        'visitor_redirect_url' => env('CCAVENUE_VISITOR_REDIRECT_URL'),
+        'visitor_cancel_url' => env('CCAVENUE_VISITOR_CANCEL_URL'),
     ],
 
 ];

@@ -3,6 +3,7 @@
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\VisitorPaymentController;
 use App\Livewire\Admin\DatabaseBackups;
 use App\Livewire\Admin\Exhibitions\Index as ExhibitionsIndex;
 use App\Livewire\Admin\Inquiries\EditBooking as AdminEditBooking;
@@ -18,6 +19,7 @@ use App\Livewire\Exhibitions\EditBooking;
 use App\Livewire\Exhibitions\ProductProfileSelection;
 use App\Livewire\Exhibitions\ThankYou;
 use App\Livewire\Exhibitions\VisitorsRegistration;
+use App\Livewire\Exhibitions\VisitorThankYou;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -57,6 +59,13 @@ Route::prefix('payment')->name('payment.')->group(function () {
     Route::post('/cancel', [PaymentController::class, 'cancel'])->name('cancel');
 });
 
+// Visitor payment routes
+Route::prefix('visitor-payment')->name('visitor-payment.')->group(function () {
+    Route::get('/{registrationCode}', [VisitorPaymentController::class, 'initiate'])->name('initiate');
+    Route::post('/response', [VisitorPaymentController::class, 'response'])->name('response');
+    Route::post('/cancel', [VisitorPaymentController::class, 'cancel'])->name('cancel');
+});
+
 Route::get('dashboard', Dashboard::class)
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -94,5 +103,6 @@ Route::middleware(['auth'])->group(function () {
 
 // Public visitor registration (no auth required)
 Route::get('{exhibition:slug}/visitors-registration', VisitorsRegistration::class)->name('visitors-registration');
+Route::get('{exhibition:slug}/visitors-registration/thank-you/{registrationCode}', VisitorThankYou::class)->name('visitors-registration.thank-you');
 
 require __DIR__.'/auth.php';

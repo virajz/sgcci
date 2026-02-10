@@ -25,7 +25,17 @@ class ExhibitionFactory extends Factory
             'description' => $this->faker->paragraph,
             'start_date' => $this->faker->date,
             'end_date' => $this->faker->date,
+            'entry_type' => 'free',
+            'entry_amount' => null,
             'created_by' => null,
         ];
+    }
+
+    public function paid(float $amount = 100.00): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'entry_type' => 'paid',
+            'entry_amount' => $amount,
+        ]);
     }
 }

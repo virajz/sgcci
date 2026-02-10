@@ -16,6 +16,7 @@
                     <flux:table.columns>
                         <flux:table.column>Name</flux:table.column>
                         <flux:table.column>Dates</flux:table.column>
+                        <flux:table.column>Entry</flux:table.column>
                         <flux:table.column>Added By</flux:table.column>
                         <flux:table.column>Actions</flux:table.column>
                     </flux:table.columns>
@@ -31,6 +32,15 @@
                                     <div class="text-sm">
                                         {{ $exhibition->start_date->format('M d, Y') }} — {{ $exhibition->end_date->format('M d, Y') }}
                                     </div>
+                                </flux:table.cell>
+
+                                <flux:table.cell>
+                                    <flux:badge :color="$exhibition->entry_type?->value === 'paid' ? 'amber' : 'green'" size="sm">
+                                        {{ $exhibition->entry_type?->label() ?? 'Free' }}
+                                        @if ($exhibition->entry_type?->value === 'paid' && $exhibition->entry_amount)
+                                            - {{ Number::currency((float) $exhibition->entry_amount, 'INR') }}
+                                        @endif
+                                    </flux:badge>
                                 </flux:table.cell>
 
                                 <flux:table.cell>
@@ -113,6 +123,24 @@
                 </flux:field>
             </div>
 
+            <flux:field>
+                <flux:label>Entry Type</flux:label>
+                <flux:radio.group wire:model.live="entryType">
+                    <flux:radio value="free" label="Free Entry" />
+                    <flux:radio value="paid" label="Paid Entry" />
+                </flux:radio.group>
+                <flux:error name="entryType" />
+            </flux:field>
+
+            @if ($entryType === 'paid')
+                <flux:field>
+                    <flux:label>Entry Amount (INR)</flux:label>
+                    <flux:input wire:model="entryAmount" type="number" min="1" step="0.01"
+                        placeholder="e.g. 100.00" />
+                    <flux:error name="entryAmount" />
+                </flux:field>
+            @endif
+
             <div class="flex gap-2">
                 <flux:button type="submit" variant="primary">Add Exhibition</flux:button>
                 <flux:button type="button" variant="ghost" wire:click="$set('showAddModal', false)">Cancel
@@ -151,6 +179,24 @@
                     <flux:error name="endDate" />
                 </flux:field>
             </div>
+
+            <flux:field>
+                <flux:label>Entry Type</flux:label>
+                <flux:radio.group wire:model.live="entryType">
+                    <flux:radio value="free" label="Free Entry" />
+                    <flux:radio value="paid" label="Paid Entry" />
+                </flux:radio.group>
+                <flux:error name="entryType" />
+            </flux:field>
+
+            @if ($entryType === 'paid')
+                <flux:field>
+                    <flux:label>Entry Amount (INR)</flux:label>
+                    <flux:input wire:model="entryAmount" type="number" min="1" step="0.01"
+                        placeholder="e.g. 100.00" />
+                    <flux:error name="entryAmount" />
+                </flux:field>
+            @endif
 
             <div class="flex gap-2">
                 <flux:button type="submit" variant="primary">Update Exhibition</flux:button>

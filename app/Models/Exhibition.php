@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\EntryType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,6 +20,8 @@ class Exhibition extends Model
         'description',
         'start_date',
         'end_date',
+        'entry_type',
+        'entry_amount',
         'created_by',
     ];
 
@@ -27,7 +30,14 @@ class Exhibition extends Model
         return [
             'start_date' => 'date',
             'end_date' => 'date',
+            'entry_type' => EntryType::class,
+            'entry_amount' => 'decimal:2',
         ];
+    }
+
+    public function isPaidEntry(): bool
+    {
+        return $this->entry_type === EntryType::Paid;
     }
 
     protected static function booted(): void
@@ -71,5 +81,10 @@ class Exhibition extends Model
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
+    }
+
+    public function visitors(): HasMany
+    {
+        return $this->hasMany(ExhibitionVisitor::class);
     }
 }
