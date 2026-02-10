@@ -28,4 +28,20 @@ class QrCodeService
 
         return trim(substr($svg, strpos($svg, "\n") + 1));
     }
+
+    /**
+     * Generate a PNG QR code for the given data string.
+     */
+    public function generatePng(string $data, int $size = 800): string
+    {
+        return (new Writer(
+            new ImageRenderer(
+                new RendererStyle($size, 4, null, null, Fill::uniformColor(
+                    new Rgb(255, 255, 255),
+                    new Rgb(0, 0, 0)
+                )),
+                new \BaconQrCode\Renderer\Image\ImagickImageBackEnd
+            )
+        ))->writeString($data);
+    }
 }

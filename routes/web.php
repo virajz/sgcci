@@ -3,6 +3,7 @@
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\VisitorPassController;
 use App\Http\Controllers\VisitorPaymentController;
 use App\Livewire\Admin\DatabaseBackups;
 use App\Livewire\Admin\Exhibitions\Index as ExhibitionsIndex;
@@ -106,5 +107,6 @@ Route::middleware(['auth'])->group(function () {
 // Public visitor registration (no auth required)
 Route::get('{exhibition:slug}/visitors-registration', VisitorsRegistration::class)->name('visitors-registration');
 Route::get('{exhibition:slug}/visitors-registration/thank-you/{registrationCode}', VisitorThankYou::class)->name('visitors-registration.thank-you');
+Route::get('{exhibition:slug}/visitor-pass/{registrationCode}/download', [VisitorPassController::class, 'download'])->name('visitor-pass.download');
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

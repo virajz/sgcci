@@ -15,6 +15,29 @@
             <flux:subheading>Your visitor registration has been confirmed.</flux:subheading>
         </div>
 
+        {{-- QR Code Section --}}
+        <flux:card class="p-8">
+            <div class="flex flex-col items-center space-y-4">
+                <flux:heading size="lg" class="text-center">Your Visitor Pass</flux:heading>
+
+                <div class="p-6 bg-white rounded-lg dark:bg-zinc-900">
+                    <div class="flex items-center justify-center w-64 h-64">
+                        {!! $qrCodeSvg !!}
+                    </div>
+                </div>
+
+                <flux:text class="text-sm text-center text-zinc-600 dark:text-zinc-400">
+                    Scan this QR code at the venue for quick entry
+                </flux:text>
+
+                <flux:button variant="primary"
+                    href="{{ route('visitor-pass.download', ['exhibition' => $exhibition->slug, 'registrationCode' => $visitor->registration_code]) }}"
+                    icon="arrow-down-tray" class="w-full sm:w-auto">
+                    Download QR Code
+                </flux:button>
+            </div>
+        </flux:card>
+
         <flux:card class="p-8">
             <div class="space-y-4">
                 <flux:heading size="lg" class="mb-4">Registration Details</flux:heading>
@@ -63,7 +86,7 @@
                         class="flex-shrink-0 w-5 h-5 mt-0.5 text-blue-600 dark:text-blue-400" />
                     <flux:text class="text-sm text-blue-700 dark:text-blue-300">
                         Please save your registration code <strong>{{ $visitor->registration_code }}</strong> for
-                        reference.
+                        reference. You can also download your QR code for easy access at the venue.
                     </flux:text>
                 </div>
             </div>

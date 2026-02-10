@@ -26,7 +26,7 @@
                 @endif
             </div>
 
-            <div class="flex-1 space-y-6 lg:overflow-y-auto">
+            <div class="flex-1 px-1 space-y-6 lg:overflow-y-auto lg:px-2">
                 {{-- Phone Number --}}
                 <flux:field>
                     <flux:label>Phone No <span class="text-red-500">*</span></flux:label>
