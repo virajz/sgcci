@@ -5,6 +5,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\VisitorPassController;
 use App\Http\Controllers\VisitorPaymentController;
+use App\Http\Controllers\VisitorScanController;
 use App\Livewire\Admin\DatabaseBackups;
 use App\Livewire\Admin\Exhibitions\Index as ExhibitionsIndex;
 use App\Livewire\Admin\Inquiries\EditBooking as AdminEditBooking;
@@ -109,4 +110,7 @@ Route::get('{exhibition:slug}/visitors-registration', VisitorsRegistration::clas
 Route::get('{exhibition:slug}/visitors-registration/thank-you/{registrationCode}', VisitorThankYou::class)->name('visitors-registration.thank-you');
 Route::get('{exhibition:slug}/visitor-pass/{registrationCode}/download', [VisitorPassController::class, 'download'])->name('visitor-pass.download');
 
-require __DIR__ . '/auth.php';
+// Smart QR scan URL — redirects based on auth/role
+Route::get('{exhibition:slug}/visitors/{registrationCode}', VisitorScanController::class)->name('visitor.scan');
+
+require __DIR__.'/auth.php';

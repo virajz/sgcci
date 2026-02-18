@@ -1,4 +1,4 @@
-<div class="flex items-center justify-center min-h-screen p-4">
+<div class="flex items-center justify-center min-h-screen p-4 bg-zinc-100 dark:bg-zinc-900">
     <flux:main class="w-full max-w-3xl mx-auto space-y-8">
         <section class="flex items-center justify-between">
             <img src="{{ asset('brand/sgcci-logo-fixed.svg') }}" alt="SGCCI Logo" class="w-full h-auto max-w-16">
@@ -15,28 +15,31 @@
             <flux:subheading>Your visitor registration has been confirmed.</flux:subheading>
         </div>
 
-        {{-- QR Code Section --}}
-        <flux:card class="p-8">
-            <div class="flex flex-col items-center space-y-4">
-                <flux:heading size="lg" class="text-center">Your Visitor Pass</flux:heading>
+        {{-- Primary Visitor Pass --}}
+        <div class="space-y-4">
+            <flux:heading size="lg" class="text-center">
+                {{ count($this->additionalPersonPasses) > 0 ? 'Your Visitor Passes' : 'Your Visitor Pass' }}
+            </flux:heading>
 
-                <div class="p-6 bg-white rounded-lg dark:bg-zinc-900">
-                    <div class="flex items-center justify-center w-64 h-64">
-                        {!! $qrCodeSvg !!}
-                    </div>
-                </div>
+            {{-- Primary visitor poster --}}
+            @include('livewire.exhibitions.partials.visitor-pass-poster', [
+                'qrCodeSvg' => $qrCodeSvg,
+                'visitorName' => $visitor->name,
+                'downloadUrl' => route('visitor-pass.download', [
+                    'exhibition' => $exhibition->slug,
+                    'registrationCode' => $visitor->registration_code,
+                ]),
+            ])
 
-                <flux:text class="text-sm text-center text-zinc-600 dark:text-zinc-400">
-                    Scan this QR code at the venue for quick entry
-                </flux:text>
-
-                <flux:button variant="primary"
-                    href="{{ route('visitor-pass.download', ['exhibition' => $exhibition->slug, 'registrationCode' => $visitor->registration_code]) }}"
-                    icon="arrow-down-tray" class="w-full sm:w-auto">
-                    Download QR Code
-                </flux:button>
-            </div>
-        </flux:card>
+            {{-- Additional person posters --}}
+            @foreach ($this->additionalPersonPasses as $pass)
+                @include('livewire.exhibitions.partials.visitor-pass-poster', [
+                    'qrCodeSvg' => $pass['qrCodeSvg'],
+                    'visitorName' => $pass['name'],
+                    'downloadUrl' => $pass['downloadUrl'],
+                ])
+            @endforeach
+        </div>
 
         <flux:card class="p-8">
             <div class="space-y-4">
@@ -68,6 +71,14 @@
                     <flux:text class="text-zinc-600 dark:text-zinc-400">Status</flux:text>
                     <flux:badge :color="$visitor->status->color()">{{ $visitor->status->label() }}</flux:badge>
                 </div>
+
+                @php $totalPersons = 1 + count($visitor->additional_persons ?? []); @endphp
+                @if ($totalPersons > 1)
+                    <div class="flex items-center justify-between py-3 border-b border-zinc-200 dark:border-zinc-700">
+                        <flux:text class="text-zinc-600 dark:text-zinc-400">People Registered</flux:text>
+                        <flux:text class="font-semibold text-black dark:text-white">{{ $totalPersons }}</flux:text>
+                    </div>
+                @endif
 
                 @if ($exhibition->start_date && $exhibition->end_date)
                     <div class="flex items-center justify-between py-3">

@@ -24,6 +24,11 @@ class VisitorThankYou extends Component
 
     public string $qrCodeUrl = '';
 
+    /**
+     * @var array<int, array{name: string, qrCodeSvg: string, downloadUrl: string}>
+     */
+    public array $additionalPersonPasses = [];
+
     public function mount(Exhibition $exhibition, string $registrationCode): void
     {
         $this->exhibitionId = $exhibition->id;
@@ -33,12 +38,36 @@ class VisitorThankYou extends Component
             ->where('exhibition_id', $exhibition->id)
             ->firstOrFail();
 
-        // Generate QR code URL
-        $this->qrCodeUrl = url("/{$exhibition->slug}/visitors/{$visitor->id}/{$registrationCode}");
-
-        // Generate QR code SVG
         $qrService = app(QrCodeService::class);
+
+        // Primary visitor: QR encodes the smart scan URL
+        $this->qrCodeUrl = route('visitor.scan', [
+            'exhibition' => $exhibition->slug,
+            'registrationCode' => $registrationCode,
+        ]);
         $this->qrCodeSvg = $qrService->generateSvg($this->qrCodeUrl, 300);
+
+        // Additional persons: each gets their own QR with a person index
+        $this->additionalPersonPasses = [];
+
+        if (! empty($visitor->additional_persons)) {
+            foreach ($visitor->additional_persons as $index => $person) {
+                $personQrUrl = route('visitor.scan', [
+                    'exhibition' => $exhibition->slug,
+                    'registrationCode' => $registrationCode,
+                ]).'?person='.($index + 1);
+
+                $this->additionalPersonPasses[] = [
+                    'name' => $person['name'],
+                    'qrCodeSvg' => $qrService->generateSvg($personQrUrl, 300),
+                    'downloadUrl' => route('visitor-pass.download', [
+                        'exhibition' => $exhibition->slug,
+                        'registrationCode' => $registrationCode,
+                        'personIndex' => $index,
+                    ]),
+                ];
+            }
+        }
     }
 
     public function render()
