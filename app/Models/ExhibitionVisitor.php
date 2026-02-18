@@ -24,6 +24,7 @@ class ExhibitionVisitor extends Model
         'email',
         'business_segment',
         'sub_business_segment',
+        'additional_persons',
         'source',
         'status',
         'payment_amount',
@@ -45,6 +46,7 @@ class ExhibitionVisitor extends Model
     {
         return [
             'payment_amount' => 'decimal:2',
+            'additional_persons' => 'array',
             'payment_response' => 'array',
             'payment_initiated_at' => 'datetime',
             'payment_completed_at' => 'datetime',

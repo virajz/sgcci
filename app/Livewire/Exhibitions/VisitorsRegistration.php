@@ -22,6 +22,8 @@ class VisitorsRegistration extends Component
     #[Locked]
     public ?string $source = null;
 
+    public int $currentStep = 1;
+
     public string $phoneNumber = '';
 
     public string $name = '';
@@ -39,6 +41,11 @@ class VisitorsRegistration extends Component
     public string $businessSegment = '';
 
     public string $subBusinessSegment = '';
+
+    /**
+     * @var array<int, array{name: string}>
+     */
+    public array $additionalPersons = [];
 
     /**
      * @return array<string, array<string>>
@@ -106,7 +113,109 @@ class VisitorsRegistration extends Component
         return $map[$this->businessSegment] ?? [];
     }
 
+    #[Computed]
+    public function totalPersons(): int
+    {
+        return 1 + count($this->additionalPersons);
+    }
+
+    #[Computed]
+    public function totalAmount(): ?float
+    {
+        $exhibition = Exhibition::findOrFail($this->exhibitionId);
+
+        if (! $exhibition->isPaidEntry()) {
+            return null;
+        }
+
+        return (float) $exhibition->entry_amount * $this->totalPersons;
+    }
+
+    public function goToStep(int $step): void
+    {
+        if ($step === 2) {
+            $this->validateStep1();
+        }
+
+        $this->currentStep = $step;
+    }
+
+    public function nextStep(): void
+    {
+        $this->validateStep1();
+        $this->currentStep = 2;
+    }
+
+    public function previousStep(): void
+    {
+        $this->currentStep = 1;
+    }
+
+    public function addPerson(): void
+    {
+        $this->additionalPersons[] = ['name' => ''];
+    }
+
+    public function removePerson(int $index): void
+    {
+        array_splice($this->additionalPersons, $index, 1);
+        $this->additionalPersons = array_values($this->additionalPersons);
+    }
+
     public function register(): void
+    {
+        $this->validateStep1();
+        $this->validateStep2();
+
+        $exhibition = Exhibition::findOrFail($this->exhibitionId);
+
+        $additionalPersonsData = array_values(
+            array_filter(
+                $this->additionalPersons,
+                fn (array $person) => ! empty(trim($person['name']))
+            )
+        );
+
+        $totalAmount = $exhibition->isPaidEntry()
+            ? (float) $exhibition->entry_amount * (1 + count($additionalPersonsData))
+            : null;
+
+        $visitor = ExhibitionVisitor::create([
+            'exhibition_id' => $this->exhibitionId,
+            'phone_number' => $this->phoneNumber,
+            'name' => $this->name,
+            'company_name' => $this->companyName ?: null,
+            'designation' => $this->designation ?: null,
+            'state' => $this->state,
+            'city' => $this->city,
+            'email' => $this->email ?: null,
+            'business_segment' => $this->businessSegment,
+            'sub_business_segment' => $this->subBusinessSegment,
+            'additional_persons' => ! empty($additionalPersonsData) ? $additionalPersonsData : null,
+            'source' => $this->source,
+            'payment_amount' => $totalAmount,
+            'status' => $exhibition->isPaidEntry()
+                ? VisitorRegistrationStatus::PaymentPending
+                : VisitorRegistrationStatus::Confirmed,
+        ]);
+
+        if ($exhibition->isPaidEntry()) {
+            $this->redirect(
+                route('visitor-payment.initiate', ['registrationCode' => $visitor->registration_code]),
+                navigate: false
+            );
+        } else {
+            $this->redirect(
+                route('visitors-registration.thank-you', [
+                    'exhibition' => $exhibition,
+                    'registrationCode' => $visitor->registration_code,
+                ]),
+                navigate: true
+            );
+        }
+    }
+
+    private function validateStep1(): void
     {
         $this->validate([
             'phoneNumber' => [
@@ -131,41 +240,16 @@ class VisitorsRegistration extends Component
             'businessSegment.required' => 'Please select a business segment.',
             'subBusinessSegment.required' => 'Please select a sub business segment.',
         ]);
+    }
 
-        $exhibition = Exhibition::findOrFail($this->exhibitionId);
-
-        $visitor = ExhibitionVisitor::create([
-            'exhibition_id' => $this->exhibitionId,
-            'phone_number' => $this->phoneNumber,
-            'name' => $this->name,
-            'company_name' => $this->companyName ?: null,
-            'designation' => $this->designation ?: null,
-            'state' => $this->state,
-            'city' => $this->city,
-            'email' => $this->email ?: null,
-            'business_segment' => $this->businessSegment,
-            'sub_business_segment' => $this->subBusinessSegment,
-            'source' => $this->source,
-            'payment_amount' => $exhibition->isPaidEntry() ? $exhibition->entry_amount : null,
-            'status' => $exhibition->isPaidEntry()
-                ? VisitorRegistrationStatus::PaymentPending
-                : VisitorRegistrationStatus::Confirmed,
+    private function validateStep2(): void
+    {
+        $this->validate([
+            'additionalPersons.*.name' => ['required', 'string', 'max:255'],
+        ], [
+            'additionalPersons.*.name.required' => 'Please enter the name for each additional person.',
+            'additionalPersons.*.name.max' => 'Each name may not exceed 255 characters.',
         ]);
-
-        if ($exhibition->isPaidEntry()) {
-            $this->redirect(
-                route('visitor-payment.initiate', ['registrationCode' => $visitor->registration_code]),
-                navigate: false
-            );
-        } else {
-            $this->redirect(
-                route('visitors-registration.thank-you', [
-                    'exhibition' => $exhibition,
-                    'registrationCode' => $visitor->registration_code,
-                ]),
-                navigate: true
-            );
-        }
     }
 
     public function render()
