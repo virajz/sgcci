@@ -23,7 +23,7 @@
 
             {{-- Primary visitor poster --}}
             @include('livewire.exhibitions.partials.visitor-pass-poster', [
-                'qrCodeSvg' => $qrCodeSvg,
+                'passImageDataUri' => $passImageDataUri,
                 'visitorName' => $visitor->name,
                 'downloadUrl' => route('visitor-pass.download', [
                     'exhibition' => $exhibition->slug,
@@ -34,7 +34,7 @@
             {{-- Additional person posters --}}
             @foreach ($this->additionalPersonPasses as $pass)
                 @include('livewire.exhibitions.partials.visitor-pass-poster', [
-                    'qrCodeSvg' => $pass['qrCodeSvg'],
+                    'passImageDataUri' => $pass['passImageDataUri'],
                     'visitorName' => $pass['name'],
                     'downloadUrl' => $pass['downloadUrl'],
                 ])

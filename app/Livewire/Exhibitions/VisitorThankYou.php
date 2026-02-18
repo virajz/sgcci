@@ -20,12 +20,10 @@ class VisitorThankYou extends Component
     #[Locked]
     public int $exhibitionId;
 
-    public string $qrCodeSvg = '';
-
-    public string $qrCodeUrl = '';
+    public string $passImageDataUri = '';
 
     /**
-     * @var array<int, array{name: string, qrCodeSvg: string, downloadUrl: string}>
+     * @var array<int, array{name: string, passImageDataUri: string, downloadUrl: string}>
      */
     public array $additionalPersonPasses = [];
 
@@ -40,14 +38,16 @@ class VisitorThankYou extends Component
 
         $qrService = app(QrCodeService::class);
 
-        // Primary visitor: QR encodes the smart scan URL
-        $this->qrCodeUrl = route('visitor.scan', [
+        // Primary visitor
+        $primaryQrUrl = route('visitor.scan', [
             'exhibition' => $exhibition->slug,
             'registrationCode' => $registrationCode,
         ]);
-        $this->qrCodeSvg = $qrService->generateSvg($this->qrCodeUrl, 300);
+        $this->passImageDataUri = 'data:image/jpeg;base64,'.base64_encode(
+            $qrService->generateVisitorPassImage($primaryQrUrl, $visitor->name)
+        );
 
-        // Additional persons: each gets their own QR with a person index
+        // Additional persons
         $this->additionalPersonPasses = [];
 
         if (! empty($visitor->additional_persons)) {
@@ -59,7 +59,9 @@ class VisitorThankYou extends Component
 
                 $this->additionalPersonPasses[] = [
                     'name' => $person['name'],
-                    'qrCodeSvg' => $qrService->generateSvg($personQrUrl, 300),
+                    'passImageDataUri' => 'data:image/jpeg;base64,'.base64_encode(
+                        $qrService->generateVisitorPassImage($personQrUrl, $person['name'])
+                    ),
                     'downloadUrl' => route('visitor-pass.download', [
                         'exhibition' => $exhibition->slug,
                         'registrationCode' => $registrationCode,
