@@ -82,12 +82,14 @@ class Dashboard extends Component
 
     public function getVisitorsTodayProperty(): int
     {
-        return ExhibitionVisitor::whereDate('created_at', today())->count();
+        return ExhibitionVisitor::where('status', VisitorRegistrationStatus::Confirmed)
+            ->whereDate('created_at', today())
+            ->count();
     }
 
     public function getVisitorsTotalProperty(): int
     {
-        return ExhibitionVisitor::count();
+        return ExhibitionVisitor::where('status', VisitorRegistrationStatus::Confirmed)->count();
     }
 
     public function getVisitorPaymentTodayProperty(): string
