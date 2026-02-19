@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\BookingStatus;
 use App\Models\Booking;
+use App\Models\ExhibitionVisitor;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -78,6 +79,33 @@ class Dashboard extends Component
             ->count();
     }
 
+    public function getVisitorsTodayProperty(): int
+    {
+        return ExhibitionVisitor::whereDate('created_at', today())->count();
+    }
+
+    public function getVisitorsTotalProperty(): int
+    {
+        return ExhibitionVisitor::count();
+    }
+
+    public function getVisitorPaymentTodayProperty(): string
+    {
+        $amount = ExhibitionVisitor::where('payment_status', 'completed')
+            ->whereDate('payment_completed_at', today())
+            ->sum('payment_amount');
+
+        return '₹'.number_format($amount, 0);
+    }
+
+    public function getVisitorPaymentTotalProperty(): string
+    {
+        $amount = ExhibitionVisitor::where('payment_status', 'completed')
+            ->sum('payment_amount');
+
+        return '₹'.number_format($amount, 0);
+    }
+
     public function render()
     {
         return view('livewire.dashboard', [
@@ -85,6 +113,10 @@ class Dashboard extends Component
             'paymentsDue' => $this->paymentsDue,
             'bookedStalls' => $this->bookedStalls,
             'pendingReviews' => $this->pendingReviews,
+            'visitorsToday' => $this->visitorsToday,
+            'visitorsTotal' => $this->visitorsTotal,
+            'visitorPaymentToday' => $this->visitorPaymentToday,
+            'visitorPaymentTotal' => $this->visitorPaymentTotal,
         ]);
     }
 }

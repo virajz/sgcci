@@ -71,10 +71,38 @@
                 </div>
             </flux:card>
         </a>
+
+        {{-- Visitors Registered --}}
+        <flux:card class="h-full">
+            <div class="flex items-start justify-between">
+                <div>
+                    <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Visitors Registered</flux:text>
+                    <flux:heading size="2xl" class="mt-2">{{ $visitorsTotal }}</flux:heading>
+                    <flux:text class="mt-1 text-xs text-zinc-500">{{ $visitorsToday }} today</flux:text>
+                </div>
+                <div class="p-3 bg-purple-100 rounded-lg dark:bg-purple-900/20">
+                    <flux:icon.users class="text-purple-600 size-6 dark:text-purple-400" variant="outline" />
+                </div>
+            </div>
+        </flux:card>
+
+        {{-- Visitor Payments Collected --}}
+        <flux:card class="h-full">
+            <div class="flex items-start justify-between">
+                <div>
+                    <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Visitor Payments Collected</flux:text>
+                    <flux:heading size="2xl" class="mt-2">{{ $visitorPaymentTotal }}</flux:heading>
+                    <flux:text class="mt-1 text-xs text-zinc-500">{{ $visitorPaymentToday }} today</flux:text>
+                </div>
+                <div class="p-3 bg-teal-100 rounded-lg dark:bg-teal-900/20">
+                    <flux:icon.banknotes class="text-teal-600 size-6 dark:text-teal-400" variant="outline" />
+                </div>
+            </div>
+        </flux:card>
     </div>
 
     {{-- Quick Actions or Additional Content --}}
-    <flux:card>
+    {{-- <flux:card>
         <div class="p-8 text-center">
             <flux:heading size="lg" class="mb-2">Exhibition Management</flux:heading>
             <flux:text class="mb-4 text-zinc-500">
@@ -87,5 +115,5 @@
                 </flux:button>
             </div>
         </div>
-    </flux:card>
+    </flux:card> --}}
 </div>
