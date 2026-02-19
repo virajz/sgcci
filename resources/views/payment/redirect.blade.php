@@ -89,21 +89,12 @@
                             @if ($booking->amount_paid > 0)
                                 Remaining Amount
                             @else
-                                Amount to Pay (50%)
+                                Amount to Pay
                             @endif
                         </flux:heading>
-                        @if ($booking->amount_paid <= 0)
-                            <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">
-                                First payment of 50% is required
-                            </flux:text>
-                        @endif
                     </div>
                     <flux:heading size="xl" class="text-primary-600 dark:text-primary-400">
-                        @php
-                            $paymentAmount =
-                                $booking->amount_paid > 0 ? $booking->remaining_amount : $booking->total_with_gst * 0.5;
-                        @endphp
-                        ₹{{ number_format((float) $paymentAmount, 2) }}
+                        ₹{{ number_format((float) $booking->remaining_amount, 2) }}
                     </flux:heading>
                 </div>
             </div>

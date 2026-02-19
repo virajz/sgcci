@@ -87,18 +87,11 @@ class CCAvenueService
     }
 
     /**
-     * Calculate the payment amount based on payment history
-     * First payment: 50% of total
-     * Subsequent payments: Remaining amount
+     * Calculate the payment amount based on remaining balance.
+     * Always charges the full remaining amount.
      */
     public function calculatePaymentAmount(Booking $booking): float
     {
-        // If this is the first payment (no amount paid yet)
-        if ((float) $booking->amount_paid <= 0) {
-            return (float) $booking->total_with_gst * 0.5; // 50% for first payment
-        }
-
-        // For subsequent payments, charge the remaining amount
         return (float) $booking->remaining_amount;
     }
 
