@@ -13,8 +13,13 @@
             <div class="space-y-1 text-center">
                 <flux:subheading>{{ $exhibition->title }}</flux:subheading>
                 @if ($exhibition->start_date && $exhibition->end_date)
-                    <flux:text size="sm" class="text-zinc-400">
+                    {{-- <flux:text size="sm" class="text-zinc-400">
                         {{ $exhibition->start_date->format('M d') }} — {{ $exhibition->end_date->format('M d, Y') }}
+                    </flux:text> --}}
+                    <flux:text size="sm">
+                        {{ $exhibition->start_date->format('M d') }}: 1:00 PM onwards &nbsp;|&nbsp;
+                        {{ $exhibition->start_date->addDay()->format('M d') }} –
+                        {{ $exhibition->end_date->format('M d') }}: 10:00 AM onwards
                     </flux:text>
                 @endif
             </div>
