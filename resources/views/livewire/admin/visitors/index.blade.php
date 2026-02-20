@@ -5,8 +5,8 @@
 
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <flux:input wire:model.live.debounce.300ms="search"
-            placeholder="Search by name, company, email, phone, or code..." icon="magnifying-glass"
-            iconVariant="outline" class="md:max-w-md" />
+            placeholder="Search by name, company, email, phone, or code..." icon="magnifying-glass" iconVariant="outline"
+            class="md:max-w-md" />
 
         <flux:select wire:model.live="statusFilter" placeholder="All Statuses" class="md:max-w-xs">
             <flux:select.option value="">All Statuses</flux:select.option>
@@ -27,6 +27,7 @@
                         <flux:table.column>Phone</flux:table.column>
                         <flux:table.column>City</flux:table.column>
                         <flux:table.column>Business Segment</flux:table.column>
+                        <flux:table.column>People</flux:table.column>
                         <flux:table.column>Status</flux:table.column>
                         <flux:table.column>Payment</flux:table.column>
                         <flux:table.column>Registered</flux:table.column>
@@ -59,13 +60,27 @@
                                 </flux:table.cell>
 
                                 <flux:table.cell>
-                                    {{ $visitor->city }}@if ($visitor->state), {{ $visitor->state }}@endif
+                                    {{ $visitor->city }}@if ($visitor->state)
+                                        , {{ $visitor->state }}
+                                    @endif
                                 </flux:table.cell>
 
                                 <flux:table.cell>
                                     <div>{{ $visitor->business_segment }}</div>
                                     @if ($visitor->sub_business_segment)
                                         <div class="text-xs text-zinc-500">{{ $visitor->sub_business_segment }}</div>
+                                    @endif
+                                </flux:table.cell>
+
+                                <flux:table.cell>
+                                    @php $totalPersons = 1 + count($visitor->additional_persons ?? []); @endphp
+                                    @if ($totalPersons > 1)
+                                        <button wire:click="viewPersons({{ $visitor->id }})" class="cursor-pointer">
+                                            <flux:badge color="blue" size="sm">{{ $totalPersons }} people
+                                            </flux:badge>
+                                        </button>
+                                    @else
+                                        <flux:badge color="zinc" size="sm">1 person</flux:badge>
                                     @endif
                                 </flux:table.cell>
 
@@ -92,8 +107,13 @@
                                 </flux:table.cell>
 
                                 <flux:table.cell>
-                                    <flux:button size="sm" variant="ghost" icon="trash" color="red"
-                                        wire:click="confirmDelete({{ $visitor->id }})">Delete</flux:button>
+                                    <div class="flex items-center gap-1">
+                                        <flux:button size="sm" variant="ghost" icon="eye"
+                                            :href="route('admin.visitors.show', $visitor)" wire:navigate>View
+                                        </flux:button>
+                                        <flux:button size="sm" variant="ghost" icon="trash" color="red"
+                                            wire:click="confirmDelete({{ $visitor->id }})">Delete</flux:button>
+                                    </div>
                                 </flux:table.cell>
                             </flux:table.row>
                         @endforeach
@@ -136,6 +156,37 @@
             <div class="flex gap-2">
                 <flux:button variant="danger" wire:click="deleteVisitor">Delete</flux:button>
                 <flux:button variant="ghost" wire:click="$set('showDeleteModal', false)">Cancel</flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    {{-- Members Modal --}}
+    <flux:modal wire:model="showPersonsModal">
+        <div class="space-y-4">
+            <flux:heading size="lg">Members</flux:heading>
+            <flux:text class="text-zinc-500 dark:text-zinc-400">All people registered under
+                <span class="font-semibold text-black dark:text-white">{{ $selectedVisitorName }}</span>
+            </flux:text>
+            <flux:separator />
+            <div class="space-y-2">
+                <div class="flex items-center gap-3 py-1">
+                    <span
+                        class="flex items-center justify-center w-7 h-7 text-xs font-semibold rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 shrink-0">1</span>
+                    <div>
+                        <flux:text class="font-medium">{{ $selectedVisitorName }}</flux:text>
+                        <flux:text class="text-xs text-zinc-400">Primary</flux:text>
+                    </div>
+                </div>
+                @foreach ($selectedPersons as $index => $person)
+                    <div class="flex items-center gap-3 py-1">
+                        <span
+                            class="flex items-center justify-center w-7 h-7 text-xs font-semibold rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 shrink-0">{{ $index + 2 }}</span>
+                        <flux:text class="font-medium">{{ $person['name'] }}</flux:text>
+                    </div>
+                @endforeach
+            </div>
+            <div class="flex justify-end pt-2">
+                <flux:button variant="ghost" wire:click="$set('showPersonsModal', false)">Close</flux:button>
             </div>
         </div>
     </flux:modal>

@@ -22,6 +22,13 @@ class Index extends Component
 
     public ?int $visitorToDelete = null;
 
+    public bool $showPersonsModal = false;
+
+    public string $selectedVisitorName = '';
+
+    /** @var array<int, array{name: string}> */
+    public array $selectedPersons = [];
+
     public function updatingSearch(): void
     {
         $this->resetPage();
@@ -36,6 +43,15 @@ class Index extends Component
     {
         $this->visitorToDelete = $visitorId;
         $this->showDeleteModal = true;
+    }
+
+    public function viewPersons(int $visitorId): void
+    {
+        $visitor = ExhibitionVisitor::findOrFail($visitorId);
+
+        $this->selectedVisitorName = $visitor->name;
+        $this->selectedPersons = $visitor->additional_persons ?? [];
+        $this->showPersonsModal = true;
     }
 
     public function deleteVisitor(): void
