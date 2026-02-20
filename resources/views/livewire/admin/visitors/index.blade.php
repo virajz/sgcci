@@ -120,7 +120,8 @@
                                             </flux:menu.item>
 
                                             <flux:menu.item icon="paper-airplane"
-                                                wire:click="sendWhatsApp({{ $visitor->id }})">
+                                                wire:click="sendWhatsApp({{ $visitor->id }})"
+                                                :disabled="$visitor->status !== \App\VisitorRegistrationStatus::Confirmed">
                                                 Send WhatsApp
                                             </flux:menu.item>
 
