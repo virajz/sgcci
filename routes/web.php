@@ -114,16 +114,16 @@ Route::get('{exhibition:slug}/visitor-pass/{registrationCode}/download', [Visito
 // Smart QR scan URL — redirects based on auth/role
 Route::get('{exhibition:slug}/visitors/{registrationCode}', VisitorScanController::class)->name('visitor.scan');
 
-Route::get('temp', function () {
-    User::factory()->create([
-        'name' => 'Gopal',
-        'email' => 'gopal@sgcci.in',
-        'role' => 'admin',
-        'password' => bcrypt('wF3%tY6^hJ9*bM1&sP4#oL2'),
-        'two_factor_secret' => null,
-        'two_factor_recovery_codes' => null,
-        'two_factor_confirmed_at' => null,
-    ]);
-});
+// Route::get('temp', function () {
+//     User::factory()->create([
+//         'name' => 'Gopal',
+//         'email' => 'gopal@sgcci.in',
+//         'role' => 'admin',
+//         'password' => bcrypt('wF3%tY6^hJ9*bM1&sP4#oL2'),
+//         'two_factor_secret' => null,
+//         'two_factor_recovery_codes' => null,
+//         'two_factor_confirmed_at' => null,
+//     ]);
+// });
 
 require __DIR__ . '/auth.php';
