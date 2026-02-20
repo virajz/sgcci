@@ -84,28 +84,26 @@ class VisitorPaymentController extends Controller
                 'payment_completed_at' => $isSuccess ? now() : null,
             ]);
 
-            if ($isSuccess && config('services.sms.enabled')) {
-                $exhibition = $visitor->exhibition;
-                $passLink = route('visitor.scan', [
-                    'exhibition' => $exhibition->slug,
-                    'registrationCode' => $visitor->registration_code,
-                ]);
-
-                $exhibitionTitle = strlen($exhibition->title) > 20
-                    ? substr($exhibition->title, 0, 17) . '...'
-                    : $exhibition->title;
-
-                SendSmsMessage::dispatch(
-                    template: 'visitor_registration_confirmed',
-                    phoneCode: '',
-                    phoneNumber: $visitor->phone_number,
-                    variables: [
-                        'name' => explode(' ', trim($visitor->name))[0],
-                        'exhibition' => $exhibitionTitle,
-                        'pass_link' => $passLink,
-                    ]
-                );
-            }
+            // SMS disabled until DLT template is approved
+            // Template ID 1707177157041193630 needs to be active in DLT portal
+            // if ($isSuccess && config('services.sms.enabled')) {
+            //     $exhibition = $visitor->exhibition;
+            //     $passLink = route('visitor.scan', [
+            //         'exhibition' => $exhibition->slug,
+            //         'registrationCode' => $visitor->registration_code,
+            //     ]);
+            //
+            //     SendSmsMessage::dispatch(
+            //         template: 'visitor_registration_confirmed',
+            //         phoneCode: '',
+            //         phoneNumber: $visitor->phone_number,
+            //         variables: [
+            //             explode(' ', trim($visitor->name))[0],
+            //             $passLink,
+            //         ],
+            //         templateId: '1707177157041193630'
+            //     );
+            // }
 
             if ($isSuccess && config('services.whatsapp.enabled')) {
                 $this->sendWhatsAppNotification($visitor, $visitor->exhibition);
@@ -162,12 +160,12 @@ class VisitorPaymentController extends Controller
     private function sendWhatsAppNotification(ExhibitionVisitor $visitor, $exhibition): void
     {
         // Format exhibition dates and payment amount
-        $exhibitionDates = $exhibition->start_date->format('d M Y') . ' to ' . $exhibition->end_date->format('d M Y');
-        $amountPaid = '₹' . number_format((float) $visitor->payment_amount, 2);
+        $exhibitionDates = $exhibition->start_date->format('d M Y').' to '.$exhibition->end_date->format('d M Y');
+        $amountPaid = '₹'.number_format((float) $visitor->payment_amount, 2);
 
         // Send WhatsApp for primary visitor
         $primaryFirstName = explode(' ', trim($visitor->name))[0];
-        $primaryImageUrl = config('app.url') . '/' . $exhibition->slug . '/visitor-pass/' . $visitor->registration_code . '/image';
+        $primaryImageUrl = config('app.url').'/'.$exhibition->slug.'/visitor-pass/'.$visitor->registration_code.'/image';
 
         SendWhatsAppCampaign::dispatch(
             campaignName: 'Paidregistration1',
@@ -190,7 +188,7 @@ class VisitorPaymentController extends Controller
             ],
             media: [
                 'url' => $primaryImageUrl,
-                'filename' => 'visitor_pass_' . $visitor->registration_code,
+                'filename' => 'visitor_pass_'.$visitor->registration_code,
             ]
         );
 
@@ -198,7 +196,7 @@ class VisitorPaymentController extends Controller
         if (! empty($visitor->additional_persons)) {
             foreach ($visitor->additional_persons as $index => $person) {
                 $personFirstName = explode(' ', trim($person['name']))[0];
-                $personImageUrl = config('app.url') . '/' . $exhibition->slug . '/visitor-pass/' . $visitor->registration_code . '/image?personIndex=' . $index;
+                $personImageUrl = config('app.url').'/'.$exhibition->slug.'/visitor-pass/'.$visitor->registration_code.'/image?personIndex='.$index;
 
                 SendWhatsAppCampaign::dispatch(
                     campaignName: 'Paidregistration1',
@@ -221,7 +219,7 @@ class VisitorPaymentController extends Controller
                     ],
                     media: [
                         'url' => $personImageUrl,
-                        'filename' => 'visitor_pass_' . $visitor->registration_code . '_person_' . ($index + 1),
+                        'filename' => 'visitor_pass_'.$visitor->registration_code.'_person_'.($index + 1),
                     ]
                 );
             }

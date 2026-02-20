@@ -73,6 +73,68 @@ class SmsService
     }
 
     /**
+     * Send an SMS using DLT registered template ID.
+     */
+    public function sendWithTemplateId(
+        string $phoneNumber,
+        string $templateId,
+        array $variables,
+        bool $flashSms = false
+    ): bool {
+        try {
+            // Join variables with pipe delimiter for DLT templates
+            $variableString = implode('|', $variables);
+
+            $response = Http::get($this->apiUrl, [
+                'user' => $this->username,
+                'password' => $this->password,
+                'senderid' => $this->senderId,
+                'channel' => $this->channel,
+                'DCS' => $this->dcs,
+                'flashsms' => $flashSms ? 1 : 0,
+                'number' => $this->sanitizePhoneNumber($phoneNumber),
+                'text' => $variableString,
+                'route' => $this->route,
+                'DLT_TE_ID' => $templateId,
+            ]);
+
+            if ($response->successful()) {
+                $responseData = $response->json();
+
+                Log::channel('sms')->info('Template SMS sent successfully', [
+                    'phone' => $phoneNumber,
+                    'template_id' => $templateId,
+                    'variables' => $variables,
+                    'api_response' => $responseData,
+                    'job_id' => $responseData['JobId'] ?? null,
+                    'message_id' => $responseData['MessageData'][0]['MessageId'] ?? null,
+                ]);
+
+                return true;
+            }
+
+            Log::channel('sms')->error('Template SMS sending failed', [
+                'phone' => $phoneNumber,
+                'template_id' => $templateId,
+                'variables' => $variables,
+                'status' => $response->status(),
+                'response' => $response->body(),
+            ]);
+
+            return false;
+        } catch (\Exception $e) {
+            Log::channel('sms')->error('Template SMS sending exception', [
+                'phone' => $phoneNumber,
+                'template_id' => $templateId,
+                'variables' => $variables,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
      * Send a template-based SMS message.
      */
     public function sendTemplate(string $template, string $phoneNumber, array $variables): bool

@@ -7,7 +7,7 @@
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <flux:input wire:model.live.debounce.300ms="search"
             placeholder="Search by name, company, email, phone, or code..." icon="magnifying-glass" iconVariant="outline"
-            class="md:max-w-md" />
+            clearable class="md:max-w-md" />
 
         <flux:select wire:model.live="statusFilter" placeholder="All Statuses" class="md:max-w-xs" variant="listbox"
             searchable>

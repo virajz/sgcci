@@ -207,27 +207,29 @@ class VisitorsRegistration extends Component
                 navigate: false
             );
         } else {
-            if (config('services.sms.enabled')) {
-                $passLink = route('visitor.scan', [
-                    'exhibition' => $exhibition->slug,
-                    'registrationCode' => $visitor->registration_code,
-                ]);
-
-                $exhibitionTitle = strlen($exhibition->title) > 20
-                    ? substr($exhibition->title, 0, 17) . '...'
-                    : $exhibition->title;
-
-                SendSmsMessage::dispatch(
-                    template: 'visitor_registration_confirmed',
-                    phoneCode: '',
-                    phoneNumber: $visitor->phone_number,
-                    variables: [
-                        'name' => explode(' ', trim($visitor->name))[0],
-                        'exhibition' => $exhibitionTitle,
-                        'pass_link' => $passLink,
-                    ]
-                );
-            }
+            // SMS disabled until DLT template is approved
+            // Template ID 1707177157041193630 needs to be active in DLT portal
+            // if (config('services.sms.enabled')) {
+            //     $passLink = route('visitor.scan', [
+            //         'exhibition' => $exhibition->slug,
+            //         'registrationCode' => $visitor->registration_code,
+            //     ]);
+            //
+            //     $exhibitionTitle = strlen($exhibition->title) > 20
+            //         ? substr($exhibition->title, 0, 17) . '...'
+            //         : $exhibition->title;
+            //
+            //     SendSmsMessage::dispatch(
+            //         template: 'visitor_registration_confirmed',
+            //         phoneCode: '',
+            //         phoneNumber: $visitor->phone_number,
+            //         variables: [
+            //             explode(' ', trim($visitor->name))[0],  // {#var#} 1 - Name
+            //             $passLink,                              // {#var#} 2 - Pass Link
+            //         ],
+            //         templateId: '1707177157041193630'
+            //     );
+            // }
 
             if (config('services.whatsapp.enabled')) {
                 $this->sendWhatsAppNotification($visitor, $exhibition);
@@ -251,7 +253,10 @@ class VisitorsRegistration extends Component
                 'string',
                 'max:20',
                 Rule::unique('exhibition_visitors', 'phone_number')
-                    ->where('exhibition_id', $this->exhibitionId),
+                    ->where('exhibition_id', $this->exhibitionId)
+                    ->whereIn('status', [
+                        VisitorRegistrationStatus::Confirmed->value,
+                    ]),
             ],
             'name' => ['required', 'string', 'max:255'],
             'companyName' => ['nullable', 'string', 'max:255'],

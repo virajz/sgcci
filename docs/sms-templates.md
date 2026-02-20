@@ -359,6 +359,7 @@ PAYMENT RCVD: Viraj Shah - ABC12345 Amt: Rs.67500 Date: 15/10 Exhibition: Auto E
 ## Template 10: Visitor Registration Confirmed
 
 **Template Name:** `visitor_registration_confirmed`
+**Template ID:** `1707177157041193630`
 **Category:** Transactional
 **Language:** English
 **Estimated Length:** ~122 characters
@@ -387,6 +388,31 @@ Dear Viraj You are registered for Auto Expo. Access your pass: https://stallbook
 
 - **Free exhibitions** — immediately after registration submission
 - **Paid exhibitions** — after CCAvenue payment is confirmed
+
+### Implementation Notes:
+
+- **One SMS per registration** — sent only to the primary visitor's phone number
+- **Not sent to additional persons** — unlike WhatsApp which sends passes to all persons
+- **Requires SMS enabled** — controlled by `SMS_ENABLED=true` in `.env`
+- **Uses DLT Template ID** — sends via registered template with variables
+- **Variables**: Name (first name only), Pass Link (full URL)
+
+### Usage Example:
+
+```php
+use App\Jobs\SendSmsMessage;
+
+SendSmsMessage::dispatch(
+    template: 'visitor_registration_confirmed',
+    phoneCode: '',
+    phoneNumber: $visitor->phone_number,
+    variables: [
+        explode(' ', trim($visitor->name))[0],  // {#var#} 1 - Name
+        $passLink,                              // {#var#} 2 - Pass Link
+    ],
+    templateId: '1707177157041193630'
+);
+```
 
 ---
 

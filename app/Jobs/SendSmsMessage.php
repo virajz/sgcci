@@ -14,7 +14,8 @@ class SendSmsMessage implements ShouldQueue
         public string $template,
         public string $phoneCode,
         public string $phoneNumber,
-        public array $variables = []
+        public array $variables = [],
+        public ?string $templateId = null
     ) {}
 
     /**
@@ -31,10 +32,20 @@ class SendSmsMessage implements ShouldQueue
         // Format phone number: combine code and number, remove '+' and spaces
         $destination = str_replace(['+', ' '], '', $this->phoneCode.$this->phoneNumber);
 
-        $sms->sendTemplate(
-            template: $this->template,
-            phoneNumber: $destination,
-            variables: $this->variables
-        );
+        // If template ID is provided, use DLT template sending
+        if ($this->templateId) {
+            $sms->sendWithTemplateId(
+                phoneNumber: $destination,
+                templateId: $this->templateId,
+                variables: $this->variables
+            );
+        } else {
+            // Fallback to old method for backward compatibility
+            $sms->sendTemplate(
+                template: $this->template,
+                phoneNumber: $destination,
+                variables: $this->variables
+            );
+        }
     }
 }
