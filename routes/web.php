@@ -112,6 +112,7 @@ Route::middleware(['auth'])->group(function () {
 Route::get('{exhibition:slug}/visitors-registration', VisitorsRegistration::class)->name('visitors-registration');
 Route::get('{exhibition:slug}/visitors-registration/thank-you/{registrationCode}', VisitorThankYou::class)->name('visitors-registration.thank-you');
 Route::get('{exhibition:slug}/visitor-pass/{registrationCode}/download', [VisitorPassController::class, 'download'])->name('visitor-pass.download');
+Route::get('{exhibition:slug}/visitor-pass/{registrationCode}/image', [VisitorPassController::class, 'inline'])->name('visitor-pass.image');
 
 // Smart QR scan URL — redirects based on auth/role
 Route::get('{exhibition:slug}/visitors/{registrationCode}', VisitorScanController::class)->name('visitor.scan');
@@ -128,4 +129,4 @@ Route::get('{exhibition:slug}/visitors/{registrationCode}', VisitorScanControlle
 //     ]);
 // });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

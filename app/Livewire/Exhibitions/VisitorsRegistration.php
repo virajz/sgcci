@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Livewire\Exhibitions;
 
+use App\Jobs\SendSmsMessage;
+use App\Jobs\SendWhatsAppCampaign;
 use App\Models\Exhibition;
 use App\Models\ExhibitionVisitor;
 use App\VisitorRegistrationStatus;
@@ -172,7 +174,7 @@ class VisitorsRegistration extends Component
         $additionalPersonsData = array_values(
             array_filter(
                 $this->additionalPersons,
-                fn (array $person) => ! empty(trim($person['name']))
+                fn(array $person) => ! empty(trim($person['name']))
             )
         );
 
@@ -205,6 +207,32 @@ class VisitorsRegistration extends Component
                 navigate: false
             );
         } else {
+            if (config('services.sms.enabled')) {
+                $passLink = route('visitor.scan', [
+                    'exhibition' => $exhibition->slug,
+                    'registrationCode' => $visitor->registration_code,
+                ]);
+
+                $exhibitionTitle = strlen($exhibition->title) > 20
+                    ? substr($exhibition->title, 0, 17) . '...'
+                    : $exhibition->title;
+
+                SendSmsMessage::dispatch(
+                    template: 'visitor_registration_confirmed',
+                    phoneCode: '',
+                    phoneNumber: $visitor->phone_number,
+                    variables: [
+                        'name' => explode(' ', trim($visitor->name))[0],
+                        'exhibition' => $exhibitionTitle,
+                        'pass_link' => $passLink,
+                    ]
+                );
+            }
+
+            if (config('services.whatsapp.enabled')) {
+                $this->sendWhatsAppNotification($visitor, $exhibition);
+            }
+
             $this->redirect(
                 route('visitors-registration.thank-you', [
                     'exhibition' => $exhibition,
@@ -219,17 +247,19 @@ class VisitorsRegistration extends Component
     {
         $this->validate([
             'phoneNumber' => [
-                'required', 'string', 'max:20',
+                'required',
+                'string',
+                'max:20',
                 Rule::unique('exhibition_visitors', 'phone_number')
                     ->where('exhibition_id', $this->exhibitionId),
             ],
             'name' => ['required', 'string', 'max:255'],
             'companyName' => ['nullable', 'string', 'max:255'],
             'designation' => ['nullable', 'string', 'max:255'],
-            'state' => ['required', 'string', 'in:'.implode(',', array_keys(static::getStateCityMap()))],
+            'state' => ['required', 'string', 'in:' . implode(',', array_keys(static::getStateCityMap()))],
             'city' => ['required', 'string'],
             'email' => ['nullable', 'email', 'max:255'],
-            'businessSegment' => ['required', 'string', 'in:'.implode(',', array_keys(static::getBusinessSegmentMap()))],
+            'businessSegment' => ['required', 'string', 'in:' . implode(',', array_keys(static::getBusinessSegmentMap()))],
             'subBusinessSegment' => ['required', 'string'],
         ], [
             'phoneNumber.required' => 'Please enter your phone number.',
@@ -250,6 +280,74 @@ class VisitorsRegistration extends Component
             'additionalPersons.*.name.required' => 'Please enter the name for each additional person.',
             'additionalPersons.*.name.max' => 'Each name may not exceed 255 characters.',
         ]);
+    }
+
+    private function sendWhatsAppNotification(ExhibitionVisitor $visitor, Exhibition $exhibition): void
+    {
+        // Format exhibition dates
+        $exhibitionDates = $exhibition->start_date->format('d M Y') . ' to ' . $exhibition->end_date->format('d M Y');
+
+        // Send WhatsApp for primary visitor
+        $primaryFirstName = explode(' ', trim($visitor->name))[0];
+        $primaryImageUrl = config('app.url') . '/' . $exhibition->slug . '/visitor-pass/' . $visitor->registration_code . '/image';
+
+        SendWhatsAppCampaign::dispatch(
+            campaignName: 'Paidregistration1',
+            phoneCode: '',
+            phoneNumber: $visitor->phone_number,
+            templateParams: [
+                $primaryFirstName,              // {{1}} - Name in title
+                $exhibition->title,             // {{2}} - Exhibition
+                $visitor->registration_code,    // {{3}} - Registration Code
+                $primaryFirstName,              // {{4}} - Name in body
+                $visitor->company_name ?: 'N/A', // {{5}} - Company
+                $visitor->city,                 // {{6}} - City
+                'Free Entry',                   // {{7}} - Amount
+                'N/A',                          // {{8}} - Transaction ID
+                $visitor->created_at->format('d-m-Y'), // {{9}} - Payment Date
+                $exhibitionDates,               // {{10}} - Exhibition Dates
+            ],
+            paramsFallbackValue: [
+                'FirstName' => 'Guest',
+            ],
+            media: [
+                'url' => $primaryImageUrl,
+                'filename' => 'visitor_pass_' . $visitor->registration_code,
+            ]
+        );
+
+        // Send WhatsApp for each additional person
+        if (! empty($visitor->additional_persons)) {
+            foreach ($visitor->additional_persons as $index => $person) {
+                $personFirstName = explode(' ', trim($person['name']))[0];
+                $personImageUrl = config('app.url') . '/' . $exhibition->slug . '/visitor-pass/' . $visitor->registration_code . '/image?personIndex=' . $index;
+
+                SendWhatsAppCampaign::dispatch(
+                    campaignName: 'Paidregistration1',
+                    phoneCode: '',
+                    phoneNumber: $visitor->phone_number,
+                    templateParams: [
+                        $personFirstName,               // {{1}} - Name in title
+                        $exhibition->title,             // {{2}} - Exhibition
+                        $visitor->registration_code,    // {{3}} - Registration Code
+                        $personFirstName,               // {{4}} - Name in body
+                        $visitor->company_name ?: 'N/A', // {{5}} - Company
+                        $visitor->city,                 // {{6}} - City
+                        'Free Entry',                   // {{7}} - Amount
+                        'N/A',                          // {{8}} - Transaction ID
+                        $visitor->created_at->format('d-m-Y'), // {{9}} - Payment Date
+                        $exhibitionDates,               // {{10}} - Exhibition Dates
+                    ],
+                    paramsFallbackValue: [
+                        'FirstName' => 'Guest',
+                    ],
+                    media: [
+                        'url' => $personImageUrl,
+                        'filename' => 'visitor_pass_' . $visitor->registration_code . '_person_' . ($index + 1),
+                    ]
+                );
+            }
+        }
     }
 
     public function render()

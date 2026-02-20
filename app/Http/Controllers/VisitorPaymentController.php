@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendSmsMessage;
+use App\Jobs\SendWhatsAppCampaign;
 use App\Models\ExhibitionVisitor;
 use App\Services\CCAvenueService;
 use App\VisitorRegistrationStatus;
@@ -82,6 +84,33 @@ class VisitorPaymentController extends Controller
                 'payment_completed_at' => $isSuccess ? now() : null,
             ]);
 
+            if ($isSuccess && config('services.sms.enabled')) {
+                $exhibition = $visitor->exhibition;
+                $passLink = route('visitor.scan', [
+                    'exhibition' => $exhibition->slug,
+                    'registrationCode' => $visitor->registration_code,
+                ]);
+
+                $exhibitionTitle = strlen($exhibition->title) > 20
+                    ? substr($exhibition->title, 0, 17) . '...'
+                    : $exhibition->title;
+
+                SendSmsMessage::dispatch(
+                    template: 'visitor_registration_confirmed',
+                    phoneCode: '',
+                    phoneNumber: $visitor->phone_number,
+                    variables: [
+                        'name' => explode(' ', trim($visitor->name))[0],
+                        'exhibition' => $exhibitionTitle,
+                        'pass_link' => $passLink,
+                    ]
+                );
+            }
+
+            if ($isSuccess && config('services.whatsapp.enabled')) {
+                $this->sendWhatsAppNotification($visitor, $visitor->exhibition);
+            }
+
             Log::info('Visitor Payment Response', [
                 'registration_code' => $visitor->registration_code,
                 'status' => $responseData['order_status'] ?? 'Unknown',
@@ -128,5 +157,74 @@ class VisitorPaymentController extends Controller
         }
 
         return redirect()->route('home')->with('info', 'Payment was cancelled.');
+    }
+
+    private function sendWhatsAppNotification(ExhibitionVisitor $visitor, $exhibition): void
+    {
+        // Format exhibition dates and payment amount
+        $exhibitionDates = $exhibition->start_date->format('d M Y') . ' to ' . $exhibition->end_date->format('d M Y');
+        $amountPaid = '₹' . number_format((float) $visitor->payment_amount, 2);
+
+        // Send WhatsApp for primary visitor
+        $primaryFirstName = explode(' ', trim($visitor->name))[0];
+        $primaryImageUrl = config('app.url') . '/' . $exhibition->slug . '/visitor-pass/' . $visitor->registration_code . '/image';
+
+        SendWhatsAppCampaign::dispatch(
+            campaignName: 'Paidregistration1',
+            phoneCode: '',
+            phoneNumber: $visitor->phone_number,
+            templateParams: [
+                $primaryFirstName,              // {{1}} - Name in title
+                $exhibition->title,             // {{2}} - Exhibition
+                $visitor->registration_code,    // {{3}} - Registration Code
+                $primaryFirstName,              // {{4}} - Name in body
+                $visitor->company_name ?: 'N/A', // {{5}} - Company
+                $visitor->city,                 // {{6}} - City
+                $amountPaid,                    // {{7}} - Amount
+                $visitor->payment_transaction_id ?: 'N/A', // {{8}} - Transaction ID
+                $visitor->payment_completed_at->format('d-m-Y'), // {{9}} - Payment Date
+                $exhibitionDates,               // {{10}} - Exhibition Dates
+            ],
+            paramsFallbackValue: [
+                'FirstName' => 'Guest',
+            ],
+            media: [
+                'url' => $primaryImageUrl,
+                'filename' => 'visitor_pass_' . $visitor->registration_code,
+            ]
+        );
+
+        // Send WhatsApp for each additional person
+        if (! empty($visitor->additional_persons)) {
+            foreach ($visitor->additional_persons as $index => $person) {
+                $personFirstName = explode(' ', trim($person['name']))[0];
+                $personImageUrl = config('app.url') . '/' . $exhibition->slug . '/visitor-pass/' . $visitor->registration_code . '/image?personIndex=' . $index;
+
+                SendWhatsAppCampaign::dispatch(
+                    campaignName: 'Paidregistration1',
+                    phoneCode: '',
+                    phoneNumber: $visitor->phone_number,
+                    templateParams: [
+                        $personFirstName,               // {{1}} - Name in title
+                        $exhibition->title,             // {{2}} - Exhibition
+                        $visitor->registration_code,    // {{3}} - Registration Code
+                        $personFirstName,               // {{4}} - Name in body
+                        $visitor->company_name ?: 'N/A', // {{5}} - Company
+                        $visitor->city,                 // {{6}} - City
+                        $amountPaid,                    // {{7}} - Amount
+                        $visitor->payment_transaction_id ?: 'N/A', // {{8}} - Transaction ID
+                        $visitor->payment_completed_at->format('d-m-Y'), // {{9}} - Payment Date
+                        $exhibitionDates,               // {{10}} - Exhibition Dates
+                    ],
+                    paramsFallbackValue: [
+                        'FirstName' => 'Guest',
+                    ],
+                    media: [
+                        'url' => $personImageUrl,
+                        'filename' => 'visitor_pass_' . $visitor->registration_code . '_person_' . ($index + 1),
+                    ]
+                );
+            }
+        }
     }
 }

@@ -52,7 +52,10 @@
                         @endif
                         <div>
                             <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Location</flux:text>
-                            <flux:text>{{ $visitor->city }}@if ($visitor->state), {{ $visitor->state }}@endif</flux:text>
+                            <flux:text>{{ $visitor->city }}@if ($visitor->state)
+                                    , {{ $visitor->state }}
+                                @endif
+                            </flux:text>
                         </div>
                         @if ($visitor->business_segment)
                             <div>
@@ -80,11 +83,13 @@
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <flux:heading size="lg">Members</flux:heading>
-                        <flux:badge color="zinc" size="sm">{{ $totalPersons }} {{ Str::plural('person', $totalPersons) }}</flux:badge>
+                        <flux:badge color="zinc" size="sm">{{ $totalPersons }}
+                            {{ Str::plural('person', $totalPersons) }}</flux:badge>
                     </div>
                     <div class="space-y-1">
                         <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/50">
-                            <span class="flex items-center justify-center w-7 h-7 text-xs font-semibold rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 shrink-0">1</span>
+                            <span
+                                class="flex items-center justify-center w-7 h-7 text-xs font-semibold rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 shrink-0">1</span>
                             <div class="flex-1 min-w-0">
                                 <flux:text class="font-medium">{{ $visitor->name }}</flux:text>
                                 <flux:text class="text-xs text-zinc-400">Primary registrant</flux:text>
@@ -92,7 +97,8 @@
                         </div>
                         @foreach ($additionalPersons as $index => $person)
                             <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/50">
-                                <span class="flex items-center justify-center w-7 h-7 text-xs font-semibold rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 shrink-0">{{ $index + 2 }}</span>
+                                <span
+                                    class="flex items-center justify-center w-7 h-7 text-xs font-semibold rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 shrink-0">{{ $index + 2 }}</span>
                                 <flux:text class="font-medium">{{ $person['name'] }}</flux:text>
                             </div>
                         @endforeach
@@ -126,20 +132,24 @@
                             @endif
                             @if ($visitor->payment_transaction_id)
                                 <div>
-                                    <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Transaction ID</flux:text>
-                                    <flux:text class="font-mono text-sm">{{ $visitor->payment_transaction_id }}</flux:text>
+                                    <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Transaction ID
+                                    </flux:text>
+                                    <flux:text class="font-mono text-sm">{{ $visitor->payment_transaction_id }}
+                                    </flux:text>
                                 </div>
                             @endif
                             @if ($visitor->payment_tracking_id)
                                 <div>
                                     <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Tracking ID</flux:text>
-                                    <flux:text class="font-mono text-sm">{{ $visitor->payment_tracking_id }}</flux:text>
+                                    <flux:text class="font-mono text-sm">{{ $visitor->payment_tracking_id }}
+                                    </flux:text>
                                 </div>
                             @endif
                             @if ($visitor->payment_bank_ref_no)
                                 <div>
                                     <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Bank Ref No.</flux:text>
-                                    <flux:text class="font-mono text-sm">{{ $visitor->payment_bank_ref_no }}</flux:text>
+                                    <flux:text class="font-mono text-sm">{{ $visitor->payment_bank_ref_no }}
+                                    </flux:text>
                                 </div>
                             @endif
                             @if ($visitor->payment_completed_at)

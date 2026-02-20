@@ -11,15 +11,15 @@
 
 ### API Parameters:
 
--   `user` - Username (from config)
--   `password` - Password (from config)
--   `senderid` - CHAMBR
--   `channel` - Trans
--   `DCS` - 8
--   `flashsms` - 0
--   `number` - Recipient mobile number (10 digits)
--   `text` - URL-encoded message text
--   `route` - 4
+- `user` - Username (from config)
+- `password` - Password (from config)
+- `senderid` - CHAMBR
+- `channel` - Trans
+- `DCS` - 8
+- `flashsms` - 0
+- `number` - Recipient mobile number (10 digits)
+- `text` - URL-encoded message text
+- `route` - 4
 
 ---
 
@@ -29,11 +29,11 @@
 
 **Important Notes:**
 
--   Each template must stay under 160 characters total
--   Links typically consume 20-30 characters
--   Text will be URL-encoded when sent
--   No special variable format needed - variables replaced before sending
--   Keep messages clear and concise
+- Each template must stay under 160 characters total
+- Links typically consume 20-30 characters
+- Text will be URL-encoded when sent
+- No special variable format needed - variables replaced before sending
+- Keep messages clear and concise
 
 ---
 
@@ -74,11 +74,11 @@ Dear%20Viraj%20Your%20booking%20for%20Auto%20Expo%202025%20is%20CONFIRMED.%20Boo
 
 ### Implementation Notes:
 
--   Use first name only for contact person to save space
--   Abbreviate exhibition title if > 20 characters
--   Use short date format (DD/MM instead of full date)
--   Use URL shortener for payment links
--   Keep booking code as-is for tracking
+- Use first name only for contact person to save space
+- Abbreviate exhibition title if > 20 characters
+- Use short date format (DD/MM instead of full date)
+- Use URL shortener for payment links
+- Keep booking code as-is for tracking
 
 ---
 
@@ -96,13 +96,13 @@ Replace `YOUR_PHONE_NUMBER` with your 10-digit mobile number for testing.
 
 Before deploying this template:
 
--   [ ] Test with longest expected exhibition name
--   [ ] Test with longest expected booking code format
--   [ ] Verify shortened URL works correctly
--   [ ] Confirm total character count stays under 160
--   [ ] Test with actual phone number
--   [ ] Verify all variables populate correctly
--   [ ] Check message delivery and formatting
+- [ ] Test with longest expected exhibition name
+- [ ] Test with longest expected booking code format
+- [ ] Verify shortened URL works correctly
+- [ ] Confirm total character count stays under 160
+- [ ] Test with actual phone number
+- [ ] Verify all variables populate correctly
+- [ ] Check message delivery and formatting
 
 ---
 
@@ -356,21 +356,56 @@ PAYMENT RCVD: Viraj Shah - ABC12345 Amt: Rs.67500 Date: 15/10 Exhibition: Auto E
 
 ---
 
+## Template 10: Visitor Registration Confirmed
+
+**Template Name:** `visitor_registration_confirmed`
+**Category:** Transactional
+**Language:** English
+**Estimated Length:** ~122 characters
+
+### Message Template:
+
+```
+Dear {{name}} You are registered for {{exhibition}}. Access your pass: {{pass_link}} Team SGCCI
+```
+
+### Variables:
+
+1. `{{name}}` - Visitor first name
+2. `{{exhibition}}` - Exhibition title (abbreviated to 20 chars if longer)
+3. `{{pass_link}}` - Visitor scan URL (`/{exhibition-slug}/visitors/{registration-code}`)
+
+### Example with Real Data:
+
+```
+Dear Viraj You are registered for Auto Expo. Access your pass: https://stallbooking.sgcci.in/auto-expo/visitors/VIS-U5WG23 Team SGCCI
+```
+
+**Character Count:** 122 characters ✓
+
+### When Sent:
+
+- **Free exhibitions** — immediately after registration submission
+- **Paid exhibitions** — after CCAvenue payment is confirmed
+
+---
+
 ## Summary
 
-All 9 SMS templates have been created with character counts well under the 160 limit:
+All SMS templates have been created with character counts well under the 160 limit:
 
-| Template | Type | Character Count | Status |
-|----------|------|----------------|--------|
-| 1. Booking Confirmation with Payment Link | Customer | 142 chars | ✓ |
-| 2. Booking Received | Customer | 138 chars | ✓ |
-| 3. Booking Rejected | Customer | 147 chars | ✓ |
-| 4. Payment Success | Customer | 122 chars | ✓ |
-| 5. Partial Payment Received | Customer | 107 chars | ✓ |
-| 6. Payment Reminder | Customer | 111 chars | ✓ |
-| 7. Staff - New Booking | Internal | 118 chars | ✓ |
-| 8. Staff - Booking Approved | Internal | 111 chars | ✓ |
-| 9. Staff - Payment Received | Internal | 110 chars | ✓ |
+| Template                                  | Type     | Character Count | Status |
+| ----------------------------------------- | -------- | --------------- | ------ |
+| 1. Booking Confirmation with Payment Link | Customer | 142 chars       | ✓      |
+| 2. Booking Received                       | Customer | 138 chars       | ✓      |
+| 3. Booking Rejected                       | Customer | 147 chars       | ✓      |
+| 4. Payment Success                        | Customer | 122 chars       | ✓      |
+| 5. Partial Payment Received               | Customer | 107 chars       | ✓      |
+| 6. Payment Reminder                       | Customer | 111 chars       | ✓      |
+| 7. Staff - New Booking                    | Internal | 118 chars       | ✓      |
+| 8. Staff - Booking Approved               | Internal | 111 chars       | ✓      |
+| 9. Staff - Payment Received               | Internal | 110 chars       | ✓      |
+| 10. Visitor Registration Confirmed        | Customer | 122 chars       | ✓      |
 
 ### Important Notes for Implementation:
 
@@ -533,17 +568,17 @@ private function formatStallsForSms(array $stalls): string
 
 Map each WhatsApp template to its SMS equivalent:
 
-| WhatsApp Template | SMS Template | Variables |
-|-------------------|--------------|-----------|
-| `booking_received` | `booking_received` | contact_name, exhibition, booking_code |
-| `booking_confirmationpayment` | `booking_confirmation_payment` | contact_name, exhibition, booking_code, due_date, payment_link |
-| `bookingrejected` | `booking_rejected` | contact_name, booking_code, exhibition, reason |
-| `payment_success` | `payment_success` | contact_name, amount, exhibition, booking_code, date |
-| `partial_payment_received` | `partial_payment_received` | contact_name, amount, booking_code, remaining, due_date |
-| `payment_reminder` | `payment_reminder` | contact_name, booking_code, amount, due_date, days |
-| `staff_booking_received` | `staff_booking_received` | contact_name, exhibition, booking_code, stalls, area, amount |
-| `staff_booking_confirmationpayment` | `staff_booking_approved` | contact_name, booking_code, stalls, amount, due_date |
-| `invoicestatus` (staff) | `staff_payment_received` | contact_name, booking_code, amount, date, exhibition |
+| WhatsApp Template                   | SMS Template                   | Variables                                                      |
+| ----------------------------------- | ------------------------------ | -------------------------------------------------------------- |
+| `booking_received`                  | `booking_received`             | contact_name, exhibition, booking_code                         |
+| `booking_confirmationpayment`       | `booking_confirmation_payment` | contact_name, exhibition, booking_code, due_date, payment_link |
+| `bookingrejected`                   | `booking_rejected`             | contact_name, booking_code, exhibition, reason                 |
+| `payment_success`                   | `payment_success`              | contact_name, amount, exhibition, booking_code, date           |
+| `partial_payment_received`          | `partial_payment_received`     | contact_name, amount, booking_code, remaining, due_date        |
+| `payment_reminder`                  | `payment_reminder`             | contact_name, booking_code, amount, due_date, days             |
+| `staff_booking_received`            | `staff_booking_received`       | contact_name, exhibition, booking_code, stalls, area, amount   |
+| `staff_booking_confirmationpayment` | `staff_booking_approved`       | contact_name, booking_code, stalls, amount, due_date           |
+| `invoicestatus` (staff)             | `staff_payment_received`       | contact_name, booking_code, amount, date, exhibition           |
 
 ### 6. Testing
 
@@ -579,13 +614,13 @@ All SMS activity is logged to `storage/logs/sms.log` with daily rotation. Check 
 For production use, implement URL shortening for payment links to keep messages under 160 characters. Options:
 
 1. **Create a simple URL shortener route:**
-   - Create route: `sgcci.in/p/{code}`
-   - Redirect to full payment URL
+    - Create route: `sgcci.in/p/{code}`
+    - Redirect to full payment URL
 
 2. **Use a third-party service:**
-   - Bitly API
-   - TinyURL API
-   - Custom short domain
+    - Bitly API
+    - TinyURL API
+    - Custom short domain
 
 Example implementation:
 

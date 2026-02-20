@@ -1,6 +1,7 @@
 <div class="space-y-6">
     <div class="flex items-center justify-between mb-6">
         <flux:heading size="xl">Visitors</flux:heading>
+        <livewire:admin.visitors.export-visitors />
     </div>
 
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -8,7 +9,8 @@
             placeholder="Search by name, company, email, phone, or code..." icon="magnifying-glass" iconVariant="outline"
             class="md:max-w-md" />
 
-        <flux:select wire:model.live="statusFilter" placeholder="All Statuses" class="md:max-w-xs">
+        <flux:select wire:model.live="statusFilter" placeholder="All Statuses" class="md:max-w-xs" variant="listbox"
+            searchable>
             <flux:select.option value="">All Statuses</flux:select.option>
             @foreach ($statuses as $status)
                 <flux:select.option value="{{ $status->value }}">{{ $status->label() }}</flux:select.option>
@@ -107,13 +109,29 @@
                                 </flux:table.cell>
 
                                 <flux:table.cell>
-                                    <div class="flex items-center gap-1">
-                                        <flux:button size="sm" variant="ghost" icon="eye"
-                                            :href="route('admin.visitors.show', $visitor)" wire:navigate>View
-                                        </flux:button>
-                                        <flux:button size="sm" variant="ghost" icon="trash" color="red"
-                                            wire:click="confirmDelete({{ $visitor->id }})">Delete</flux:button>
-                                    </div>
+                                    <flux:dropdown position="bottom end">
+                                        <flux:button size="sm" variant="ghost" icon="ellipsis-horizontal"
+                                            icon-variant="mini" inset="top bottom"></flux:button>
+
+                                        <flux:menu>
+                                            <flux:menu.item icon="eye"
+                                                :href="route('admin.visitors.show', $visitor)" wire:navigate>
+                                                View
+                                            </flux:menu.item>
+
+                                            <flux:menu.item icon="paper-airplane"
+                                                wire:click="sendWhatsApp({{ $visitor->id }})">
+                                                Send WhatsApp
+                                            </flux:menu.item>
+
+                                            <flux:menu.separator />
+
+                                            <flux:menu.item icon="trash" variant="danger"
+                                                wire:click="confirmDelete({{ $visitor->id }})">
+                                                Delete
+                                            </flux:menu.item>
+                                        </flux:menu>
+                                    </flux:dropdown>
                                 </flux:table.cell>
                             </flux:table.row>
                         @endforeach
@@ -171,7 +189,7 @@
             <div class="space-y-2">
                 <div class="flex items-center gap-3 py-1">
                     <span
-                        class="flex items-center justify-center w-7 h-7 text-xs font-semibold rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 shrink-0">1</span>
+                        class="flex items-center justify-center text-xs font-semibold rounded-full w-7 h-7 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 shrink-0">1</span>
                     <div>
                         <flux:text class="font-medium">{{ $selectedVisitorName }}</flux:text>
                         <flux:text class="text-xs text-zinc-400">Primary</flux:text>
@@ -180,7 +198,7 @@
                 @foreach ($selectedPersons as $index => $person)
                     <div class="flex items-center gap-3 py-1">
                         <span
-                            class="flex items-center justify-center w-7 h-7 text-xs font-semibold rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 shrink-0">{{ $index + 2 }}</span>
+                            class="flex items-center justify-center text-xs font-semibold text-blue-600 bg-blue-100 rounded-full w-7 h-7 dark:bg-blue-900 dark:text-blue-400 shrink-0">{{ $index + 2 }}</span>
                         <flux:text class="font-medium">{{ $person['name'] }}</flux:text>
                     </div>
                 @endforeach

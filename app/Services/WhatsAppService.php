@@ -29,7 +29,7 @@ class WhatsAppService
         array $attributes = []
     ): bool {
         try {
-            $response = Http::post($this->apiUrl, [
+            $payload = [
                 'apiKey' => $this->apiKey,
                 'campaignName' => $campaignName,
                 'destination' => $destination,
@@ -42,12 +42,22 @@ class WhatsAppService
                 'location' => $location,
                 'attributes' => $attributes,
                 'paramsFallbackValue' => $paramsFallbackValue,
+            ];
+
+            Log::channel('whatsapp')->info('Sending WhatsApp campaign', [
+                'campaign' => $campaignName,
+                'destination' => $destination,
+                'media_url' => $media['url'] ?? null,
+                'template_params_count' => count($templateParams),
             ]);
+
+            $response = Http::post($this->apiUrl, $payload);
 
             if ($response->successful()) {
                 Log::channel('whatsapp')->info('WhatsApp campaign sent successfully', [
                     'campaign' => $campaignName,
                     'destination' => $destination,
+                    'response' => $response->json(),
                 ]);
 
                 return true;

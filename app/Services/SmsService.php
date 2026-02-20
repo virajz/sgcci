@@ -184,6 +184,13 @@ class SmsService
                 $variables['exhibition']
             ),
 
+            'visitor_registration_confirmed' => sprintf(
+                'Dear %s You are registered for %s. Access your pass: %s Team SGCCI',
+                $variables['name'],
+                $variables['exhibition'],
+                $variables['pass_link']
+            ),
+
             default => throw new \InvalidArgumentException("Unknown SMS template: {$template}")
         };
     }
