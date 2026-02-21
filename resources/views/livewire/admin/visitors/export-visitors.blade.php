@@ -57,12 +57,11 @@
                     <flux:label badge="optional">Include in Export</flux:label>
                     <div class="flex flex-col gap-2 mt-2">
                         <flux:checkbox wire:model="includePersonalInfo"
-                            label="Personal Information (Name, Email, Phone, Designation)" />
+                            label="Personal Information (Name, Phone, Email, Designation)" />
                         <flux:checkbox wire:model="includeBusinessInfo"
                             label="Business Information (Company, Segment, City, State)" />
                         <flux:checkbox wire:model="includePaymentInfo"
-                            label="Payment Information (Amount, Status, Method, Transaction ID)" />
-                        <flux:checkbox wire:model="includeAdditionalPersons" label="Additional Persons Details" />
+                            label="Payment Information (Total Persons, Amount, Status, Method, Transaction ID)" />
                     </div>
                 </flux:field>
 

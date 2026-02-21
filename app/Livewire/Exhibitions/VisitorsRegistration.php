@@ -45,7 +45,7 @@ class VisitorsRegistration extends Component
     public string $subBusinessSegment = '';
 
     /**
-     * @var array<int, array{name: string}>
+     * @var array<int, array{name: string, phone_number: string}>
      */
     public array $additionalPersons = [];
 
@@ -155,7 +155,7 @@ class VisitorsRegistration extends Component
 
     public function addPerson(): void
     {
-        $this->additionalPersons[] = ['name' => ''];
+        $this->additionalPersons[] = ['name' => '', 'phone_number' => ''];
     }
 
     public function removePerson(int $index): void
@@ -174,7 +174,7 @@ class VisitorsRegistration extends Component
         $additionalPersonsData = array_values(
             array_filter(
                 $this->additionalPersons,
-                fn(array $person) => ! empty(trim($person['name']))
+                fn (array $person) => ! empty(trim($person['name']))
             )
         );
 
@@ -261,10 +261,10 @@ class VisitorsRegistration extends Component
             'name' => ['required', 'string', 'max:255'],
             'companyName' => ['nullable', 'string', 'max:255'],
             'designation' => ['nullable', 'string', 'max:255'],
-            'state' => ['required', 'string', 'in:' . implode(',', array_keys(static::getStateCityMap()))],
+            'state' => ['required', 'string', 'in:'.implode(',', array_keys(static::getStateCityMap()))],
             'city' => ['required', 'string'],
             'email' => ['nullable', 'email', 'max:255'],
-            'businessSegment' => ['required', 'string', 'in:' . implode(',', array_keys(static::getBusinessSegmentMap()))],
+            'businessSegment' => ['required', 'string', 'in:'.implode(',', array_keys(static::getBusinessSegmentMap()))],
             'subBusinessSegment' => ['required', 'string'],
         ], [
             'phoneNumber.required' => 'Please enter your phone number.',
@@ -279,22 +279,68 @@ class VisitorsRegistration extends Component
 
     private function validateStep2(): void
     {
+        // Collect all phone numbers in the form (primary + additional) to check for duplicates within the form
+        $allFormPhones = array_filter(
+            array_map(fn (array $p) => trim($p['phone_number'] ?? ''), $this->additionalPersons)
+        );
+
         $this->validate([
             'additionalPersons.*.name' => ['required', 'string', 'max:255'],
+            'additionalPersons.*.phone_number' => [
+                'required',
+                'string',
+                'max:20',
+                function (string $_attribute, mixed $value, \Closure $fail) use ($allFormPhones): void {
+                    $phone = trim((string) $value);
+
+                    // Must not match the primary visitor's phone
+                    if ($phone === trim($this->phoneNumber)) {
+                        $fail('This phone number is already used as the primary visitor.');
+
+                        return;
+                    }
+
+                    // Must not appear more than once across all additional persons
+                    if (count(array_keys($allFormPhones, $phone)) > 1) {
+                        $fail('Each additional person must have a unique phone number.');
+
+                        return;
+                    }
+
+                    // Must not already be registered for this exhibition
+                    $alreadyRegistered = ExhibitionVisitor::query()
+                        ->where('exhibition_id', $this->exhibitionId)
+                        ->whereIn('status', [VisitorRegistrationStatus::Confirmed->value])
+                        ->where(function (\Illuminate\Database\Eloquent\Builder $query) use ($phone): void {
+                            $query->where('phone_number', $phone)
+                                ->orWhereRaw(
+                                    "EXISTS (SELECT 1 FROM jsonb_array_elements(additional_persons::jsonb) AS p WHERE p->>'phone_number' = ?)",
+                                    [$phone]
+                                );
+                        })
+                        ->exists();
+
+                    if ($alreadyRegistered) {
+                        $fail('This phone number is already registered for this exhibition.');
+                    }
+                },
+            ],
         ], [
             'additionalPersons.*.name.required' => 'Please enter the name for each additional person.',
             'additionalPersons.*.name.max' => 'Each name may not exceed 255 characters.',
+            'additionalPersons.*.phone_number.required' => 'Please enter the phone number for each additional person.',
+            'additionalPersons.*.phone_number.max' => 'Each phone number may not exceed 20 characters.',
         ]);
     }
 
     private function sendWhatsAppNotification(ExhibitionVisitor $visitor, Exhibition $exhibition): void
     {
         // Format exhibition dates
-        $exhibitionDates = $exhibition->start_date->format('d M Y') . ' to ' . $exhibition->end_date->format('d M Y');
+        $exhibitionDates = $exhibition->start_date->format('d M Y').' to '.$exhibition->end_date->format('d M Y');
 
         // Send WhatsApp for primary visitor
         $primaryFirstName = explode(' ', trim($visitor->name))[0];
-        $primaryImageUrl = config('app.url') . '/' . $exhibition->slug . '/visitor-pass/' . $visitor->registration_code . '/image';
+        $primaryImageUrl = config('app.url').'/'.$exhibition->slug.'/visitor-pass/'.$visitor->registration_code.'/image';
 
         SendWhatsAppCampaign::dispatch(
             campaignName: 'Paidregistration1',
@@ -317,7 +363,7 @@ class VisitorsRegistration extends Component
             ],
             media: [
                 'url' => $primaryImageUrl,
-                'filename' => 'visitor_pass_' . $visitor->registration_code,
+                'filename' => 'visitor_pass_'.$visitor->registration_code,
             ]
         );
 
@@ -325,12 +371,13 @@ class VisitorsRegistration extends Component
         if (! empty($visitor->additional_persons)) {
             foreach ($visitor->additional_persons as $index => $person) {
                 $personFirstName = explode(' ', trim($person['name']))[0];
-                $personImageUrl = config('app.url') . '/' . $exhibition->slug . '/visitor-pass/' . $visitor->registration_code . '/image?personIndex=' . $index;
+                $personImageUrl = config('app.url').'/'.$exhibition->slug.'/visitor-pass/'.$visitor->registration_code.'/image?personIndex='.$index;
+                $personPhone = ! empty($person['phone_number']) ? $person['phone_number'] : $visitor->phone_number;
 
                 SendWhatsAppCampaign::dispatch(
                     campaignName: 'Paidregistration1',
                     phoneCode: '',
-                    phoneNumber: $visitor->phone_number,
+                    phoneNumber: $personPhone,
                     templateParams: [
                         $personFirstName,               // {{1}} - Name in title
                         $exhibition->title,             // {{2}} - Exhibition
@@ -348,7 +395,7 @@ class VisitorsRegistration extends Component
                     ],
                     media: [
                         'url' => $personImageUrl,
-                        'filename' => 'visitor_pass_' . $visitor->registration_code . '_person_' . ($index + 1),
+                        'filename' => 'visitor_pass_'.$visitor->registration_code.'_person_'.($index + 1),
                     ]
                 );
             }

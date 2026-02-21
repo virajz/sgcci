@@ -215,24 +215,31 @@
 
                     {{-- Additional Persons List --}}
                     @foreach ($additionalPersons as $index => $person)
-                        <div class="flex items-center gap-3 px-4 py-3 border rounded-xl border-zinc-200 dark:border-zinc-700"
+                        <div class="flex items-start gap-3 px-4 py-3 border rounded-xl border-zinc-200 dark:border-zinc-700"
                             wire:key="person-{{ $index }}">
                             <div
-                                class="flex items-center justify-center text-sm font-semibold rounded-full size-9 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 shrink-0">
+                                class="flex items-center justify-center mt-1 text-sm font-semibold rounded-full size-9 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 shrink-0">
                                 {{ $index + 2 }}
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <flux:input wire:model="additionalPersons.{{ $index }}.name"
-                                    placeholder="Full name" size="sm" />
-                                <flux:error name="additionalPersons.{{ $index }}.name" />
+                            <div class="flex-1 min-w-0 space-y-2">
+                                <div>
+                                    <flux:input wire:model="additionalPersons.{{ $index }}.name"
+                                        placeholder="Full name" size="sm" />
+                                    <flux:error name="additionalPersons.{{ $index }}.name" />
+                                </div>
+                                <div>
+                                    <flux:input wire:model="additionalPersons.{{ $index }}.phone_number"
+                                        type="tel" placeholder="Phone number" size="sm" />
+                                    <flux:error name="additionalPersons.{{ $index }}.phone_number" />
+                                </div>
                             </div>
                             @if ($exhibition->isPaidEntry())
-                                <flux:badge color="zinc" size="sm" class="shrink-0">
+                                <flux:badge color="zinc" size="sm" class="mt-1 shrink-0">
                                     {{ Number::currency((float) $exhibition->entry_amount, 'INR') }}</flux:badge>
                             @endif
                             <flux:button wire:click="removePerson({{ $index }})" variant="ghost"
                                 size="sm"
-                                class="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
+                                class="mt-0.5 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
                                 icon="trash" />
                         </div>
                     @endforeach

@@ -91,15 +91,20 @@
                             <span
                                 class="flex items-center justify-center w-7 h-7 text-xs font-semibold rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 shrink-0">1</span>
                             <div class="flex-1 min-w-0">
-                                <flux:text class="font-medium">{{ $visitor->name }}</flux:text>
-                                <flux:text class="text-xs text-zinc-400">Primary registrant</flux:text>
+                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $visitor->name }}</p>
+                                <p class="text-xs text-zinc-500">{{ $visitor->phone_number }} · Primary</p>
                             </div>
                         </div>
                         @foreach ($additionalPersons as $index => $person)
                             <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/50">
                                 <span
                                     class="flex items-center justify-center w-7 h-7 text-xs font-semibold rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 shrink-0">{{ $index + 2 }}</span>
-                                <flux:text class="font-medium">{{ $person['name'] }}</flux:text>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $person['name'] ?? '' }}</p>
+                                    @if (!empty($person['phone_number']))
+                                        <p class="text-xs text-zinc-500">{{ $person['phone_number'] }}</p>
+                                    @endif
+                                </div>
                             </div>
                         @endforeach
                     </div>

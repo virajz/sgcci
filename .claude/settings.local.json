@@ -5,7 +5,10 @@
       "Bash(php artisan test:*)",
       "Bash(vendor/bin/pint:*)",
       "Bash(php artisan view:clear:*)",
-      "Bash(php artisan view:cache:*)"
+      "Bash(php artisan view:cache:*)",
+      "mcp__laravel-boost__application-info",
+      "mcp__laravel-boost__database-schema",
+      "mcp__laravel-boost__database-query"
     ],
     "deny": [],
     "ask": []

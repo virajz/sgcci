@@ -25,8 +25,6 @@ class ExportVisitors extends Component
 
     public bool $includePaymentInfo = true;
 
-    public bool $includeAdditionalPersons = true;
-
     public int $resultCount = 0;
 
     public function mount(): void
@@ -118,7 +116,7 @@ class ExportVisitors extends Component
         }
 
         // Generate CSV
-        $filename = 'visitors_export_' . now()->format('Y-m-d_His') . '.csv';
+        $filename = 'visitors_export_'.now()->format('Y-m-d_His').'.csv';
         $handle = fopen('php://temp', 'r+');
 
         // Add BOM for proper UTF-8 encoding in Excel
@@ -130,10 +128,11 @@ class ExportVisitors extends Component
             'Exhibition',
             'Status',
             'Registration Date',
+            'Member Type',
         ];
 
         if ($this->includePersonalInfo) {
-            array_push($headers, 'Name', 'Email', 'Phone Number', 'Designation');
+            array_push($headers, 'Name', 'Phone Number', 'Email', 'Designation');
         }
 
         if ($this->includeBusinessInfo) {
@@ -141,76 +140,84 @@ class ExportVisitors extends Component
         }
 
         if ($this->includePaymentInfo) {
-            array_push($headers, 'Payment Amount', 'Payment Status', 'Payment Method', 'Payment Date', 'Transaction ID');
-        }
-
-        if ($this->includeAdditionalPersons) {
-            array_push($headers, 'Total Persons', 'Additional Persons');
+            array_push($headers, 'Total Persons', 'Payment Amount', 'Payment Status', 'Payment Method', 'Payment Date', 'Transaction ID');
         }
 
         fputcsv($handle, $headers);
 
-        // Add data rows
+        // Add one row per person (primary + each additional)
         foreach ($visitors as $visitor) {
-            $row = [
+            $commonFields = [
                 $visitor->registration_code,
                 $visitor->exhibition->title ?? '',
                 $visitor->status->label(),
                 $visitor->created_at->format('Y-m-d H:i:s'),
             ];
 
-            if ($this->includePersonalInfo) {
-                array_push(
-                    $row,
+            $commonBusinessFields = $this->includeBusinessInfo ? [
+                $visitor->company_name ?? '',
+                $visitor->business_segment,
+                $visitor->sub_business_segment,
+                $visitor->city,
+                $visitor->state ?? '',
+            ] : [];
+
+            $totalPersons = 1 + count($visitor->additional_persons ?? []);
+
+            $commonPaymentFields = $this->includePaymentInfo ? [
+                $totalPersons,
+                $visitor->payment_amount ? number_format((float) $visitor->payment_amount, 2) : '',
+                $visitor->payment_status ?? '',
+                $visitor->payment_method ?? '',
+                $visitor->payment_completed_at?->format('Y-m-d H:i:s') ?? '',
+                $visitor->payment_transaction_id ?? '',
+            ] : [];
+
+            // Primary visitor row
+            $row = array_merge(
+                $commonFields,
+                ['Primary'],
+                $this->includePersonalInfo ? [
                     $visitor->name,
-                    $visitor->email ?? '',
                     $visitor->phone_number,
-                    $visitor->designation ?? ''
-                );
-            }
-
-            if ($this->includeBusinessInfo) {
-                array_push(
-                    $row,
-                    $visitor->company_name ?? '',
-                    $visitor->business_segment,
-                    $visitor->sub_business_segment,
-                    $visitor->city,
-                    $visitor->state ?? ''
-                );
-            }
-
-            if ($this->includePaymentInfo) {
-                array_push(
-                    $row,
-                    $visitor->payment_amount ? number_format((float) $visitor->payment_amount, 2) : '',
-                    $visitor->payment_status ?? '',
-                    $visitor->payment_method ?? '',
-                    $visitor->payment_completed_at?->format('Y-m-d H:i:s') ?? '',
-                    $visitor->payment_transaction_id ?? ''
-                );
-            }
-
-            if ($this->includeAdditionalPersons) {
-                $totalPersons = 1 + count($visitor->additional_persons ?? []);
-                $additionalNames = ! empty($visitor->additional_persons)
-                    ? implode(', ', array_column($visitor->additional_persons, 'name'))
-                    : '';
-
-                array_push($row, $totalPersons, $additionalNames);
-            }
+                    $visitor->email ?? '',
+                    $visitor->designation ?? '',
+                ] : [],
+                $commonBusinessFields,
+                $commonPaymentFields,
+            );
 
             fputcsv($handle, $row);
+
+            // One row per additional person
+            foreach ($visitor->additional_persons ?? [] as $person) {
+                $row = array_merge(
+                    $commonFields,
+                    ['Additional'],
+                    $this->includePersonalInfo ? [
+                        $person['name'] ?? '',
+                        $person['phone_number'] ?? '',  // may be empty for old records
+                        '',
+                        '',
+                    ] : [],
+                    $commonBusinessFields,
+                    $commonPaymentFields,
+                );
+
+                fputcsv($handle, $row);
+            }
         }
 
         rewind($handle);
         $csv = stream_get_contents($handle);
         fclose($handle);
 
+        $totalRows = $visitors->sum(fn ($v) => 1 + count($v->additional_persons ?? []));
+
         Flux::toast(
             heading: 'Export Ready!',
             variant: 'success',
-            text: "Exported {$visitors->count()} visitors successfully."
+            text: "Exported {$totalRows} rows for {$visitors->count()} registrations."
         );
 
         $this->showModal = false;
@@ -220,7 +227,7 @@ class ExportVisitors extends Component
             echo $csv;
         }, $filename, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 
