@@ -11,7 +11,8 @@ use Illuminate\Console\Command;
 class SendPartialPaymentReminders extends Command
 {
     protected $signature = 'bookings:send-partial-payment-reminders
-                            {--dry-run : Preview which bookings would be notified without sending}';
+                            {--dry-run : Preview which bookings would be notified without sending}
+                            {--force : Skip confirmation prompt (used for scheduled runs)}';
 
     protected $description = 'Send payment link reminders to bookings with partial payments outstanding';
 
@@ -30,10 +31,14 @@ class SendPartialPaymentReminders extends Command
             ->where('status', BookingStatus::PaymentPending)
             ->where('amount_paid', '>', 0)
             ->where('remaining_amount', '>', 0)
+            ->where(function ($q) {
+                $q->whereNull('last_partial_reminder_sent_at')
+                    ->orWhere('last_partial_reminder_sent_at', '<', now()->subDays(2));
+            })
             ->get();
 
         if ($bookings->isEmpty()) {
-            $this->info('No bookings found with partial payments outstanding.');
+            $this->info('No bookings found with partial payments outstanding (or all were already reminded within 2 days).');
 
             return Command::SUCCESS;
         }
@@ -41,7 +46,7 @@ class SendPartialPaymentReminders extends Command
         $this->info("Found {$bookings->count()} booking(s) with partial payments outstanding.");
         $this->newLine();
 
-        $headers = ['Booking Code', 'Contact Person', 'Phone', 'Amount Paid', 'Remaining', 'Total'];
+        $headers = ['Booking Code', 'Contact Person', 'Phone', 'Amount Paid', 'Remaining', 'Total', 'Last Reminded'];
         $rows = $bookings->map(fn ($b) => [
             $b->booking_code,
             $b->contact_person,
@@ -49,6 +54,7 @@ class SendPartialPaymentReminders extends Command
             '₹'.number_format((float) $b->amount_paid, 2),
             '₹'.number_format((float) $b->remaining_amount, 2),
             '₹'.number_format((float) $b->total_with_gst, 2),
+            $b->last_partial_reminder_sent_at?->format('M d, Y H:i') ?? 'Never',
         ])->toArray();
 
         $this->table($headers, $rows);
@@ -66,7 +72,7 @@ class SendPartialPaymentReminders extends Command
             return Command::FAILURE;
         }
 
-        if (! $this->confirm("Send reminders to all {$bookings->count()} booking(s)?")) {
+        if (! $this->option('force') && ! $this->confirm("Send reminders to all {$bookings->count()} booking(s)?")) {
             $this->info('Aborted.');
 
             return Command::SUCCESS;
@@ -82,17 +88,19 @@ class SendPartialPaymentReminders extends Command
                     phoneCode: $booking->phone_code,
                     phoneNumber: $booking->phone_number,
                     templateParams: [
-                        (string) $booking->contact_person,                  // {{1}} Contact Person Name
-                        (string) $booking->exhibition->title,               // {{2}} Exhibition Title
-                        implode(', ', $booking->selected_stalls),           // {{3}} Allotted Stalls
-                        (string) $booking->booking_code,                    // {{4}} Booking Code
-                        (string) number_format($booking->total_area, 0),    // {{5}} Total Area
-                        (string) number_format($booking->total_with_gst, 2), // {{6}} Total Amount with GST
-                        $deadline->format('M d, Y'),                        // {{7}} Payment Due Date (first)
-                        (string) $booking->payment_link,                    // {{8}} Payment Link URL
-                        $deadline->format('M d, Y'),                        // {{9}} Payment Due Date (repeated)
+                        (string) $booking->contact_person,                    // {{1}} Contact Person Name
+                        (string) $booking->exhibition->title,                 // {{2}} Exhibition Title
+                        implode(', ', $booking->selected_stalls),             // {{3}} Allotted Stalls
+                        (string) $booking->booking_code,                      // {{4}} Booking Code
+                        (string) number_format($booking->total_area, 0),      // {{5}} Total Area
+                        (string) number_format($booking->total_with_gst, 2),  // {{6}} Total Amount with GST
+                        $deadline->format('M d, Y'),                          // {{7}} Payment Due Date (first)
+                        (string) $booking->payment_link,                      // {{8}} Payment Link URL
+                        $deadline->format('M d, Y'),                          // {{9}} Payment Due Date (repeated)
                     ]
                 );
+
+                $booking->update(['last_partial_reminder_sent_at' => now()]);
 
                 $sentCount++;
                 $this->info("✓ Sent to {$booking->contact_person} ({$booking->booking_code})");

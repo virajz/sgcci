@@ -53,6 +53,7 @@ class Booking extends Model
         'remaining_amount',
         'partial_payment_deadline',
         'last_payment_reminder_sent_at',
+        'last_partial_reminder_sent_at',
         'payment_history',
         'status',
         'is_manual_block',
@@ -121,6 +122,7 @@ class Booking extends Model
             'payment_initiated_at' => 'datetime',
             'partial_payment_deadline' => 'date',
             'last_payment_reminder_sent_at' => 'datetime',
+            'last_partial_reminder_sent_at' => 'datetime',
         ];
     }
 

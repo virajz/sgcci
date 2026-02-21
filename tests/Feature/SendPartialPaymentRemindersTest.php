@@ -121,7 +121,7 @@ it('reports failure when whatsapp is disabled', function () {
         'remaining_amount' => 10000,
     ]);
 
-    $this->artisan('bookings:send-partial-payment-reminders')
+    $this->artisan('bookings:send-partial-payment-reminders --force')
         ->assertFailed();
 
     Queue::assertNothingPushed();
@@ -135,4 +135,75 @@ it('outputs nothing to do when no partial payment bookings exist', function () {
         ->expectsOutputToContain('No bookings found');
 
     Queue::assertNothingPushed();
+});
+
+it('skips bookings reminded within the last 2 days', function () {
+    Queue::fake();
+
+    // Should be skipped — reminded 1 day ago
+    Booking::factory()->create([
+        'exhibition_id' => $this->exhibition->id,
+        'status' => BookingStatus::PaymentPending,
+        'amount_paid' => 10000,
+        'remaining_amount' => 10000,
+        'last_partial_reminder_sent_at' => now()->subDay(),
+    ]);
+
+    $this->artisan('bookings:send-partial-payment-reminders --dry-run')
+        ->assertSuccessful()
+        ->expectsOutputToContain('No bookings found');
+
+    Queue::assertNothingPushed();
+});
+
+it('includes bookings whose last reminder was more than 2 days ago', function () {
+    Queue::fake();
+
+    $booking = Booking::factory()->create([
+        'exhibition_id' => $this->exhibition->id,
+        'status' => BookingStatus::PaymentPending,
+        'amount_paid' => 10000,
+        'remaining_amount' => 10000,
+        'last_partial_reminder_sent_at' => now()->subDays(3),
+    ]);
+
+    $this->artisan('bookings:send-partial-payment-reminders --dry-run')
+        ->assertSuccessful()
+        ->expectsOutputToContain('1 booking(s)')
+        ->expectsOutputToContain($booking->booking_code);
+});
+
+it('skips confirmation prompt when --force flag is used', function () {
+    Queue::fake();
+
+    Booking::factory()->create([
+        'exhibition_id' => $this->exhibition->id,
+        'status' => BookingStatus::PaymentPending,
+        'amount_paid' => 10000,
+        'remaining_amount' => 10000,
+    ]);
+
+    $this->artisan('bookings:send-partial-payment-reminders --force')
+        ->assertSuccessful()
+        ->expectsOutputToContain('Sent: 1');
+
+    Queue::assertPushed(SendWhatsAppCampaign::class, 1);
+});
+
+it('updates last_partial_reminder_sent_at after successful send', function () {
+    Queue::fake();
+
+    $booking = Booking::factory()->create([
+        'exhibition_id' => $this->exhibition->id,
+        'status' => BookingStatus::PaymentPending,
+        'amount_paid' => 10000,
+        'remaining_amount' => 10000,
+        'last_partial_reminder_sent_at' => null,
+    ]);
+
+    $this->artisan('bookings:send-partial-payment-reminders --force')
+        ->assertSuccessful();
+
+    expect($booking->fresh()->last_partial_reminder_sent_at)->not->toBeNull()
+        ->and($booking->fresh()->last_partial_reminder_sent_at->isToday())->toBeTrue();
 });
