@@ -79,11 +79,11 @@ class Index extends Component
         $visitor = ExhibitionVisitor::with('exhibition')->findOrFail($visitorId);
         $exhibition = $visitor->exhibition;
 
-        $exhibitionDates = $exhibition->start_date->format('d M Y') . ' to ' . $exhibition->end_date->format('d M Y');
+        $exhibitionDates = $exhibition->start_date->format('d M Y').' to '.$exhibition->end_date->format('d M Y');
 
         // Determine payment info based on status
         if ($visitor->status === VisitorRegistrationStatus::Confirmed && $visitor->payment_amount) {
-            $amountPaid = '₹' . number_format((float) $visitor->payment_amount, 2);
+            $amountPaid = '₹'.number_format((float) $visitor->payment_amount, 2);
             $transactionId = $visitor->payment_transaction_id ?: 'N/A';
             $paymentDate = $visitor->payment_completed_at ? $visitor->payment_completed_at->format('d-m-Y') : 'N/A';
         } else {
@@ -94,7 +94,7 @@ class Index extends Component
 
         // Send WhatsApp for primary visitor
         $primaryFirstName = explode(' ', trim($visitor->name))[0];
-        $primaryImageUrl = config('app.url') . '/' . $exhibition->slug . '/visitor-pass/' . $visitor->registration_code . '/image';
+        $primaryImageUrl = config('app.url').'/'.$exhibition->slug.'/visitor-pass/'.$visitor->registration_code.'/image';
 
         SendWhatsAppCampaign::dispatch(
             campaignName: 'Paidregistration1',
@@ -117,7 +117,7 @@ class Index extends Component
             ],
             media: [
                 'url' => $primaryImageUrl,
-                'filename' => 'visitor_pass_' . $visitor->registration_code,
+                'filename' => 'visitor_pass_'.$visitor->registration_code,
             ]
         );
 
@@ -125,12 +125,13 @@ class Index extends Component
         if (! empty($visitor->additional_persons)) {
             foreach ($visitor->additional_persons as $index => $person) {
                 $personFirstName = explode(' ', trim($person['name']))[0];
-                $personImageUrl = config('app.url') . '/' . $exhibition->slug . '/visitor-pass/' . $visitor->registration_code . '/image?personIndex=' . $index;
+                $personImageUrl = config('app.url').'/'.$exhibition->slug.'/visitor-pass/'.$visitor->registration_code.'/image?personIndex='.$index;
+                $personPhone = ! empty($person['phone_number']) ? $person['phone_number'] : $visitor->phone_number;
 
                 SendWhatsAppCampaign::dispatch(
                     campaignName: 'Paidregistration1',
                     phoneCode: '',
-                    phoneNumber: $visitor->phone_number,
+                    phoneNumber: $personPhone,
                     templateParams: [
                         $personFirstName,
                         $exhibition->title,
@@ -148,7 +149,7 @@ class Index extends Component
                     ],
                     media: [
                         'url' => $personImageUrl,
-                        'filename' => 'visitor_pass_' . $visitor->registration_code . '_person_' . ($index + 1),
+                        'filename' => 'visitor_pass_'.$visitor->registration_code.'_person_'.($index + 1),
                     ]
                 );
             }
