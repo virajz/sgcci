@@ -117,7 +117,7 @@
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <flux:field>
                             <flux:label>State <span class="text-red-500">*</span></flux:label>
-                            <flux:select variant="listbox" wire:model.live="state" placeholder="Select State">
+                            <flux:select variant="listbox" searchable wire:model.live="state" placeholder="Select State">
                                 @foreach ($states as $stateOption)
                                     <flux:select.option value="{{ $stateOption }}">{{ $stateOption }}
                                     </flux:select.option>
@@ -128,7 +128,7 @@
 
                         <flux:field>
                             <flux:label>City <span class="text-red-500">*</span></flux:label>
-                            <flux:select variant="listbox" wire:model="city" placeholder="Select City">
+                            <flux:select variant="listbox" searchable wire:model="city" placeholder="Select City">
                                 @foreach ($this->cities as $cityOption)
                                     <flux:select.option value="{{ $cityOption }}">{{ $cityOption }}
                                     </flux:select.option>

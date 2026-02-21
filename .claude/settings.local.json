@@ -8,7 +8,8 @@
       "Bash(php artisan view:cache:*)",
       "mcp__laravel-boost__application-info",
       "mcp__laravel-boost__database-schema",
-      "mcp__laravel-boost__database-query"
+      "mcp__laravel-boost__database-query",
+      "mcp__laravel-boost__tinker"
     ],
     "deny": [],
     "ask": []
