@@ -12,8 +12,12 @@
                 iconVariant="micro">
                 Back to List
             </flux:button>
-            @if (in_array($visitor->status, [\App\VisitorRegistrationStatus::PaymentPending, \App\VisitorRegistrationStatus::PaymentFailed]))
-                <flux:button variant="primary" icon="check-circle" wire:click="confirmMarkPaid">Mark as Paid</flux:button>
+            @if (in_array($visitor->status, [
+                    \App\VisitorRegistrationStatus::PaymentPending,
+                    \App\VisitorRegistrationStatus::PaymentFailed,
+                ]))
+                <flux:button variant="primary" icon="check-circle" wire:click="confirmMarkPaid">Mark as Paid
+                </flux:button>
             @endif
             <flux:button variant="danger" icon="trash" wire:click="confirmDelete">Delete</flux:button>
         </div>
@@ -24,7 +28,7 @@
         <div class="space-y-6 lg:col-span-2">
             {{-- Registration Details --}}
             <flux:card>
-                <div class="p-6">
+                <div>
                     <flux:heading size="lg" class="mb-4">Registration Details</flux:heading>
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div>
@@ -83,7 +87,7 @@
             @php $additionalPersons = $visitor->additional_persons ?? []; @endphp
             @php $totalPersons = 1 + count($additionalPersons); @endphp
             <flux:card>
-                <div class="p-6">
+                <div>
                     <div class="flex items-center justify-between mb-4">
                         <flux:heading size="lg">Members</flux:heading>
                         <flux:badge color="zinc" size="sm">{{ $totalPersons }}
@@ -92,18 +96,20 @@
                     <div class="space-y-1">
                         <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/50">
                             <span
-                                class="flex items-center justify-center w-7 h-7 text-xs font-semibold rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 shrink-0">1</span>
+                                class="flex items-center justify-center text-xs font-semibold text-blue-700 bg-blue-100 rounded-full w-7 h-7 dark:bg-blue-900 dark:text-blue-300 shrink-0">1</span>
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $visitor->name }}</p>
+                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $visitor->name }}
+                                </p>
                                 <p class="text-xs text-zinc-500">{{ $visitor->phone_number }} · Primary</p>
                             </div>
                         </div>
                         @foreach ($additionalPersons as $index => $person)
                             <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/50">
                                 <span
-                                    class="flex items-center justify-center w-7 h-7 text-xs font-semibold rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 shrink-0">{{ $index + 2 }}</span>
+                                    class="flex items-center justify-center text-xs font-semibold rounded-full w-7 h-7 bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 shrink-0">{{ $index + 2 }}</span>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $person['name'] ?? '' }}</p>
+                                    <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                                        {{ $person['name'] ?? '' }}</p>
                                     @if (!empty($person['phone_number']))
                                         <p class="text-xs text-zinc-500">{{ $person['phone_number'] }}</p>
                                     @endif
@@ -117,12 +123,12 @@
             {{-- Payment Details --}}
             @if ($visitor->payment_amount)
                 <flux:card>
-                    <div class="p-6">
+                    <div>
                         <flux:heading size="lg" class="mb-4">Payment</flux:heading>
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div>
                                 <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Amount</flux:text>
-                                <flux:text class="font-mono font-semibold text-lg">
+                                <flux:text class="font-mono text-lg font-semibold">
                                     ₹{{ number_format($visitor->payment_amount, 2) }}
                                 </flux:text>
                             </div>
@@ -176,7 +182,7 @@
         <div class="space-y-6">
             {{-- Status Card --}}
             <flux:card>
-                <div class="p-6 space-y-4">
+                <div class="space-y-4">
                     <div class="flex items-center justify-between">
                         <flux:heading size="lg">Status</flux:heading>
                         <flux:badge color="{{ $visitor->status->color() }}" size="sm">
@@ -198,15 +204,16 @@
                             <flux:text>{{ $visitor->updated_at->format('M d, Y · H:i') }}</flux:text>
                         </div>
                     @endif
-                    @if ($visitor->payment_notes)
-                        <flux:separator />
-                        <div>
-                            <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Payment Notes</flux:text>
-                            <flux:text class="text-sm">{{ $visitor->payment_notes }}</flux:text>
-                        </div>
-                    @endif
                 </div>
             </flux:card>
+            @if ($visitor->payment_notes)
+                <flux:card>
+                    <div class="space-y-2">
+                        <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Payment Notes</flux:text>
+                        <flux:text class="text-sm">{{ $visitor->payment_notes }}</flux:text>
+                    </div>
+                </flux:card>
+            @endif
         </div>
     </div>
 
@@ -218,19 +225,22 @@
                 Use this only when the payment was debited from the visitor's account but our system did not receive
                 confirmation. A WhatsApp pass will be sent after confirming.
             </flux:text>
-            <div class="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+            <div class="p-4 border rounded-lg bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
                 <flux:text class="text-sm text-amber-800 dark:text-amber-300">
                     <strong>{{ $visitor->name }}</strong> — {{ $visitor->registration_code }}<br>
                     Amount: <strong>₹{{ number_format($visitor->payment_amount, 2) }}</strong>
                 </flux:text>
             </div>
             <flux:field>
-                <flux:label>Transaction / Tracking ID <flux:badge size="sm" color="zinc">Optional</flux:badge></flux:label>
+                <flux:label>Transaction / Tracking ID <flux:badge size="sm" color="zinc">Optional</flux:badge>
+                </flux:label>
                 <flux:input wire:model="manualTransactionId" placeholder="e.g. 123456789 from CCAvenue" />
             </flux:field>
             <flux:field>
-                <flux:label>Notes <flux:badge size="sm" color="zinc">Optional</flux:badge></flux:label>
-                <flux:textarea wire:model="manualNotes" placeholder="Any additional details about this payment..." rows="2" />
+                <flux:label>Notes <flux:badge size="sm" color="zinc">Optional</flux:badge>
+                </flux:label>
+                <flux:textarea wire:model="manualNotes" placeholder="Any additional details about this payment..."
+                    rows="2" />
             </flux:field>
             <div class="flex gap-2">
                 <flux:button variant="primary" wire:click="markPaymentCompleted" wire:loading.attr="disabled">
