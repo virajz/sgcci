@@ -44,7 +44,8 @@
                                 </flux:table.cell>
 
                                 <flux:table.cell>
-                                    <div class="font-semibold text-black dark:text-white">{{ $visitor->name }}</div>
+                                    <a href="{{ route('admin.visitors.show', $visitor) }}" wire:navigate
+                                        class="font-semibold text-black dark:text-white hover:underline">{{ $visitor->name }}</a>
                                     @if ($visitor->email)
                                         <div class="text-xs text-zinc-500">{{ $visitor->email }}</div>
                                     @endif

@@ -19,6 +19,10 @@ class Show extends Component
 
     public bool $showMarkPaidModal = false;
 
+    public string $manualTransactionId = '';
+
+    public string $manualNotes = '';
+
     public function mount(ExhibitionVisitor $visitor): void
     {
         $this->visitor = $visitor->load('exhibition');
@@ -26,6 +30,8 @@ class Show extends Component
 
     public function confirmMarkPaid(): void
     {
+        $this->manualTransactionId = '';
+        $this->manualNotes = '';
         $this->showMarkPaidModal = true;
     }
 
@@ -61,6 +67,9 @@ class Show extends Component
             'payment_method' => $this->visitor->payment_method ?? 'Manual',
             'payment_status' => 'Success',
             'payment_completed_at' => now(),
+            'payment_transaction_id' => $this->manualTransactionId ?: $this->visitor->payment_transaction_id,
+            'payment_tracking_id' => $this->manualTransactionId ?: $this->visitor->payment_tracking_id,
+            'payment_notes' => $this->manualNotes ?: null,
         ]);
 
         $this->visitor->refresh();

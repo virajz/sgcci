@@ -36,6 +36,7 @@ class ExhibitionVisitor extends Model
         'payment_response',
         'payment_initiated_at',
         'payment_completed_at',
+        'payment_notes',
     ];
 
     protected $attributes = [

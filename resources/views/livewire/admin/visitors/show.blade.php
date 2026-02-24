@@ -198,28 +198,15 @@
                             <flux:text>{{ $visitor->updated_at->format('M d, Y · H:i') }}</flux:text>
                         </div>
                     @endif
+                    @if ($visitor->payment_notes)
+                        <flux:separator />
+                        <div>
+                            <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Payment Notes</flux:text>
+                            <flux:text class="text-sm">{{ $visitor->payment_notes }}</flux:text>
+                        </div>
+                    @endif
                 </div>
             </flux:card>
-
-            {{-- Exhibition Card --}}
-            @if ($visitor->exhibition)
-                <flux:card>
-                    <div class="p-6 space-y-3">
-                        <flux:heading size="lg">Exhibition</flux:heading>
-                        <flux:text class="font-semibold">{{ $visitor->exhibition->name }}</flux:text>
-                        @if ($visitor->exhibition->start_date)
-                            <div>
-                                <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Dates</flux:text>
-                                <flux:text>{{ $visitor->exhibition->start_date->format('M d, Y') }}
-                                    @if ($visitor->exhibition->end_date)
-                                        — {{ $visitor->exhibition->end_date->format('M d, Y') }}
-                                    @endif
-                                </flux:text>
-                            </div>
-                        @endif
-                    </div>
-                </flux:card>
-            @endif
         </div>
     </div>
 
@@ -228,9 +215,8 @@
         <div class="space-y-6">
             <flux:heading size="lg">Manually Confirm Payment</flux:heading>
             <flux:text>
-                Are you sure you want to manually mark this registration as paid? This should only be done when the
-                payment was successfully debited from the visitor's account but our system did not receive the
-                confirmation. A WhatsApp pass will be sent to the visitor.
+                Use this only when the payment was debited from the visitor's account but our system did not receive
+                confirmation. A WhatsApp pass will be sent after confirming.
             </flux:text>
             <div class="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
                 <flux:text class="text-sm text-amber-800 dark:text-amber-300">
@@ -238,6 +224,14 @@
                     Amount: <strong>₹{{ number_format($visitor->payment_amount, 2) }}</strong>
                 </flux:text>
             </div>
+            <flux:field>
+                <flux:label>Transaction / Tracking ID <flux:badge size="sm" color="zinc">Optional</flux:badge></flux:label>
+                <flux:input wire:model="manualTransactionId" placeholder="e.g. 123456789 from CCAvenue" />
+            </flux:field>
+            <flux:field>
+                <flux:label>Notes <flux:badge size="sm" color="zinc">Optional</flux:badge></flux:label>
+                <flux:textarea wire:model="manualNotes" placeholder="Any additional details about this payment..." rows="2" />
+            </flux:field>
             <div class="flex gap-2">
                 <flux:button variant="primary" wire:click="markPaymentCompleted" wire:loading.attr="disabled">
                     <span wire:loading.remove wire:target="markPaymentCompleted">Confirm Payment</span>
