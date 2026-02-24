@@ -134,6 +134,8 @@ class CCAvenueService
             'merchant_param1' => (string) $visitor->id,
             'merchant_param2' => (string) $visitor->exhibition_id,
             'merchant_param3' => 'visitor_registration',
+            'merchant_param4' => $visitor->name,
+            'merchant_param5' => $visitor->phone_number,
         ];
     }
 

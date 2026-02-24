@@ -12,6 +12,9 @@
                 iconVariant="micro">
                 Back to List
             </flux:button>
+            @if (in_array($visitor->status, [\App\VisitorRegistrationStatus::PaymentPending, \App\VisitorRegistrationStatus::PaymentFailed]))
+                <flux:button variant="primary" icon="check-circle" wire:click="confirmMarkPaid">Mark as Paid</flux:button>
+            @endif
             <flux:button variant="danger" icon="trash" wire:click="confirmDelete">Delete</flux:button>
         </div>
     </div>
@@ -219,6 +222,31 @@
             @endif
         </div>
     </div>
+
+    {{-- Mark as Paid Confirmation Modal --}}
+    <flux:modal wire:model="showMarkPaidModal">
+        <div class="space-y-6">
+            <flux:heading size="lg">Manually Confirm Payment</flux:heading>
+            <flux:text>
+                Are you sure you want to manually mark this registration as paid? This should only be done when the
+                payment was successfully debited from the visitor's account but our system did not receive the
+                confirmation. A WhatsApp pass will be sent to the visitor.
+            </flux:text>
+            <div class="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                <flux:text class="text-sm text-amber-800 dark:text-amber-300">
+                    <strong>{{ $visitor->name }}</strong> — {{ $visitor->registration_code }}<br>
+                    Amount: <strong>₹{{ number_format($visitor->payment_amount, 2) }}</strong>
+                </flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:button variant="primary" wire:click="markPaymentCompleted" wire:loading.attr="disabled">
+                    <span wire:loading.remove wire:target="markPaymentCompleted">Confirm Payment</span>
+                    <span wire:loading wire:target="markPaymentCompleted">Processing...</span>
+                </flux:button>
+                <flux:button variant="ghost" wire:click="$set('showMarkPaidModal', false)">Cancel</flux:button>
+            </div>
+        </div>
+    </flux:modal>
 
     {{-- Delete Confirmation Modal --}}
     <flux:modal wire:model="showDeleteModal">
