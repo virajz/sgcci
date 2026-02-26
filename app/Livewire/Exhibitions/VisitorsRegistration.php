@@ -40,9 +40,7 @@ class VisitorsRegistration extends Component
 
     public string $email = '';
 
-    public string $businessSegment = '';
-
-    public string $subBusinessSegment = '';
+    public string $segment = '';
 
     /**
      * @var array<int, array{name: string, phone_number: string}>
@@ -94,20 +92,6 @@ class VisitorsRegistration extends Component
         ];
     }
 
-    /**
-     * @return array<string, array<string>>
-     */
-    public static function getBusinessSegmentMap(): array
-    {
-        return [
-            'Manufacturing' => ['Textiles', 'Chemicals', 'Machinery', 'Food Processing'],
-            'Trading' => ['Import/Export', 'Wholesale', 'Retail', 'Distribution'],
-            'Services' => ['Consulting', 'Financial Services', 'Logistics', 'Education'],
-            'IT & Technology' => ['Software Development', 'IT Services', 'Hardware', 'Telecom'],
-            'Healthcare' => ['Pharmaceuticals', 'Medical Devices', 'Hospitals', 'Diagnostics'],
-        ];
-    }
-
     public function mount(Exhibition $exhibition): void
     {
         $this->exhibitionId = $exhibition->id;
@@ -119,11 +103,6 @@ class VisitorsRegistration extends Component
         $this->city = '';
     }
 
-    public function updatedBusinessSegment(): void
-    {
-        $this->subBusinessSegment = '';
-    }
-
     /**
      * @return array<string>
      */
@@ -133,17 +112,6 @@ class VisitorsRegistration extends Component
         $map = static::getStateCityMap();
 
         return $map[$this->state] ?? [];
-    }
-
-    /**
-     * @return array<string>
-     */
-    #[Computed]
-    public function subSegments(): array
-    {
-        $map = static::getBusinessSegmentMap();
-
-        return $map[$this->businessSegment] ?? [];
     }
 
     #[Computed]
@@ -222,8 +190,8 @@ class VisitorsRegistration extends Component
             'state' => $this->state,
             'city' => $this->city,
             'email' => $this->email ?: null,
-            'business_segment' => $this->businessSegment,
-            'sub_business_segment' => $this->subBusinessSegment,
+            'business_segment' => $this->segment ?: null,
+            'sub_business_segment' => null,
             'additional_persons' => ! empty($additionalPersonsData) ? $additionalPersonsData : null,
             'source' => $this->source,
             'payment_amount' => $totalAmount,
@@ -295,16 +263,13 @@ class VisitorsRegistration extends Component
             'state' => ['required', 'string', 'in:'.implode(',', array_keys(static::getStateCityMap()))],
             'city' => ['required', 'string'],
             'email' => ['nullable', 'email', 'max:255'],
-            'businessSegment' => ['required', 'string', 'in:'.implode(',', array_keys(static::getBusinessSegmentMap()))],
-            'subBusinessSegment' => ['required', 'string'],
+            'segment' => ['nullable', 'string', 'in:Business,Job (Working Professional),Student,Housewife,Other'],
         ], [
             'phoneNumber.required' => 'Please enter your phone number.',
             'phoneNumber.unique' => 'This phone number is already registered for this exhibition.',
             'name.required' => 'Please enter your name.',
             'state.required' => 'Please select a state.',
             'city.required' => 'Please select a city.',
-            'businessSegment.required' => 'Please select a business segment.',
-            'subBusinessSegment.required' => 'Please select a sub business segment.',
         ]);
     }
 
@@ -440,7 +405,6 @@ class VisitorsRegistration extends Component
         return view('livewire.exhibitions.visitors-registration', [
             'exhibition' => $exhibition,
             'states' => array_keys(static::getStateCityMap()),
-            'businessSegments' => array_keys(static::getBusinessSegmentMap()),
         ]);
     }
 }

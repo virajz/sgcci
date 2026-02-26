@@ -98,21 +98,6 @@
                         </flux:field>
                     </div>
 
-                    {{-- Company + Designation --}}
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <flux:field>
-                            <flux:label>Company Name</flux:label>
-                            <flux:input wire:model="companyName" placeholder="Optional" />
-                            <flux:error name="companyName" />
-                        </flux:field>
-
-                        <flux:field>
-                            <flux:label>Designation</flux:label>
-                            <flux:input wire:model="designation" placeholder="Optional" />
-                            <flux:error name="designation" />
-                        </flux:field>
-                    </div>
-
                     {{-- State & City --}}
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <flux:field>
@@ -138,37 +123,39 @@
                         </flux:field>
                     </div>
 
-                    {{-- Email --}}
-                    <flux:field>
-                        <flux:label>Email</flux:label>
-                        <flux:input wire:model="email" type="email" placeholder="your@email.com (optional)" />
-                        <flux:error name="email" />
-                    </flux:field>
-
-                    {{-- Business Segments --}}
+                    {{-- Company + Designation --}}
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <flux:field>
-                            <flux:label>Business Segment <span class="text-red-500">*</span></flux:label>
-                            <flux:select variant="listbox" wire:model.live="businessSegment"
-                                placeholder="Select Segment">
-                                @foreach ($businessSegments as $segment)
-                                    <flux:select.option value="{{ $segment }}">{{ $segment }}
-                                    </flux:select.option>
-                                @endforeach
-                            </flux:select>
-                            <flux:error name="businessSegment" />
+                            <flux:label>Company Name</flux:label>
+                            <flux:input wire:model="companyName" placeholder="Optional" />
+                            <flux:error name="companyName" />
                         </flux:field>
 
                         <flux:field>
-                            <flux:label>Sub Segment <span class="text-red-500">*</span></flux:label>
-                            <flux:select variant="listbox" wire:model="subBusinessSegment"
-                                placeholder="Select Sub Segment">
-                                @foreach ($this->subSegments as $subSegment)
-                                    <flux:select.option value="{{ $subSegment }}">{{ $subSegment }}
-                                    </flux:select.option>
-                                @endforeach
+                            <flux:label>Designation</flux:label>
+                            <flux:input wire:model="designation" placeholder="Optional" />
+                            <flux:error name="designation" />
+                        </flux:field>
+                    </div>
+
+                    {{-- Segment + Email --}}
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <flux:field>
+                            <flux:label>Segment</flux:label>
+                            <flux:select variant="listbox" wire:model="segment" placeholder="Select Segment">
+                                <flux:select.option value="Business">Business</flux:select.option>
+                                <flux:select.option value="Job (Working Professional)">Job (Working Professional)</flux:select.option>
+                                <flux:select.option value="Student">Student</flux:select.option>
+                                <flux:select.option value="Housewife">Housewife</flux:select.option>
+                                <flux:select.option value="Other">Other</flux:select.option>
                             </flux:select>
-                            <flux:error name="subBusinessSegment" />
+                            <flux:error name="segment" />
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>Email</flux:label>
+                            <flux:input wire:model="email" type="email" placeholder="your@email.com (optional)" />
+                            <flux:error name="email" />
                         </flux:field>
                     </div>
                 </div>
