@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\ExhibitorBadgeController;
+use App\Http\Controllers\ExhibitorScanController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\VisitorPassController;
@@ -8,6 +10,7 @@ use App\Http\Controllers\VisitorPaymentController;
 use App\Http\Controllers\VisitorScanController;
 use App\Livewire\Admin\DatabaseBackups;
 use App\Livewire\Admin\Exhibitions\Index as ExhibitionsIndex;
+use App\Livewire\Admin\Exhibitors\Badges as AdminExhibitorBadges;
 use App\Livewire\Admin\Exhibitors\Index as ExhibitorsIndex;
 use App\Livewire\Admin\Inquiries\EditBooking as AdminEditBooking;
 use App\Livewire\Admin\Inquiries\Index as InquiriesIndex;
@@ -25,6 +28,7 @@ use App\Livewire\Exhibitions\ProductProfileSelection;
 use App\Livewire\Exhibitions\ThankYou;
 use App\Livewire\Exhibitions\VisitorsRegistration;
 use App\Livewire\Exhibitions\VisitorThankYou;
+use App\Livewire\Exhibitor\Badges as ExhibitorBadges;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -94,10 +98,19 @@ Route::middleware(['auth'])->group(function () {
         )
         ->name('two-factor.show');
 
+    // Exhibitor routes
+    Route::prefix('exhibitor')->name('exhibitor.')->group(function () {
+        Route::get('badges', ExhibitorBadges::class)->name('badges.index');
+        Route::get('badges/{booking}/{member}/image', [ExhibitorBadgeController::class, 'inline'])->name('badges.inline');
+        Route::get('badges/{booking}/{member}/download', [ExhibitorBadgeController::class, 'download'])->name('badges.download');
+        Route::get('badges/{booking}/download-all', [ExhibitorBadgeController::class, 'downloadAll'])->name('badges.download-all');
+    });
+
     // Admin routes
     Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         Route::get('exhibitions', ExhibitionsIndex::class)->name('exhibitions.index');
         Route::get('exhibitors', ExhibitorsIndex::class)->name('exhibitors.index');
+        Route::get('exhibitors/{booking}/badges', AdminExhibitorBadges::class)->name('exhibitors.badges');
         Route::get('inquiries', InquiriesIndex::class)->name('inquiries.index');
         Route::get('inquiries/{booking}', InquiriesShow::class)->name('inquiries.show');
         Route::get('inquiries/{booking}/edit', AdminEditBooking::class)->name('inquiries.edit');
@@ -118,6 +131,9 @@ Route::get('{exhibition:slug}/visitor-pass/{registrationCode}/image', [VisitorPa
 
 // Smart QR scan URL — redirects based on auth/role
 Route::get('{exhibition:slug}/visitors/{registrationCode}', VisitorScanController::class)->name('visitor.scan');
+
+// Exhibitor QR scan URL — redirects: admin→admin badges, exhibitor→own badges, public→WhatsApp
+Route::get('exhibitor/{bookingCode}', ExhibitorScanController::class)->name('exhibitor.scan');
 
 // Route::get('temp', function () {
 //     User::factory()->create([

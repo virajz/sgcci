@@ -18,8 +18,10 @@
                         <flux:table.column>Phone</flux:table.column>
                         <flux:table.column>Exhibition</flux:table.column>
                         <flux:table.column>Stalls</flux:table.column>
+                        <flux:table.column>Badges</flux:table.column>
                         <flux:table.column>Login Password</flux:table.column>
                         <flux:table.column>Paid At</flux:table.column>
+                        <flux:table.column></flux:table.column>
                     </flux:table.columns>
 
                     <flux:table.rows>
@@ -59,6 +61,24 @@
                                 </flux:table.cell>
 
                                 <flux:table.cell>
+                                    @if ($editingBadgeLimitId === $booking->id)
+                                        <div class="flex items-center gap-2">
+                                            <flux:input type="number" wire:model="editingBadgeLimit" min="1" max="100" class="w-20" size="sm" />
+                                            <flux:button size="sm" variant="primary" wire:click="saveBadgeLimit" icon="check" />
+                                            <flux:button size="sm" variant="ghost" wire:click="cancelEditingBadgeLimit" icon="x-mark" />
+                                        </div>
+                                    @else
+                                        <div class="flex items-center gap-2">
+                                            <flux:text class="text-sm">
+                                                {{ $booking->badgeMembers->count() }} / {{ $booking->badge_limit }}
+                                            </flux:text>
+                                            <flux:button size="sm" variant="ghost" icon="pencil" iconVariant="outline"
+                                                wire:click="startEditingBadgeLimit({{ $booking->id }}, {{ $booking->badge_limit }})" />
+                                        </div>
+                                    @endif
+                                </flux:table.cell>
+
+                                <flux:table.cell>
                                     @if ($booking->login_password)
                                         <div class="flex items-center gap-2" x-data>
                                             <flux:text class="font-mono text-sm">{{ $booking->login_password }}</flux:text>
@@ -79,6 +99,13 @@
                                     <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">
                                         {{ $booking->payment_completed_at?->format('M d, Y') ?? '—' }}
                                     </flux:text>
+                                </flux:table.cell>
+
+                                <flux:table.cell>
+                                    <flux:button size="sm" variant="ghost" icon="identification" iconVariant="outline"
+                                        :href="route('admin.exhibitors.badges', $booking)" wire:navigate>
+                                        Badges
+                                    </flux:button>
                                 </flux:table.cell>
                             </flux:table.row>
                         @endforeach

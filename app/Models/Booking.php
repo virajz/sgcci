@@ -83,6 +83,7 @@ class Booking extends Model
         'payment_initiated_at',
         'exhibitor_user_id',
         'login_password',
+        'badge_limit',
     ];
 
     protected $attributes = [
@@ -568,5 +569,10 @@ class Booking extends Model
     public function supportTickets(): HasMany
     {
         return $this->hasMany(SupportTicket::class);
+    }
+
+    public function badgeMembers(): HasMany
+    {
+        return $this->hasMany(ExhibitorBadgeMember::class);
     }
 }

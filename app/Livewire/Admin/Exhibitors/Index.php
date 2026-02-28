@@ -16,6 +16,10 @@ class Index extends Component
 
     public string $search = '';
 
+    public ?int $editingBadgeLimitId = null;
+
+    public int $editingBadgeLimit = 5;
+
     public function mount(): void
     {
         if (! Auth::user()->isAdmin()) {
@@ -28,6 +32,31 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function startEditingBadgeLimit(int $bookingId, int $currentLimit): void
+    {
+        $this->editingBadgeLimitId = $bookingId;
+        $this->editingBadgeLimit = $currentLimit;
+    }
+
+    public function saveBadgeLimit(): void
+    {
+        $this->validate([
+            'editingBadgeLimit' => ['required', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $booking = Booking::findOrFail($this->editingBadgeLimitId);
+        $booking->update(['badge_limit' => $this->editingBadgeLimit]);
+
+        $this->editingBadgeLimitId = null;
+
+        $this->dispatch('badge-limit-saved');
+    }
+
+    public function cancelEditingBadgeLimit(): void
+    {
+        $this->editingBadgeLimitId = null;
+    }
+
     public function render()
     {
         $search = strtolower($this->search);
@@ -36,7 +65,7 @@ class Index extends Component
         $bookings = Booking::query()
             ->where('status', BookingStatus::PaymentCompleted)
             ->where('is_manual_block', false)
-            ->with(['exhibition', 'exhibitorUser'])
+            ->with(['exhibition', 'exhibitorUser', 'badgeMembers'])
             ->when($this->search, function ($query) use ($search, $phoneSearch) {
                 $query->where(function ($q) use ($search, $phoneSearch) {
                     $q->whereRaw('LOWER(booking_code) LIKE ?', ["%{$search}%"])

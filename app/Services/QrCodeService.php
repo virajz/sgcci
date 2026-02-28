@@ -15,6 +15,59 @@ use ImagickPixel;
 
 class QrCodeService
 {
+    // -------------------------------------------------------------------------
+    // Exhibitor badge constants (badge.jpeg — 1600×1048, landscape)
+    // Left white panel: x=1..784, y=195..1048 (usable area below top logos)
+    // Panel centre X = 392
+    // -------------------------------------------------------------------------
+
+    /** Centre X of the left panel (measured: panel spans x=1..784). */
+    private const BADGE_PANEL_CENTER_X = 392;
+
+    /** Circular photo: diameter and top-left corner (centered in panel). */
+    private const BADGE_PHOTO_DIAMETER = 320;
+
+    private const BADGE_PHOTO_X = 232;   // (392 - 320/2)
+
+    private const BADGE_PHOTO_Y = 250;   // just below the top logo area
+
+    /** Name text Y baseline (below photo bottom at y=570, +50 gap). */
+    private const BADGE_NAME_Y = 630;
+
+    /** Company text Y baseline. */
+    private const BADGE_COMPANY_Y = 685;
+
+    /** Stall text Y baseline. */
+    private const BADGE_STALL_Y = 730;
+
+    /** QR code size and top-left (centered in panel). */
+    private const BADGE_QR_SIZE = 128;
+
+    private const BADGE_QR_X = 328;     // (392 - 128/2)
+
+    private const BADGE_QR_Y = 770;
+
+    /** Max text width for left panel text (leave ~30px margin each side). */
+    private const BADGE_TEXT_MAX_WIDTH = 560;
+
+    /** Font sizes. */
+    private const BADGE_NAME_FONT_MAX = 36;
+
+    private const BADGE_NAME_FONT_MIN = 20;
+
+    private const BADGE_COMPANY_FONT_MAX = 26;
+
+    private const BADGE_COMPANY_FONT_MIN = 14;
+
+    private const BADGE_STALL_FONT = 20;
+
+    /** Colours. */
+    private const BADGE_TEXT_DARK = '#1e2d5a';
+
+    private const BADGE_QR_BG = [30, 45, 90];
+
+    private const BADGE_QR_FG = [255, 255, 255];
+
     /**
      * Inner blue box pixel coordinates in creative.jpeg (1080×1920).
      * Measured precisely from the image.
@@ -151,7 +204,137 @@ class QrCodeService
     }
 
     /**
-     * Find the largest font size where the text fits within NAME_MAX_WIDTH.
+     * Generate the exhibitor badge composite: badge.jpeg with photo, name,
+     * company, stall number(s), and the QR code placed on the left white panel.
+     *
+     * @param  string  $qrData  URL/text to encode in the QR
+     * @param  string  $memberName  Full name of the badge holder
+     * @param  string  $companyName  Brand / company name
+     * @param  string  $stallNumbers  Stall number(s) e.g. "42, 43"
+     * @param  string|null  $photoPath  Absolute path to the member's photo (optional)
+     */
+    public function generateBadgeImage(
+        string $qrData,
+        string $memberName,
+        string $companyName,
+        string $stallNumbers,
+        ?string $photoPath = null,
+    ): string {
+        /** @var Imagick $badge */
+        $badge = new Imagick(public_path('badge.jpeg'));
+
+        // --- Circular photo ---
+        if ($photoPath && file_exists($photoPath)) {
+            /** @var Imagick $photo */
+            $photo = new Imagick($photoPath);
+
+            // Square-crop first so the circle is symmetric
+            $photo->cropThumbnailImage(self::BADGE_PHOTO_DIAMETER, self::BADGE_PHOTO_DIAMETER);
+            $photo->setImageFormat('png');
+
+            // Build a circular mask: white circle on black background
+            /** @var Imagick $mask */
+            $mask = new Imagick;
+            $mask->newImage(self::BADGE_PHOTO_DIAMETER, self::BADGE_PHOTO_DIAMETER, new ImagickPixel('black'));
+            $mask->setImageFormat('png');
+            /** @var ImagickDraw $circle */
+            $circle = new ImagickDraw;
+            $circle->setFillColor(new ImagickPixel('white'));
+            $r = self::BADGE_PHOTO_DIAMETER / 2;
+            $circle->circle($r, $r, $r * 2, $r);
+            $mask->drawImage($circle);
+
+            // Enable alpha on photo, then use the mask as the alpha channel
+            $photo->setImageAlphaChannel(Imagick::ALPHACHANNEL_ACTIVATE);
+            $photo->compositeImage($mask, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
+
+            $badge->compositeImage($photo, Imagick::COMPOSITE_OVER, self::BADGE_PHOTO_X, self::BADGE_PHOTO_Y);
+        } else {
+            // Draw a filled circle with initials as placeholder
+            /** @var ImagickDraw $circleDraw */
+            $circleDraw = new ImagickDraw;
+            $circleDraw->setFillColor(new ImagickPixel('#d1d5db'));
+            $cx = self::BADGE_PHOTO_X + self::BADGE_PHOTO_DIAMETER / 2;
+            $cy = self::BADGE_PHOTO_Y + self::BADGE_PHOTO_DIAMETER / 2;
+            $r = self::BADGE_PHOTO_DIAMETER / 2;
+            $circleDraw->circle($cx, $cy, $cx + $r, $cy);
+            $badge->drawImage($circleDraw);
+
+            // Initials text
+            $initials = collect(explode(' ', $memberName))
+                ->take(2)
+                ->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))
+                ->implode('');
+
+            /** @var ImagickDraw $initDraw */
+            $initDraw = new ImagickDraw;
+            $initDraw->setFont(self::fontPath());
+            $initDraw->setFontSize(80);
+            $initDraw->setFillColor(new ImagickPixel('#6b7280'));
+            $initDraw->setTextAlignment(Imagick::ALIGN_CENTER);
+            $badge->annotateImage($initDraw, (int) $cx, (int) ($cy + 30), 0, $initials);
+        }
+
+        // --- QR code ---
+        $qrPng = (new Writer(
+            new ImageRenderer(
+                new RendererStyle(self::BADGE_QR_SIZE, 0, null, null, Fill::uniformColor(
+                    new Rgb(...self::BADGE_QR_BG),
+                    new Rgb(...self::BADGE_QR_FG),
+                )),
+                new ImagickImageBackEnd
+            )
+        ))->writeString($qrData);
+
+        /** @var Imagick $qrImage */
+        $qrImage = new Imagick;
+        $qrImage->readImageBlob($qrPng);
+        $badge->compositeImage($qrImage, Imagick::COMPOSITE_OVER, self::BADGE_QR_X, self::BADGE_QR_Y);
+
+        // --- Text: Name ---
+        $nameText = mb_strtoupper($memberName);
+        $nameFontSize = $this->fitTextToWidth($badge, $nameText, self::BADGE_NAME_FONT_MAX, self::BADGE_NAME_FONT_MIN, self::BADGE_TEXT_MAX_WIDTH);
+
+        /** @var ImagickDraw $nameDraw */
+        $nameDraw = new ImagickDraw;
+        $nameDraw->setFont(self::fontPath());
+        $nameDraw->setFontSize($nameFontSize);
+        $nameDraw->setFillColor(new ImagickPixel(self::BADGE_TEXT_DARK));
+        $nameDraw->setTextAlignment(Imagick::ALIGN_CENTER);
+        $nameDraw->setTextAntialias(true);
+        $badge->annotateImage($nameDraw, self::BADGE_PANEL_CENTER_X, self::BADGE_NAME_Y, 0, $nameText);
+
+        // --- Text: Company ---
+        $companyText = $companyName;
+        $companyFontSize = $this->fitTextToWidth($badge, $companyText, self::BADGE_COMPANY_FONT_MAX, self::BADGE_COMPANY_FONT_MIN, self::BADGE_TEXT_MAX_WIDTH);
+
+        /** @var ImagickDraw $companyDraw */
+        $companyDraw = new ImagickDraw;
+        $companyDraw->setFont(self::fontPath());
+        $companyDraw->setFontSize($companyFontSize);
+        $companyDraw->setFillColor(new ImagickPixel(self::BADGE_TEXT_DARK));
+        $companyDraw->setTextAlignment(Imagick::ALIGN_CENTER);
+        $companyDraw->setTextAntialias(true);
+        $badge->annotateImage($companyDraw, self::BADGE_PANEL_CENTER_X, self::BADGE_COMPANY_Y, 0, $companyText);
+
+        // --- Text: Stall ---
+        /** @var ImagickDraw $stallDraw */
+        $stallDraw = new ImagickDraw;
+        $stallDraw->setFont(self::fontPath());
+        $stallDraw->setFontSize(self::BADGE_STALL_FONT);
+        $stallDraw->setFillColor(new ImagickPixel('#6b7280'));
+        $stallDraw->setTextAlignment(Imagick::ALIGN_CENTER);
+        $stallDraw->setTextAntialias(true);
+        $badge->annotateImage($stallDraw, self::BADGE_PANEL_CENTER_X, self::BADGE_STALL_Y, 0, 'Stall: '.$stallNumbers);
+
+        $badge->setImageFormat('jpeg');
+        $badge->setImageCompressionQuality(92);
+
+        return $badge->getImageBlob();
+    }
+
+    /**
+     * Find the largest font size where the text fits within the given max width.
      */
     private function fitFontSize(Imagick $img, string $text): int
     {
@@ -168,5 +351,25 @@ class QrCodeService
         }
 
         return self::NAME_FONT_MIN;
+    }
+
+    /**
+     * Find the largest font size (between $max and $min) where $text fits within $maxWidth pixels.
+     */
+    private function fitTextToWidth(Imagick $img, string $text, int $max, int $min, int $maxWidth): int
+    {
+        /** @var ImagickDraw $draw */
+        $draw = new ImagickDraw;
+        $draw->setFont(self::fontPath());
+
+        for ($size = $max; $size >= $min; $size -= 1) {
+            $draw->setFontSize($size);
+            $metrics = $img->queryFontMetrics($draw, $text);
+            if ($metrics['textWidth'] <= $maxWidth) {
+                return $size;
+            }
+        }
+
+        return $min;
     }
 }

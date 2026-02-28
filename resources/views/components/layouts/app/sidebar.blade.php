@@ -19,31 +19,41 @@
                     wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
             </flux:navlist.group>
 
-            <flux:navlist.group :heading="__('Management')" class="grid">
-                <flux:navlist.item icon="building-office" :href="route('admin.exhibitions.index')"
-                    :current="request()->routeIs('admin.exhibitions.*')" wire:navigate>{{ __('Exhibitions') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="clipboard-document-list" :href="route('admin.inquiries.index')"
-                    :current="request()->routeIs('admin.inquiries.*')" wire:navigate>{{ __('Inquiries') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="identification" :href="route('admin.exhibitors.index')"
-                    :current="request()->routeIs('admin.exhibitors.*')" wire:navigate>{{ __('Exhibitors') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="user-group" :href="route('admin.visitors.index')"
-                    :current="request()->routeIs('admin.visitors.*')" wire:navigate>{{ __('Visitors') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="users" :href="route('admin.staff-members.index')"
-                    :current="request()->routeIs('admin.staff-members.*')" wire:navigate>{{ __('Staff Members') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="ticket" :href="route('admin.support-tickets.index')"
-                    :current="request()->routeIs('admin.support-tickets.*')" wire:navigate>{{ __('Support Tickets') }}
-                </flux:navlist.item>
-                @if(auth()->user()->email === 'viraj@sgcci.in')
-                    <flux:navlist.item icon="circle-stack" :href="route('admin.database-backups')"
-                        :current="request()->routeIs('admin.database-backups')" wire:navigate>{{ __('Database Backups') }}
+            @if(auth()->user()->isExhibitor())
+                <flux:navlist.group :heading="__('Exhibitor')" class="grid">
+                    <flux:navlist.item icon="identification" :href="route('exhibitor.badges.index')"
+                        :current="request()->routeIs('exhibitor.badges.*')" wire:navigate>{{ __('Badges') }}
                     </flux:navlist.item>
-                @endif
-            </flux:navlist.group>
+                </flux:navlist.group>
+            @endif
+
+            @if(auth()->user()->isAdmin())
+                <flux:navlist.group :heading="__('Management')" class="grid">
+                    <flux:navlist.item icon="building-office" :href="route('admin.exhibitions.index')"
+                        :current="request()->routeIs('admin.exhibitions.*')" wire:navigate>{{ __('Exhibitions') }}
+                    </flux:navlist.item>
+                    <flux:navlist.item icon="clipboard-document-list" :href="route('admin.inquiries.index')"
+                        :current="request()->routeIs('admin.inquiries.*')" wire:navigate>{{ __('Inquiries') }}
+                    </flux:navlist.item>
+                    <flux:navlist.item icon="identification" :href="route('admin.exhibitors.index')"
+                        :current="request()->routeIs('admin.exhibitors.*')" wire:navigate>{{ __('Exhibitors') }}
+                    </flux:navlist.item>
+                    <flux:navlist.item icon="user-group" :href="route('admin.visitors.index')"
+                        :current="request()->routeIs('admin.visitors.*')" wire:navigate>{{ __('Visitors') }}
+                    </flux:navlist.item>
+                    <flux:navlist.item icon="users" :href="route('admin.staff-members.index')"
+                        :current="request()->routeIs('admin.staff-members.*')" wire:navigate>{{ __('Staff Members') }}
+                    </flux:navlist.item>
+                    <flux:navlist.item icon="ticket" :href="route('admin.support-tickets.index')"
+                        :current="request()->routeIs('admin.support-tickets.*')" wire:navigate>{{ __('Support Tickets') }}
+                    </flux:navlist.item>
+                    @if(auth()->user()->email === 'viraj@sgcci.in')
+                        <flux:navlist.item icon="circle-stack" :href="route('admin.database-backups')"
+                            :current="request()->routeIs('admin.database-backups')" wire:navigate>{{ __('Database Backups') }}
+                        </flux:navlist.item>
+                    @endif
+                </flux:navlist.group>
+            @endif
         </flux:navlist>
 
         <flux:spacer />
