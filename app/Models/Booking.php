@@ -81,6 +81,8 @@ class Booking extends Model
         'payment_tracking_id',
         'payment_bank_ref_no',
         'payment_initiated_at',
+        'exhibitor_user_id',
+        'login_password',
     ];
 
     protected $attributes = [
@@ -410,7 +412,7 @@ class Booking extends Model
      */
     public function isPaymentPending(): bool
     {
-        return in_array($this->status, [BookingStatus::Allotted, BookingStatus::PaymentPending]) && ! $this->isPaymentCompleted();
+        return in_array($this->status, [BookingStatus::PaymentCompleted, BookingStatus::PaymentPending]) && ! $this->isPaymentCompleted();
     }
 
     /**
@@ -489,7 +491,7 @@ class Booking extends Model
         // If payment is now complete
         if ($newRemainingAmount <= 0) {
             $updateData['payment_completed_at'] = now();
-            $updateData['status'] = BookingStatus::Allotted;
+            $updateData['status'] = BookingStatus::PaymentCompleted;
             $updateData['payment_method'] = $method;
             if ($transactionId) {
                 $updateData['payment_transaction_id'] = $transactionId;
@@ -556,6 +558,11 @@ class Booking extends Model
     public function blockedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'blocked_by');
+    }
+
+    public function exhibitorUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'exhibitor_user_id');
     }
 
     public function supportTickets(): HasMany

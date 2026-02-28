@@ -8,6 +8,7 @@ use App\Http\Controllers\VisitorPaymentController;
 use App\Http\Controllers\VisitorScanController;
 use App\Livewire\Admin\DatabaseBackups;
 use App\Livewire\Admin\Exhibitions\Index as ExhibitionsIndex;
+use App\Livewire\Admin\Exhibitors\Index as ExhibitorsIndex;
 use App\Livewire\Admin\Inquiries\EditBooking as AdminEditBooking;
 use App\Livewire\Admin\Inquiries\Index as InquiriesIndex;
 use App\Livewire\Admin\Inquiries\Show as InquiriesShow;
@@ -96,6 +97,7 @@ Route::middleware(['auth'])->group(function () {
     // Admin routes
     Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         Route::get('exhibitions', ExhibitionsIndex::class)->name('exhibitions.index');
+        Route::get('exhibitors', ExhibitorsIndex::class)->name('exhibitors.index');
         Route::get('inquiries', InquiriesIndex::class)->name('inquiries.index');
         Route::get('inquiries/{booking}', InquiriesShow::class)->name('inquiries.show');
         Route::get('inquiries/{booking}/edit', AdminEditBooking::class)->name('inquiries.edit');
@@ -129,4 +131,4 @@ Route::get('{exhibition:slug}/visitors/{registrationCode}', VisitorScanControlle
 //     ]);
 // });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

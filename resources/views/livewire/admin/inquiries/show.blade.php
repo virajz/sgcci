@@ -188,7 +188,7 @@
                     @if (
                         $booking->amount_paid > 0 ||
                             $booking->status === \App\BookingStatus::PaymentPending ||
-                            $booking->status === \App\BookingStatus::Allotted)
+                            $booking->status === \App\BookingStatus::PaymentCompleted)
                         <flux:separator />
 
                         <div class="space-y-3">
@@ -426,21 +426,32 @@
                             <span wire:loading wire:target="reEnableExpiredBooking">Re-enabling...</span>
                         </flux:button>
                     </div>
-                @elseif (in_array($booking->status, [\App\BookingStatus::Allotted, \App\BookingStatus::PaymentCompleted]) &&
-                        auth()->user()->isAdmin())
+                @elseif ($booking->status === \App\BookingStatus::PaymentCompleted && auth()->user()->isAdmin())
                     <div class="space-y-3">
                         <flux:callout variant="info" class="mb-4">
-                            @if ($booking->status === \App\BookingStatus::Allotted)
-                                Stalls have been allotted and payment has been completed.
-                            @else
-                                Payment completed successfully.
-                            @endif
+                            Payment completed successfully.
                         </flux:callout>
 
                         @if ($booking->amount_paid > 0 && auth()->user()->isSuperAdmin())
                             <flux:button wire:click="openRefundModal" variant="danger" class="w-full"
                                 icon="receipt-refund" iconVariant="outline">
                                 Refund Payment
+                            </flux:button>
+                        @endif
+
+                        @if ($booking->login_password)
+                            <flux:button x-data
+                                x-on:click="navigator.clipboard.writeText(
+                                    'Login URL: {{ route('login') }}\nEmail: {{ $booking->email }}\nPhone: {{ $booking->phone_number }}\nPassword: {{ $booking->login_password }}'
+                                ).then(() => {
+                                    $flux.toast({
+                                        variant: 'success',
+                                        heading: 'Copied!',
+                                        text: 'Login details copied to clipboard'
+                                    });
+                                })"
+                                variant="outline" class="w-full" icon="clipboard-document" iconVariant="outline">
+                                Copy Login Details
                             </flux:button>
                         @endif
 
@@ -466,7 +477,7 @@
                             \App\BookingStatus::Refunded,
                             \App\BookingStatus::Rejected,
                         ]) &&
-                        !in_array($booking->status, [\App\BookingStatus::Allotted, \App\BookingStatus::PaymentCompleted]))
+                        $booking->status !== \App\BookingStatus::PaymentCompleted)
                     <flux:separator class="my-4" />
                     <flux:button wire:click="openReleaseModal" variant="outline" class="w-full" icon="lock-open"
                         iconVariant="outline">
@@ -515,8 +526,7 @@
                             <div class="pb-3 border-b dark:border-zinc-700">
                                 <div class="flex items-center gap-2 mb-1">
                                     <flux:icon.check class="w-4 h-4 text-green-500" />
-                                    <flux:subheading class="text-sm">Payment Completed & Stalls Allotted
-                                    </flux:subheading>
+                                    <flux:subheading class="text-sm">Payment Completed</flux:subheading>
                                 </div>
                                 <flux:text class="text-xs text-zinc-500">
                                     {{ $booking->payment_completed_at->format('M d, Y h:i A') }}

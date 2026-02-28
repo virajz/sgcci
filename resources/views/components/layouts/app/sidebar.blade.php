@@ -26,6 +26,9 @@
                 <flux:navlist.item icon="clipboard-document-list" :href="route('admin.inquiries.index')"
                     :current="request()->routeIs('admin.inquiries.*')" wire:navigate>{{ __('Inquiries') }}
                 </flux:navlist.item>
+                <flux:navlist.item icon="identification" :href="route('admin.exhibitors.index')"
+                    :current="request()->routeIs('admin.exhibitors.*')" wire:navigate>{{ __('Exhibitors') }}
+                </flux:navlist.item>
                 <flux:navlist.item icon="user-group" :href="route('admin.visitors.index')"
                     :current="request()->routeIs('admin.visitors.*')" wire:navigate>{{ __('Visitors') }}
                 </flux:navlist.item>

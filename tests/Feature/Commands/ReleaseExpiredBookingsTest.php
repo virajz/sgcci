@@ -102,7 +102,7 @@ test('command only releases payment pending bookings', function () {
 
     $allotted = Booking::factory()->create([
         'exhibition_id' => $exhibition->id,
-        'status' => BookingStatus::Allotted,
+        'status' => BookingStatus::PaymentCompleted,
         'payment_due_at' => now()->subHours(2),
     ]);
 
@@ -129,7 +129,7 @@ test('command only releases payment pending bookings', function () {
     $paymentPending->refresh();
 
     expect($pendingApproval->status)->toBe(BookingStatus::PendingApproval)
-        ->and($allotted->status)->toBe(BookingStatus::Allotted)
+        ->and($allotted->status)->toBe(BookingStatus::PaymentCompleted)
         ->and($rejected->status)->toBe(BookingStatus::Rejected)
         ->and($paymentPending->status)->toBe(BookingStatus::Expired);
 });

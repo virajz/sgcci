@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -69,5 +70,15 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin' || $this->isSuperAdmin();
+    }
+
+    public function isExhibitor(): bool
+    {
+        return $this->role === 'exhibitor';
+    }
+
+    public function booking(): HasOne
+    {
+        return $this->hasOne(Booking::class, 'exhibitor_user_id');
     }
 }

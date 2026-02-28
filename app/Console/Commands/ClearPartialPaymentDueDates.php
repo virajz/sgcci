@@ -43,7 +43,7 @@ class ClearPartialPaymentDueDates extends Command
             ->where('amount_paid', '>', 0)
             ->whereNotNull('payment_due_at')
             ->where('remaining_amount', '>', 0)
-            ->whereIn('status', [BookingStatus::PaymentPending, BookingStatus::Allotted])
+            ->whereIn('status', [BookingStatus::PaymentPending, BookingStatus::PaymentCompleted])
             ->get();
 
         if ($bookings->isEmpty()) {

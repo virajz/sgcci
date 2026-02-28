@@ -330,7 +330,7 @@ class Show extends Component
         }
 
         $this->booking->update([
-            'status' => BookingStatus::Allotted,
+            'status' => BookingStatus::PaymentCompleted,
             'payment_completed_at' => now(),
         ]);
 

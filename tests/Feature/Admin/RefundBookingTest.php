@@ -14,7 +14,7 @@ test('super admin can refund booking with payment', function () {
     $exhibition = Exhibition::factory()->create();
     $booking = Booking::factory()->create([
         'exhibition_id' => $exhibition->id,
-        'status' => BookingStatus::Allotted,
+        'status' => BookingStatus::PaymentCompleted,
         'amount_paid' => 50000,
         'payment_completed_at' => now(),
     ]);
@@ -69,7 +69,7 @@ test('admin cannot refund booking', function () {
     $exhibition = Exhibition::factory()->create();
     $booking = Booking::factory()->create([
         'exhibition_id' => $exhibition->id,
-        'status' => BookingStatus::Allotted,
+        'status' => BookingStatus::PaymentCompleted,
         'amount_paid' => 50000,
         'payment_completed_at' => now(),
     ]);
@@ -85,7 +85,7 @@ test('admin cannot refund booking', function () {
     $booking->refresh();
 
     // Status should not have changed
-    expect($booking->status)->toBe(BookingStatus::Allotted)
+    expect($booking->status)->toBe(BookingStatus::PaymentCompleted)
         ->and($booking->refunded_by)->toBeNull()
         ->and($booking->refunded_at)->toBeNull();
 });
@@ -95,7 +95,7 @@ test('refund requires reason with minimum length', function () {
     $exhibition = Exhibition::factory()->create();
     $booking = Booking::factory()->create([
         'exhibition_id' => $exhibition->id,
-        'status' => BookingStatus::Allotted,
+        'status' => BookingStatus::PaymentCompleted,
         'amount_paid' => 50000,
     ]);
 
@@ -128,7 +128,7 @@ test('refund requires reason field', function () {
     $exhibition = Exhibition::factory()->create();
     $booking = Booking::factory()->create([
         'exhibition_id' => $exhibition->id,
-        'status' => BookingStatus::Allotted,
+        'status' => BookingStatus::PaymentCompleted,
         'amount_paid' => 50000,
     ]);
 
@@ -168,7 +168,7 @@ test('refund button visible for super admin on paid bookings', function () {
     $exhibition = Exhibition::factory()->create();
     $booking = Booking::factory()->create([
         'exhibition_id' => $exhibition->id,
-        'status' => BookingStatus::Allotted,
+        'status' => BookingStatus::PaymentCompleted,
         'amount_paid' => 50000,
         'payment_completed_at' => now(),
     ]);
@@ -199,7 +199,7 @@ test('refund button not visible for regular admin', function () {
     $exhibition = Exhibition::factory()->create();
     $booking = Booking::factory()->create([
         'exhibition_id' => $exhibition->id,
-        'status' => BookingStatus::Allotted,
+        'status' => BookingStatus::PaymentCompleted,
         'amount_paid' => 50000,
         'payment_completed_at' => now(),
     ]);
@@ -237,7 +237,7 @@ test('refund modal shows payment amount', function () {
     $amountPaid = 75000.50;
     $booking = Booking::factory()->create([
         'exhibition_id' => $exhibition->id,
-        'status' => BookingStatus::Allotted,
+        'status' => BookingStatus::PaymentCompleted,
         'amount_paid' => $amountPaid,
         'payment_completed_at' => now(),
     ]);

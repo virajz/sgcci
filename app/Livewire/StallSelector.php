@@ -44,7 +44,6 @@ class StallSelector extends Component
         // Define status priority (higher number = higher priority)
         $statusPriority = [
             'payment_completed' => 3,
-            'allotted' => 2,
             'payment_pending' => 1,
             'approved_by_admin' => 1,
             'pending_approval' => 1,
@@ -57,7 +56,7 @@ class StallSelector extends Component
                     // Map statuses for UI display
                     $uiStatus = match ($booking->status->value) {
                         'payment_completed' => 'allotted',
-                        'pending_approval', 'approved_by_admin', 'payment_pending', 'allotted' => 'reserved',
+                        'pending_approval', 'approved_by_admin', 'payment_pending' => 'reserved',
                         'rejected', 'expired', 'cancelled' => null, // These stalls are available again
                         default => null,
                     };

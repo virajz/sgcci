@@ -119,12 +119,12 @@ test('admin cannot re-enable refunded booking', function () {
     expect($booking->status)->toBe(BookingStatus::Refunded);
 });
 
-test('admin cannot re-enable allotted booking', function () {
+test('admin cannot re-enable payment completed booking', function () {
     $admin = User::factory()->admin()->create();
     $exhibition = Exhibition::factory()->create();
     $booking = Booking::factory()->create([
         'exhibition_id' => $exhibition->id,
-        'status' => BookingStatus::Allotted,
+        'status' => BookingStatus::PaymentCompleted,
         'payment_completed_at' => now(),
     ]);
 
@@ -136,7 +136,7 @@ test('admin cannot re-enable allotted booking', function () {
     $booking->refresh();
 
     // Status should not have changed
-    expect($booking->status)->toBe(BookingStatus::Allotted);
+    expect($booking->status)->toBe(BookingStatus::PaymentCompleted);
 });
 
 test('admin cannot re-enable payment pending booking', function () {

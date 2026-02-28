@@ -52,7 +52,7 @@ test('super admin can approve and send payment link setting status to payment pe
         ->and($booking->payment_due_at)->not->toBeNull();
 });
 
-test('super admin can mark payment as completed and allot stalls', function () {
+test('super admin can mark payment as completed', function () {
     $superAdmin = User::factory()->create(['role' => 'super_admin']);
     $exhibition = Exhibition::factory()->create();
     $booking = Booking::factory()->create([
@@ -73,7 +73,7 @@ test('super admin can mark payment as completed and allot stalls', function () {
 
     $booking->refresh();
 
-    expect($booking->status)->toBe(BookingStatus::Allotted)
+    expect($booking->status)->toBe(BookingStatus::PaymentCompleted)
         ->and($booking->payment_completed_at)->not->toBeNull();
 });
 
@@ -129,10 +129,10 @@ test('stalls are only counted as allotted after payment completion', function ()
         'selected_stalls' => ['35', '47'],
     ]);
 
-    // Create a booking that's allotted (payment completed)
-    $allottedBooking = Booking::factory()->create([
+    // Create a booking that's payment completed
+    $completedBooking = Booking::factory()->create([
         'exhibition_id' => $exhibition->id,
-        'status' => BookingStatus::Allotted,
+        'status' => BookingStatus::PaymentCompleted,
         'selected_stalls' => ['59', '71'],
         'payment_completed_at' => now(),
     ]);
@@ -141,16 +141,16 @@ test('stalls are only counted as allotted after payment completion', function ()
     $stallSelector->exhibitionId = $exhibition->id;
     $bookedStalls = $stallSelector->getBookedStallsProperty();
 
-    // Payment pending stalls should be 'reserved', not 'allotted'
+    // Payment pending stalls should show as 'reserved'
     expect($bookedStalls['35'])->toBe('reserved')
         ->and($bookedStalls['47'])->toBe('reserved');
 
-    // Allotted stalls (but status is Allotted not PaymentCompleted) should be 'reserved'
-    expect($bookedStalls['59'])->toBe('reserved')
-        ->and($bookedStalls['71'])->toBe('reserved');
+    // Payment completed stalls should show as 'allotted' (UI term)
+    expect($bookedStalls['59'])->toBe('allotted')
+        ->and($bookedStalls['71'])->toBe('allotted');
 });
 
-test('complete booking approval workflow from pending to allotted', function () {
+test('complete booking approval workflow from pending to payment completed', function () {
     $admin = User::factory()->create(['role' => 'admin']);
     $superAdmin = User::factory()->create(['role' => 'super_admin']);
     $exhibition = Exhibition::factory()->create();
@@ -182,6 +182,6 @@ test('complete booking approval workflow from pending to allotted', function () 
         ->call('markPaymentCompleted');
 
     $booking->refresh();
-    expect($booking->status)->toBe(BookingStatus::Allotted)
+    expect($booking->status)->toBe(BookingStatus::PaymentCompleted)
         ->and($booking->payment_completed_at)->not->toBeNull();
 });

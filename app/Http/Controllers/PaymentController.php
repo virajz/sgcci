@@ -26,7 +26,7 @@ class PaymentController extends Controller
         $booking = Booking::where('booking_code', $bookingCode)->firstOrFail();
 
         // Verify booking is eligible for payment
-        if (! in_array($booking->status, [BookingStatus::Allotted, BookingStatus::PaymentPending])) {
+        if (! in_array($booking->status, [BookingStatus::PaymentCompleted, BookingStatus::PaymentPending])) {
             return redirect()->route('exhibitions.booking.thank-you', [
                 'exhibition' => $booking->exhibition_id,
                 'bookingCode' => $bookingCode,
@@ -269,7 +269,7 @@ class PaymentController extends Controller
             ->whereIn('status', [
                 BookingStatus::PendingApproval,
                 BookingStatus::ApprovedByAdmin,
-                BookingStatus::Allotted,
+                BookingStatus::PaymentCompleted,
                 BookingStatus::PaymentPending,
             ])
             ->get()

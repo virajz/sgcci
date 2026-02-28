@@ -90,7 +90,7 @@ test('booking can record full payment', function () {
         ->and($booking->isPaymentCompleted())->toBeTrue()
         ->and($booking->hasPartialPayment())->toBeFalse()
         ->and($booking->getPaymentPercentage())->toBe(100.0)
-        ->and($booking->status)->toBe(BookingStatus::Allotted)
+        ->and($booking->status)->toBe(BookingStatus::PaymentCompleted)
         ->and($booking->payment_completed_at)->not->toBeNull()
         ->and($booking->payment_method)->toBe('bank_transfer')
         ->and($booking->payment_transaction_id)->toBe('TXN456');

@@ -36,7 +36,6 @@
                     <div class="grid grid-cols-2 gap-2">
                         <flux:checkbox wire:model.live="selectedStatuses" value="pending_approval" label="Pending Approval" />
                         <flux:checkbox wire:model.live="selectedStatuses" value="approved_by_admin" label="Approved by Admin" />
-                        <flux:checkbox wire:model.live="selectedStatuses" value="allotted" label="Allotted" />
                         <flux:checkbox wire:model.live="selectedStatuses" value="payment_pending" label="Payment Pending" />
                         <flux:checkbox wire:model.live="selectedStatuses" value="part_payment_received" label="Part Payment Received" />
                         <flux:checkbox wire:model.live="selectedStatuses" value="payment_completed" label="Payment Completed" />
