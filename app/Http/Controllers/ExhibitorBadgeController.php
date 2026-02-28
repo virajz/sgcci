@@ -69,17 +69,26 @@ class ExhibitorBadgeController extends Controller
     {
         $scanUrl = route('exhibitor.scan', $booking->booking_code);
 
-        $photoPath = $member->photo
-            ? Storage::disk('public')->path($member->photo)
-            : null;
+        // Write photo to a temp file so Imagick can read it regardless of storage driver
+        $tmpPhotoPath = null;
+        if ($member->photo && Storage::exists($member->photo)) {
+            $tmpPhotoPath = tempnam(sys_get_temp_dir(), 'badge_photo_');
+            file_put_contents($tmpPhotoPath, Storage::get($member->photo));
+        }
 
-        return $this->qrCodeService->generateBadgeImage(
-            qrData: $scanUrl,
-            memberName: $member->name,
-            companyName: $booking->brand_name,
-            stallNumbers: implode(', ', $booking->selected_stalls),
-            photoPath: $photoPath,
-        );
+        try {
+            return $this->qrCodeService->generateBadgeImage(
+                qrData: $scanUrl,
+                memberName: $member->name,
+                companyName: $booking->brand_name,
+                stallNumbers: implode(', ', $booking->selected_stalls),
+                photoPath: $tmpPhotoPath,
+            );
+        } finally {
+            if ($tmpPhotoPath && file_exists($tmpPhotoPath)) {
+                unlink($tmpPhotoPath);
+            }
+        }
     }
 
     private function authorizeAccess(Booking $booking, ExhibitorBadgeMember $member): void

@@ -91,7 +91,7 @@ class Badges extends Component
         $photoPath = null;
 
         if ($this->memberPhoto) {
-            $photoPath = $this->memberPhoto->store('badge-photos', 'public');
+            $photoPath = $this->memberPhoto->store('badge-photos');
         }
 
         $this->booking->badgeMembers()->create([
@@ -117,9 +117,9 @@ class Badges extends Component
 
         if ($this->memberPhoto) {
             if ($photoPath) {
-                Storage::disk('public')->delete($photoPath);
+                Storage::delete($photoPath);
             }
-            $photoPath = $this->memberPhoto->store('badge-photos', 'public');
+            $photoPath = $this->memberPhoto->store('badge-photos');
         }
 
         $member->update([
@@ -145,7 +145,7 @@ class Badges extends Component
         $member = $this->booking->badgeMembers()->findOrFail($this->deletingMemberId);
 
         if ($member->photo) {
-            Storage::disk('public')->delete($member->photo);
+            Storage::delete($member->photo);
         }
 
         $member->delete();

@@ -64,9 +64,9 @@ class QrCodeService
     /** Colours. */
     private const BADGE_TEXT_DARK = '#1e2d5a';
 
-    private const BADGE_QR_BG = [30, 45, 90];
+    private const BADGE_QR_BG = [255, 255, 255];
 
-    private const BADGE_QR_FG = [255, 255, 255];
+    private const BADGE_QR_FG = [0, 0, 0];
 
     /**
      * Inner blue box pixel coordinates in creative.jpeg (1080×1920).
@@ -101,11 +101,9 @@ class QrCodeService
      */
     private const FONT_RELATIVE_PATH = 'resources/fonts/VerdanaBold.ttf';
 
-    /** Blue box fill colour — used as QR background so it blends in. */
-    private const QR_BG = [57, 49, 134];
+    private const QR_BG = [255, 255, 255];
 
-    /** QR module colour. */
-    private const QR_FG = [255, 255, 255];
+    private const QR_FG = [0, 0, 0];
 
     private static function fontPath(): string
     {
