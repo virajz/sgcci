@@ -27,12 +27,39 @@ class GenerateExhibitorPasswords extends Command
 
         $bookings = Booking::query()
             ->where('status', BookingStatus::PaymentCompleted)
+            ->where('is_manual_block', false)
             ->whereNull('exhibitor_user_id')
             ->with('exhibition')
             ->get();
 
         if ($bookings->isEmpty()) {
             $this->info('No bookings found that need exhibitor accounts.');
+
+            return self::SUCCESS;
+        }
+
+        // Skip admin@sgcci.com
+        $adminSkipped = $bookings->filter(fn ($b) => strtolower($b->email) === 'admin@sgcci.com');
+        if ($adminSkipped->isNotEmpty()) {
+            foreach ($adminSkipped as $b) {
+                $this->warn("Skipping booking {$b->booking_code} — email is admin@sgcci.com");
+            }
+            $bookings = $bookings->reject(fn ($b) => strtolower($b->email) === 'admin@sgcci.com');
+        }
+
+        // Warn and skip duplicate emails
+        $emailCounts = $bookings->groupBy(fn ($b) => strtolower($b->email));
+        $duplicateEmails = $emailCounts->filter(fn ($group) => $group->count() > 1);
+        if ($duplicateEmails->isNotEmpty()) {
+            foreach ($duplicateEmails as $email => $group) {
+                $codes = $group->pluck('booking_code')->join(', ');
+                $this->warn("Skipping bookings with duplicate email '{$email}': {$codes}");
+            }
+            $bookings = $bookings->filter(fn ($b) => $emailCounts->get(strtolower($b->email))->count() === 1);
+        }
+
+        if ($bookings->isEmpty()) {
+            $this->info('No eligible bookings remaining after filtering.');
 
             return self::SUCCESS;
         }

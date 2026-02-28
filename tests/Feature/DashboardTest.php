@@ -15,8 +15,8 @@ test('authenticated users can visit the dashboard', function () {
     $this->get('/dashboard')->assertSuccessful();
 });
 
-test('dashboard displays stat cards', function () {
-    $user = User::factory()->create();
+test('admin dashboard displays all stat cards', function () {
+    $user = User::factory()->admin()->create();
 
     $this->actingAs($user)
         ->get('/dashboard')
@@ -24,7 +24,22 @@ test('dashboard displays stat cards', function () {
         ->assertSee('Available Stalls')
         ->assertSee('Payments Due Soon')
         ->assertSee('Confirmed Bookings')
-        ->assertSee('Pending Reviews');
+        ->assertSee('Pending Reviews')
+        ->assertSee('Visitors Registered');
+});
+
+test('exhibitor dashboard only shows visitors registered stat', function () {
+    $user = User::factory()->create(['role' => 'exhibitor']);
+
+    $this->actingAs($user)
+        ->get('/dashboard')
+        ->assertSuccessful()
+        ->assertSee('Visitors Registered')
+        ->assertDontSee('Available Stalls')
+        ->assertDontSee('Payments Due Soon')
+        ->assertDontSee('Confirmed Bookings')
+        ->assertDontSee('Pending Reviews')
+        ->assertDontSee('Visitor Payments Collected');
 });
 
 test('dashboard shows correct available stalls count', function () {
