@@ -15,7 +15,7 @@ class SyncPendingVisitorPayments extends Command
 {
     protected $signature = 'visitors:sync-pending-payments
                             {--minutes=10 : Only poll records where payment was initiated at least this many minutes ago}
-                            {--limit=50 : Maximum number of records to poll in one run (prevents server overload)}
+                            {--limit=10 : Maximum number of records to poll in one run (prevents server overload)}
                             {--dry-run : Print what would change without actually updating}';
 
     protected $description = 'Poll CCAvenue Order Status API for visitor registrations stuck in payment_pending and resolve them.';
