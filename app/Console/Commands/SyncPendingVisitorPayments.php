@@ -16,6 +16,7 @@ class SyncPendingVisitorPayments extends Command
     protected $signature = 'visitors:sync-pending-payments
                             {--minutes=10 : Only poll records where payment was initiated at least this many minutes ago}
                             {--limit=10 : Maximum number of records to poll in one run (prevents server overload)}
+                            {--expire-hours=24 : Mark as failed if CCAvenue still shows Awaited/Unknown after this many hours}
                             {--dry-run : Print what would change without actually updating}';
 
     protected $description = 'Poll CCAvenue Order Status API for visitor registrations stuck in payment_pending and resolve them.';
@@ -29,6 +30,7 @@ class SyncPendingVisitorPayments extends Command
     {
         $minutesOld = (int) $this->option('minutes');
         $limit = (int) $this->option('limit');
+        $expireHours = (int) $this->option('expire-hours');
         $dryRun = (bool) $this->option('dry-run');
 
         // Only poll records that:
@@ -61,9 +63,12 @@ class SyncPendingVisitorPayments extends Command
 
             $this->line("  [{$visitor->registration_code}] CCAvenue status: {$status['order_status']}");
 
+            $isExpired = $visitor->payment_initiated_at->lt(now()->subHours($expireHours));
+
             match (true) {
                 $orderStatus === 'success' => $this->resolveSuccess($visitor, $status, $dryRun) ?: $resolved++,
                 in_array($orderStatus, ['failure', 'aborted', 'unsuccessful']) => $this->resolveFailure($visitor, $status, $dryRun) ?: $resolved++,
+                $isExpired => $this->resolveExpired($visitor, $status, $expireHours, $dryRun) ?: $resolved++,
                 default => $skipped++,
             };
         }
@@ -109,6 +114,33 @@ class SyncPendingVisitorPayments extends Command
     }
 
     /**
+     * Mark visitor as PaymentFailed because CCAvenue still shows Awaited/Unknown after the expiry window.
+     *
+     * @param  array<string, mixed>  $statusData
+     */
+    private function resolveExpired(ExhibitionVisitor $visitor, array $statusData, int $expireHours, bool $dryRun): void
+    {
+        $this->warn("    → Expiring {$visitor->registration_code} (still '{$statusData['order_status']}' after {$expireHours}h)");
+
+        if ($dryRun) {
+            return;
+        }
+
+        $visitor->update([
+            'status' => VisitorRegistrationStatus::PaymentFailed,
+            'payment_status' => $statusData['order_status'] ?? 'Awaited',
+            'payment_response' => $statusData,
+            'payment_notes' => "Expired via order status poll — no payment after {$expireHours}h",
+        ]);
+
+        Log::info('SyncPendingVisitorPayments: expired via poll', [
+            'registration_code' => $visitor->registration_code,
+            'order_status' => $statusData['order_status'] ?? null,
+            'expire_hours' => $expireHours,
+        ]);
+    }
+
+    /**
      * Mark visitor as PaymentFailed.
      *
      * @param  array<string, mixed>  $statusData
@@ -137,10 +169,10 @@ class SyncPendingVisitorPayments extends Command
     private function sendWhatsAppNotification(ExhibitionVisitor $visitor): void
     {
         $exhibition = $visitor->exhibition;
-        $exhibitionDates = $exhibition->start_date->format('d M Y') . ' to ' . $exhibition->end_date->format('d M Y');
-        $amountPaid = '₹' . number_format((float) $visitor->payment_amount, 2);
+        $exhibitionDates = $exhibition->start_date->format('d M Y').' to '.$exhibition->end_date->format('d M Y');
+        $amountPaid = '₹'.number_format((float) $visitor->payment_amount, 2);
         $primaryFirstName = explode(' ', trim($visitor->name))[0];
-        $primaryImageUrl = config('app.url') . '/' . $exhibition->slug . '/visitor-pass/' . $visitor->registration_code . '/image';
+        $primaryImageUrl = config('app.url').'/'.$exhibition->slug.'/visitor-pass/'.$visitor->registration_code.'/image';
 
         SendWhatsAppCampaign::dispatch(
             campaignName: 'Paidregistration1',
@@ -161,13 +193,13 @@ class SyncPendingVisitorPayments extends Command
             paramsFallbackValue: ['FirstName' => 'Guest'],
             media: [
                 'url' => $primaryImageUrl,
-                'filename' => 'visitor_pass_' . $visitor->registration_code,
+                'filename' => 'visitor_pass_'.$visitor->registration_code,
             ]
         );
 
         foreach ($visitor->additional_persons ?? [] as $index => $person) {
             $personFirstName = explode(' ', trim($person['name']))[0];
-            $personImageUrl = config('app.url') . '/' . $exhibition->slug . '/visitor-pass/' . $visitor->registration_code . '/image?personIndex=' . $index;
+            $personImageUrl = config('app.url').'/'.$exhibition->slug.'/visitor-pass/'.$visitor->registration_code.'/image?personIndex='.$index;
             $personPhone = ! empty($person['phone_number']) ? $person['phone_number'] : $visitor->phone_number;
 
             SendWhatsAppCampaign::dispatch(
@@ -189,7 +221,7 @@ class SyncPendingVisitorPayments extends Command
                 paramsFallbackValue: ['FirstName' => 'Guest'],
                 media: [
                     'url' => $personImageUrl,
-                    'filename' => 'visitor_pass_' . $visitor->registration_code . '_person_' . ($index + 1),
+                    'filename' => 'visitor_pass_'.$visitor->registration_code.'_person_'.($index + 1),
                 ]
             );
         }

@@ -15,5 +15,7 @@ Schedule::command('bookings:send-partial-payment-reminders --force --no-interact
     ->cron('0 9 */2 * *')
     ->when(fn () => now()->lte(Carbon::create(2026, 2, 28)));
 
-// Poll CCAvenue for visitor payments that never returned from the gateway
-Schedule::command('visitors:sync-pending-payments')->everyFifteenMinutes();
+// Poll CCAvenue for visitor payments that never returned from the gateway.
+// --limit=50 clears the existing backlog within a few cycles.
+// --expire-hours=24 auto-fails anything CCAvenue still shows as Awaited/Unknown after 24h.
+Schedule::command('visitors:sync-pending-payments --limit=50 --expire-hours=24')->everyFifteenMinutes();
