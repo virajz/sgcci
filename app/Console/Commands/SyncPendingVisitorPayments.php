@@ -15,6 +15,7 @@ class SyncPendingVisitorPayments extends Command
 {
     protected $signature = 'visitors:sync-pending-payments
                             {--minutes=10 : Only poll records where payment was initiated at least this many minutes ago}
+                            {--limit=50 : Maximum number of records to poll in one run (prevents server overload)}
                             {--dry-run : Print what would change without actually updating}';
 
     protected $description = 'Poll CCAvenue Order Status API for visitor registrations stuck in payment_pending and resolve them.';
@@ -27,16 +28,20 @@ class SyncPendingVisitorPayments extends Command
     public function handle(): int
     {
         $minutesOld = (int) $this->option('minutes');
+        $limit = (int) $this->option('limit');
         $dryRun = (bool) $this->option('dry-run');
 
         // Only poll records that:
         // 1. Are still payment_pending
         // 2. Had payment_initiated_at set (i.e. the customer was actually redirected to CCAvenue)
         // 3. Were initiated at least $minutesOld minutes ago (give live payments time to complete normally)
+        // Oldest-first so the most overdue get resolved first
         $pending = ExhibitionVisitor::query()
             ->where('status', VisitorRegistrationStatus::PaymentPending)
             ->whereNotNull('payment_initiated_at')
             ->where('payment_initiated_at', '<=', now()->subMinutes($minutesOld))
+            ->orderBy('payment_initiated_at')
+            ->limit($limit)
             ->get();
 
         if ($pending->isEmpty()) {
@@ -45,7 +50,7 @@ class SyncPendingVisitorPayments extends Command
             return self::SUCCESS;
         }
 
-        $this->info("Found {$pending->count()} stale pending payment(s). Polling CCAvenue...");
+        $this->info("Found {$pending->count()} stale pending payment(s) (limit: {$limit}). Polling CCAvenue...");
 
         $resolved = 0;
         $skipped = 0;
@@ -132,10 +137,10 @@ class SyncPendingVisitorPayments extends Command
     private function sendWhatsAppNotification(ExhibitionVisitor $visitor): void
     {
         $exhibition = $visitor->exhibition;
-        $exhibitionDates = $exhibition->start_date->format('d M Y').' to '.$exhibition->end_date->format('d M Y');
-        $amountPaid = '₹'.number_format((float) $visitor->payment_amount, 2);
+        $exhibitionDates = $exhibition->start_date->format('d M Y') . ' to ' . $exhibition->end_date->format('d M Y');
+        $amountPaid = '₹' . number_format((float) $visitor->payment_amount, 2);
         $primaryFirstName = explode(' ', trim($visitor->name))[0];
-        $primaryImageUrl = config('app.url').'/'.$exhibition->slug.'/visitor-pass/'.$visitor->registration_code.'/image';
+        $primaryImageUrl = config('app.url') . '/' . $exhibition->slug . '/visitor-pass/' . $visitor->registration_code . '/image';
 
         SendWhatsAppCampaign::dispatch(
             campaignName: 'Paidregistration1',
@@ -156,13 +161,13 @@ class SyncPendingVisitorPayments extends Command
             paramsFallbackValue: ['FirstName' => 'Guest'],
             media: [
                 'url' => $primaryImageUrl,
-                'filename' => 'visitor_pass_'.$visitor->registration_code,
+                'filename' => 'visitor_pass_' . $visitor->registration_code,
             ]
         );
 
         foreach ($visitor->additional_persons ?? [] as $index => $person) {
             $personFirstName = explode(' ', trim($person['name']))[0];
-            $personImageUrl = config('app.url').'/'.$exhibition->slug.'/visitor-pass/'.$visitor->registration_code.'/image?personIndex='.$index;
+            $personImageUrl = config('app.url') . '/' . $exhibition->slug . '/visitor-pass/' . $visitor->registration_code . '/image?personIndex=' . $index;
             $personPhone = ! empty($person['phone_number']) ? $person['phone_number'] : $visitor->phone_number;
 
             SendWhatsAppCampaign::dispatch(
@@ -184,7 +189,7 @@ class SyncPendingVisitorPayments extends Command
                 paramsFallbackValue: ['FirstName' => 'Guest'],
                 media: [
                     'url' => $personImageUrl,
-                    'filename' => 'visitor_pass_'.$visitor->registration_code.'_person_'.($index + 1),
+                    'filename' => 'visitor_pass_' . $visitor->registration_code . '_person_' . ($index + 1),
                 ]
             );
         }
