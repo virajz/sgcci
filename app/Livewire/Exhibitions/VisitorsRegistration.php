@@ -181,24 +181,62 @@ class VisitorsRegistration extends Component
             ? (float) $exhibition->entry_amount * (1 + count($additionalPersonsData))
             : null;
 
-        $visitor = ExhibitionVisitor::create([
-            'exhibition_id' => $this->exhibitionId,
-            'phone_number' => $this->phoneNumber,
-            'name' => $this->name,
-            'company_name' => $this->companyName ?: null,
-            'designation' => $this->designation ?: null,
-            'state' => $this->state,
-            'city' => $this->city,
-            'email' => $this->email ?: null,
-            'business_segment' => $this->segment ?: null,
-            'sub_business_segment' => null,
-            'additional_persons' => ! empty($additionalPersonsData) ? $additionalPersonsData : null,
-            'source' => $this->source,
-            'payment_amount' => $totalAmount,
-            'status' => $exhibition->isPaidEntry()
-                ? VisitorRegistrationStatus::PaymentPending
-                : VisitorRegistrationStatus::Confirmed,
-        ]);
+        $newStatus = $exhibition->isPaidEntry()
+            ? VisitorRegistrationStatus::PaymentPending
+            : VisitorRegistrationStatus::Confirmed;
+
+        // Reuse an existing incomplete registration (payment_pending or payment_failed)
+        // to gracefully handle retries after an abandoned or failed payment.
+        $existingIncomplete = ExhibitionVisitor::query()
+            ->where('exhibition_id', $this->exhibitionId)
+            ->where('phone_number', $this->phoneNumber)
+            ->whereIn('status', [
+                VisitorRegistrationStatus::PaymentPending->value,
+                VisitorRegistrationStatus::PaymentFailed->value,
+            ])
+            ->first();
+
+        if ($existingIncomplete) {
+            $existingIncomplete->update([
+                'name' => $this->name,
+                'company_name' => $this->companyName ?: null,
+                'designation' => $this->designation ?: null,
+                'state' => $this->state,
+                'city' => $this->city,
+                'email' => $this->email ?: null,
+                'business_segment' => $this->segment ?: null,
+                'additional_persons' => ! empty($additionalPersonsData) ? $additionalPersonsData : null,
+                'source' => $this->source,
+                'payment_amount' => $totalAmount,
+                'status' => $newStatus,
+                'payment_initiated_at' => null,
+                'payment_completed_at' => null,
+                'payment_transaction_id' => null,
+                'payment_tracking_id' => null,
+                'payment_bank_ref_no' => null,
+                'payment_status' => null,
+                'payment_response' => null,
+                'payment_notes' => null,
+            ]);
+            $visitor = $existingIncomplete->fresh();
+        } else {
+            $visitor = ExhibitionVisitor::create([
+                'exhibition_id' => $this->exhibitionId,
+                'phone_number' => $this->phoneNumber,
+                'name' => $this->name,
+                'company_name' => $this->companyName ?: null,
+                'designation' => $this->designation ?: null,
+                'state' => $this->state,
+                'city' => $this->city,
+                'email' => $this->email ?: null,
+                'business_segment' => $this->segment ?: null,
+                'sub_business_segment' => null,
+                'additional_persons' => ! empty($additionalPersonsData) ? $additionalPersonsData : null,
+                'source' => $this->source,
+                'payment_amount' => $totalAmount,
+                'status' => $newStatus,
+            ]);
+        }
 
         if ($exhibition->isPaidEntry()) {
             $this->redirect(

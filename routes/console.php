@@ -14,3 +14,6 @@ Schedule::command('bookings:send-payment-reminders')->daily();
 Schedule::command('bookings:send-partial-payment-reminders --force --no-interaction')
     ->cron('0 9 */2 * *')
     ->when(fn () => now()->lte(Carbon::create(2026, 2, 28)));
+
+// Poll CCAvenue for visitor payments that never returned from the gateway
+Schedule::command('visitors:sync-pending-payments')->everyFifteenMinutes();

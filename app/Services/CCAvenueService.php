@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Booking;
 use App\Models\ExhibitionVisitor;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class CCAvenueService
@@ -76,7 +77,7 @@ class CCAvenueService
             'billing_state' => 'Gujarat', // Default to Gujarat for SGCCI
             'billing_zip' => '380009', // Default to SGCCI headquarters pincode
             'billing_country' => 'India',
-            'billing_tel' => str_replace(' ', '', $booking->phone_code.$booking->phone_number),
+            'billing_tel' => str_replace(' ', '', $booking->phone_code . $booking->phone_number),
             'billing_email' => $booking->email,
             'merchant_param1' => (string) $booking->id,
             'merchant_param2' => (string) $booking->exhibition_id,
@@ -104,7 +105,7 @@ class CCAvenueService
 
         $dataString = '';
         foreach ($merchantData as $key => $value) {
-            $dataString .= $key.'='.$value.'&';
+            $dataString .= $key . '=' . $value . '&';
         }
 
         return $this->encrypt(rtrim($dataString, '&'));
@@ -148,7 +149,7 @@ class CCAvenueService
 
         $dataString = '';
         foreach ($merchantData as $key => $value) {
-            $dataString .= $key.'='.$value.'&';
+            $dataString .= $key . '=' . $value . '&';
         }
 
         return $this->encrypt(rtrim($dataString, '&'));
@@ -209,13 +210,106 @@ class CCAvenueService
     }
 
     /**
-     * PKCS5 padding
+     * Query CCAvenue's Order Status API for a given order ID.
+     *
+     * Returns an array with at minimum:
+     *   - 'order_status' : "Success" | "Failure" | "Aborted" | "Not Found" | "Invalid" | "Timeout"
+     *   - 'tracking_id'  : CCAvenue reference number (if available)
+     *   - 'amount'       : amount charged (if available)
+     *   - raw fields from CCAvenue
+     *
+     * @param  string  $orderId  The order_id / registration_code used when initiating payment
+     * @return array<string, mixed>
      */
+    public function checkOrderStatus(string $orderId): array
+    {
+        $requestPayload = json_encode([
+            'merchant_id' => $this->merchantId,
+            'order_no' => $orderId,
+        ]);
+        $encRequest = $this->encrypt($requestPayload);
+
+        $apiUrl = $this->testMode
+            ? 'https://test.ccavenue.com/apis/servlet/DoWebTrans'
+            : 'https://login.ccavenue.com/apis/servlet/DoWebTrans';
+
+        try {
+            $response = Http::asForm()
+                ->timeout(15)
+                ->post($apiUrl, [
+                    'enc_request' => $encRequest,
+                    'access_code' => $this->accessCode,
+                    'request_type' => 'JSON',
+                    'response_type' => 'JSON',
+                    'command' => 'orderStatusTracker',
+                    'version' => '1.1',
+                ]);
+
+            if (! $response->successful()) {
+                Log::error('CCAvenue Order Status API HTTP error', [
+                    'order_id' => $orderId,
+                    'status' => $response->status(),
+                ]);
+
+                return ['order_status' => 'Timeout'];
+            }
+
+            // CCAvenue returns URL-encoded form data: "status=0&enc_response=..."
+            parse_str(trim($response->body()), $parsed);
+
+            if (empty($parsed['enc_response'])) {
+                Log::warning('CCAvenue Order Status API returned no enc_response', [
+                    'order_id' => $orderId,
+                    'body' => $response->body(),
+                ]);
+
+                return ['order_status' => 'Invalid'];
+            }
+
+            $decrypted = $this->decrypt($parsed['enc_response']);
+            $data = json_decode($decrypted, true) ?? [];
+
+            // The status API returns "Shipped" for a successful payment; normalise
+            // to "Success" so it is consistent with the redirect response handler.
+            $rawStatus = $data['order_status'] ?? 'Unknown';
+            $normalisedStatus = match (strtolower($rawStatus)) {
+                'shipped' => 'Success',
+                'awaited', 'initiated' => 'Awaited',
+                default => $rawStatus,
+            };
+
+            $normalised = [
+                'order_status' => $normalisedStatus,
+                'tracking_id' => $data['reference_no'] ?? null,
+                'bank_ref_no' => $data['order_bank_ref_no'] ?? null,
+                'amount' => $data['order_amt'] ?? null,
+                'order_id' => $data['order_no'] ?? $orderId,
+                'payment_mode' => $data['order_card_name'] ?? null,
+            ];
+
+            Log::info('CCAvenue Order Status API response', [
+                'order_id' => $orderId,
+                'raw_status' => $rawStatus,
+                'order_status' => $normalisedStatus,
+                'tracking_id' => $normalised['tracking_id'],
+            ]);
+
+            return $normalised;
+        } catch (\Exception $e) {
+            Log::error('CCAvenue Order Status API exception', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['order_status' => 'Timeout'];
+        }
+    }
+
     private function pkcs5Pad(string $plainText, int $blockSize): string
     {
         $pad = $blockSize - (strlen($plainText) % $blockSize);
 
-        return $plainText.str_repeat(chr($pad), $pad);
+        return $plainText . str_repeat(chr($pad), $pad);
     }
 
     /**
