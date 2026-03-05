@@ -176,7 +176,7 @@ class Index extends Component
                         ->orWhereRaw('LOWER(company_name) LIKE ?', ["%{$search}%"])
                         ->orWhereRaw('LOWER(email) LIKE ?', ["%{$search}%"])
                         ->orWhere('phone_number', 'like', "%{$search}%")
-                        ->orWhere('registration_code', 'like', "%{$search}%");
+                        ->orWhereRaw('LOWER(registration_code) LIKE ?', ["%{$search}%"]);
                 });
             })
             ->when($this->statusFilter, function ($query) {
