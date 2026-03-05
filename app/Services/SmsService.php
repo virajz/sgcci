@@ -257,7 +257,7 @@ class SmsService
                 'Dear Exhibitor, kindly find your login credentials for %s Exhibitors Badges and other Services, URL: - %s, Id: - %s, Pwd:-%s, Thanking you, SGCCI - %s',
                 $variables['exhibition'],
                 $variables['login_url'],
-                $variables['phone_number'],
+                $variables['email'],
                 $variables['password'],
                 $variables['exhibition']
             ),

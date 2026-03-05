@@ -14,6 +14,7 @@ class ExhibitorBadgeMember extends Model
     protected $fillable = [
         'booking_id',
         'name',
+        'phone_number',
         'photo',
     ];
 

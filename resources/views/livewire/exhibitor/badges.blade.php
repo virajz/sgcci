@@ -87,7 +87,12 @@
                         </button>
 
                         <div class="flex items-center justify-between gap-2 p-3">
-                            <flux:text class="font-semibold truncate">{{ $member->name }}</flux:text>
+                            <div class="min-w-0">
+                                <flux:text class="font-semibold truncate">{{ $member->name }}</flux:text>
+                                @if ($member->phone_number)
+                                    <flux:text class="text-xs truncate text-zinc-500 dark:text-zinc-400">{{ $member->phone_number }}</flux:text>
+                                @endif
+                            </div>
                             <div class="flex flex-shrink-0 gap-1">
                                 <flux:button size="sm" variant="ghost" icon="pencil" iconVariant="outline"
                                     wire:click="openEditModal({{ $member->id }})" />
@@ -157,6 +162,12 @@
             </flux:field>
 
             <flux:field>
+                <flux:label>Phone Number</flux:label>
+                <flux:input wire:model="memberPhoneNumber" placeholder="+91 98765 43210" />
+                <flux:error name="memberPhoneNumber" />
+            </flux:field>
+
+            <flux:field>
                 <flux:label>Photo <span class="text-zinc-400">(optional)</span></flux:label>
                 <flux:input type="file" wire:model="memberPhoto" accept="image/*" />
                 <flux:description>Max 2MB. JPG, PNG, or WEBP.</flux:description>
@@ -189,6 +200,12 @@
                 <flux:label>Name</flux:label>
                 <flux:input wire:model="memberName" placeholder="Full name" />
                 <flux:error name="memberName" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>Phone Number</flux:label>
+                <flux:input wire:model="memberPhoneNumber" placeholder="+91 98765 43210" />
+                <flux:error name="memberPhoneNumber" />
             </flux:field>
 
             <flux:field>

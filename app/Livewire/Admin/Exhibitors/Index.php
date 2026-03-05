@@ -344,7 +344,7 @@ class Index extends Component
             variables: [
                 'exhibition' => $booking->exhibition?->title ?? 'SGCCI Auto Expo',
                 'login_url' => route('login'),
-                'phone_number' => $booking->phone_number,
+                'email' => $booking->email,
                 'password' => $booking->login_password,
             ]
         );

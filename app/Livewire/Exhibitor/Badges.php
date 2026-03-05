@@ -37,6 +37,8 @@ class Badges extends Component
 
     public string $memberName = '';
 
+    public string $memberPhoneNumber = '';
+
     public $memberPhoto = null;
 
     public function mount(): void
@@ -71,6 +73,7 @@ class Badges extends Component
         $member = $this->booking->badgeMembers()->findOrFail($memberId);
         $this->editingMemberId = $memberId;
         $this->memberName = $member->name;
+        $this->memberPhoneNumber = $member->phone_number ?? '';
         $this->memberPhoto = null;
         $this->showEditModal = true;
     }
@@ -79,6 +82,7 @@ class Badges extends Component
     {
         $this->validate([
             'memberName' => ['required', 'string', 'max:255'],
+            'memberPhoneNumber' => ['required', 'string', 'max:20'],
             'memberPhoto' => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -96,6 +100,7 @@ class Badges extends Component
 
         $this->booking->badgeMembers()->create([
             'name' => $this->memberName,
+            'phone_number' => $this->memberPhoneNumber,
             'photo' => $photoPath,
         ]);
 
@@ -108,6 +113,7 @@ class Badges extends Component
     {
         $this->validate([
             'memberName' => ['required', 'string', 'max:255'],
+            'memberPhoneNumber' => ['required', 'string', 'max:20'],
             'memberPhoto' => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -124,6 +130,7 @@ class Badges extends Component
 
         $member->update([
             'name' => $this->memberName,
+            'phone_number' => $this->memberPhoneNumber,
             'photo' => $photoPath,
         ]);
 
@@ -158,6 +165,7 @@ class Badges extends Component
     private function resetMemberForm(): void
     {
         $this->memberName = '';
+        $this->memberPhoneNumber = '';
         $this->memberPhoto = null;
         $this->editingMemberId = null;
     }
