@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Exhibitors;
 
 use App\BookingStatus;
+use App\Jobs\SendSmsMessage;
 use App\Models\Booking;
 use App\Models\User;
 use Flux\Flux;
@@ -28,6 +29,14 @@ class Index extends Component
     public array $selectedBookings = [];
 
     public bool $showBulkConfirmModal = false;
+
+    public bool $showBulkSmsConfirmModal = false;
+
+    public bool $showGenerateConfirmModal = false;
+
+    public ?int $confirmGenerateId = null;
+
+    public string $confirmGenerateName = '';
 
     public function mount(): void
     {
@@ -67,23 +76,36 @@ class Index extends Component
         $this->editingBadgeLimitId = null;
     }
 
-    public function generateCredentials(int $bookingId): void
+    public function openGenerateConfirmModal(int $bookingId, string $brandName): void
+    {
+        $this->confirmGenerateId = $bookingId;
+        $this->confirmGenerateName = $brandName;
+        $this->showGenerateConfirmModal = true;
+    }
+
+    public function generateCredentials(): void
     {
         if (! Auth::user()->isAdmin()) {
             Flux::toast(heading: 'Unauthorized', variant: 'danger', text: 'Only admins can generate credentials.');
+            $this->showGenerateConfirmModal = false;
 
             return;
         }
 
-        $booking = Booking::findOrFail($bookingId);
+        $booking = Booking::findOrFail($this->confirmGenerateId);
 
         if ($booking->login_password) {
             Flux::toast(heading: 'Already Generated', variant: 'warning', text: 'Login credentials already exist for this booking.');
+            $this->showGenerateConfirmModal = false;
 
             return;
         }
 
         $this->createExhibitorAccount($booking);
+
+        $this->showGenerateConfirmModal = false;
+        $this->confirmGenerateId = null;
+        $this->confirmGenerateName = '';
 
         Flux::toast(heading: 'Credentials Generated!', variant: 'success', text: "Login credentials created for {$booking->brand_name}.");
     }
@@ -128,6 +150,87 @@ class Index extends Component
         );
     }
 
+    public function sendCredentialsSms(int $bookingId): void
+    {
+        if (! Auth::user()->isAdmin()) {
+            Flux::toast(heading: 'Unauthorized', variant: 'danger', text: 'Only admins can send SMS.');
+
+            return;
+        }
+
+        $booking = Booking::with('exhibition')->findOrFail($bookingId);
+
+        if (! $booking->login_password) {
+            Flux::toast(heading: 'No Credentials', variant: 'warning', text: 'No login credentials found for this booking.');
+
+            return;
+        }
+
+        $this->dispatchCredentialsSms($booking);
+
+        Flux::toast(heading: 'SMS Sent!', variant: 'success', text: "Login credentials SMS sent to {$booking->brand_name}.");
+    }
+
+    public function openBulkSmsConfirmModal(): void
+    {
+        if (empty($this->selectedBookings)) {
+            Flux::toast(heading: 'No Selection', variant: 'warning', text: 'Please select at least one exhibitor.');
+
+            return;
+        }
+
+        $this->showBulkSmsConfirmModal = true;
+    }
+
+    public function bulkSendCredentialsSms(): void
+    {
+        if (! Auth::user()->isAdmin()) {
+            Flux::toast(heading: 'Unauthorized', variant: 'danger', text: 'Only admins can send SMS.');
+            $this->showBulkSmsConfirmModal = false;
+
+            return;
+        }
+
+        $bookings = Booking::whereIn('id', $this->selectedBookings)
+            ->whereNotNull('login_password')
+            ->with('exhibition')
+            ->get();
+
+        $count = 0;
+        foreach ($bookings as $booking) {
+            $this->dispatchCredentialsSms($booking);
+            $count++;
+        }
+
+        $this->selectedBookings = [];
+        $this->showBulkSmsConfirmModal = false;
+
+        Flux::toast(
+            heading: 'SMS Sent!',
+            variant: 'success',
+            text: "Login credentials SMS sent to {$count} exhibitor(s)."
+        );
+    }
+
+    protected function dispatchCredentialsSms(Booking $booking): void
+    {
+        if (! config('services.sms.enabled')) {
+            return;
+        }
+
+        SendSmsMessage::dispatch(
+            template: 'exhibitor_credentials',
+            phoneCode: $booking->phone_code,
+            phoneNumber: $booking->phone_number,
+            variables: [
+                'exhibition' => $booking->exhibition?->title ?? 'SGCCI Auto Expo',
+                'login_url' => route('login'),
+                'phone_number' => $booking->phone_number,
+                'password' => $booking->login_password,
+            ]
+        );
+    }
+
     protected function createExhibitorAccount(Booking $booking): void
     {
         $plainPassword = 'SGCCI@'.strtoupper(Str::random(6));
@@ -153,6 +256,9 @@ class Index extends Component
             'exhibitor_user_id' => $user->id,
             'login_password' => $plainPassword,
         ]);
+
+        $booking->refresh();
+        $this->dispatchCredentialsSms($booking);
     }
 
     public function render()

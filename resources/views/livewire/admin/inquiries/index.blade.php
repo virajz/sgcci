@@ -254,8 +254,7 @@
 
                                                             @if ($booking->amount_paid > 0 && ! $booking->login_password && Auth::user()->isSuperAdmin())
                                                                 <flux:menu.item icon="arrow-right-circle" iconVariant="outline"
-                                                                    wire:click="moveToExhibitor({{ $booking->id }})"
-                                                                    wire:confirm="Move '{{ $booking->brand_name }}' to exhibitor status? Login credentials will be generated.">
+                                                                    wire:click="openMoveConfirmModal({{ $booking->id }}, '{{ addslashes($booking->brand_name) }}')">
                                                                     Move to Exhibitor
                                                                 </flux:menu.item>
                                                             @endif
@@ -306,6 +305,28 @@
                     <flux:button variant="ghost">Cancel</flux:button>
                 </flux:modal.close>
                 <flux:button wire:click="releaseStall" variant="danger">Release Stall</flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    {{-- Single Move to Exhibitor Modal --}}
+    <flux:modal wire:model="showMoveConfirmModal" class="min-w-[22rem]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Move to Exhibitor?</flux:heading>
+                <flux:text class="mt-2">
+                    Move <strong>{{ $confirmMoveName }}</strong> to the exhibitors list?
+                    Login credentials will be generated. Payment status will remain as Payment Pending.
+                </flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
+                <flux:button wire:click="moveToExhibitor" variant="primary" icon="arrow-right-circle" iconVariant="outline">
+                    Move to Exhibitor
+                </flux:button>
             </div>
         </div>
     </flux:modal>

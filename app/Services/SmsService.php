@@ -253,6 +253,15 @@ class SmsService
                 $variables['pass_link']
             ),
 
+            'exhibitor_credentials' => sprintf(
+                'Dear Exhibitor, kindly find your login credentials for %s Exhibitors Badges and other Services, URL: - %s, Id: - %s, Pwd:-%s, Thanking you, SGCCI - %s',
+                $variables['exhibition'],
+                $variables['login_url'],
+                $variables['phone_number'],
+                $variables['password'],
+                $variables['exhibition']
+            ),
+
             default => throw new \InvalidArgumentException("Unknown SMS template: {$template}")
         };
     }

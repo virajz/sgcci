@@ -1,4 +1,4 @@
-<div class="space-y-6">
+<div class="space-y-6" x-data="{ smsBookingId: null, smsBookingName: '' }">
     <div class="flex items-center justify-between mb-6">
         <flux:heading size="xl">Exhibitors</flux:heading>
     </div>
@@ -12,6 +12,10 @@
             <flux:button variant="primary" icon="key" iconVariant="outline"
                 wire:click="openBulkConfirmModal">
                 Generate Credentials ({{ count($selectedBookings) }})
+            </flux:button>
+            <flux:button variant="filled" icon="chat-bubble-left-ellipsis" iconVariant="outline"
+                wire:click="openBulkSmsConfirmModal">
+                Send SMS ({{ count($selectedBookings) }})
             </flux:button>
         @endif
     </div>
@@ -41,9 +45,7 @@
                             @foreach ($bookings as $booking)
                                 <flux:table.row :key="$booking->id">
                                     <flux:table.cell>
-                                        @if (! $booking->login_password)
-                                            <flux:checkbox :value="$booking->id" />
-                                        @endif
+                                        <flux:checkbox :value="$booking->id" />
                                     </flux:table.cell>
 
                                     <flux:table.cell>
@@ -116,8 +118,7 @@
                                             </div>
                                         @else
                                             <flux:button size="sm" variant="ghost" icon="key" iconVariant="outline"
-                                                wire:click="generateCredentials({{ $booking->id }})"
-                                                wire:confirm="Generate login credentials for {{ $booking->brand_name }}?">
+                                                wire:click="openGenerateConfirmModal({{ $booking->id }}, '{{ addslashes($booking->brand_name) }}')">
                                                 Generate
                                             </flux:button>
                                         @endif
@@ -130,10 +131,18 @@
                                     </flux:table.cell>
 
                                     <flux:table.cell>
-                                        <flux:button size="sm" variant="ghost" icon="identification" iconVariant="outline"
-                                            :href="route('admin.exhibitors.badges', $booking)" wire:navigate>
-                                            Badges
-                                        </flux:button>
+                                        <div class="flex items-center gap-2">
+                                            @if ($booking->login_password)
+                                                <flux:button size="sm" variant="ghost" icon="chat-bubble-left-ellipsis" iconVariant="outline"
+                                                    x-on:click="smsBookingId = {{ $booking->id }}; smsBookingName = '{{ addslashes($booking->brand_name) }}'; $flux.modal('send-sms-confirm').show()">
+                                                    Send SMS
+                                                </flux:button>
+                                            @endif
+                                            <flux:button size="sm" variant="ghost" icon="identification" iconVariant="outline"
+                                                :href="route('admin.exhibitors.badges', $booking)" wire:navigate>
+                                                Badges
+                                            </flux:button>
+                                        </div>
                                     </flux:table.cell>
                                 </flux:table.row>
                             @endforeach
@@ -160,6 +169,28 @@
         @endif
     </flux:card>
 
+    {{-- Single Generate Credentials Modal --}}
+    <flux:modal wire:model="showGenerateConfirmModal" class="min-w-[22rem]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Generate Credentials?</flux:heading>
+                <flux:text class="mt-2">
+                    Generate login credentials for <strong>{{ $confirmGenerateName }}</strong>?
+                    A user account will be created, a password generated, and an SMS will be sent.
+                </flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
+                <flux:button wire:click="generateCredentials" variant="primary" icon="key" iconVariant="outline">
+                    Generate
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
     {{-- Bulk Generate Confirmation Modal --}}
     <flux:modal wire:model="showBulkConfirmModal" class="min-w-[22rem]">
         <div class="space-y-6">
@@ -167,7 +198,7 @@
                 <flux:heading size="lg">Generate Credentials?</flux:heading>
                 <flux:text class="mt-2">
                     Generate login credentials for <strong>{{ count($selectedBookings) }}</strong> selected exhibitor(s)?
-                    This will create user accounts and generate passwords for those without credentials.
+                    This will create user accounts, generate passwords, and send an SMS to each.
                 </flux:text>
             </div>
             <div class="flex gap-2">
@@ -177,6 +208,49 @@
                 </flux:modal.close>
                 <flux:button wire:click="bulkGenerateCredentials" variant="primary" icon="key" iconVariant="outline">
                     Generate
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    {{-- Single Send SMS Modal --}}
+    <flux:modal name="send-sms-confirm" class="min-w-[22rem]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Send SMS?</flux:heading>
+                <flux:text class="mt-2">
+                    Resend login credentials via SMS to <strong x-text="smsBookingName"></strong>?
+                </flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
+                <flux:button x-on:click="$wire.sendCredentialsSms(smsBookingId); $flux.modal('send-sms-confirm').close()" variant="primary" icon="chat-bubble-left-ellipsis" iconVariant="outline">
+                    Send SMS
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    {{-- Bulk Send SMS Modal --}}
+    <flux:modal wire:model="showBulkSmsConfirmModal" class="min-w-[22rem]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Send SMS?</flux:heading>
+                <flux:text class="mt-2">
+                    Send login credentials via SMS to <strong>{{ count($selectedBookings) }}</strong> selected exhibitor(s)?
+                    Only exhibitors with generated credentials will receive an SMS.
+                </flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
+                <flux:button wire:click="bulkSendCredentialsSms" variant="primary" icon="chat-bubble-left-ellipsis" iconVariant="outline">
+                    Send SMS
                 </flux:button>
             </div>
         </div>

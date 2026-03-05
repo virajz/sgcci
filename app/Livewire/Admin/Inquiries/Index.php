@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Inquiries;
 
 use App\BookingStatus;
+use App\Jobs\SendSmsMessage;
 use App\Models\Booking;
 use App\Models\User;
 use Flux\Flux;
@@ -32,6 +33,12 @@ class Index extends Component
     public array $selectedBookings = [];
 
     public bool $showBulkMoveModal = false;
+
+    public bool $showMoveConfirmModal = false;
+
+    public ?int $confirmMoveId = null;
+
+    public string $confirmMoveName = '';
 
     public array $visibleColumns = [
         'booking_code' => true,
@@ -189,31 +196,59 @@ class Index extends Component
             'exhibitor_user_id' => $user->id,
             'login_password' => $plainPassword,
         ]);
+
+        if (config('services.sms.enabled')) {
+            SendSmsMessage::dispatch(
+                template: 'exhibitor_credentials',
+                phoneCode: $booking->phone_code,
+                phoneNumber: $booking->phone_number,
+                variables: [
+                    'exhibition' => $booking->exhibition?->title ?? 'SGCCI Auto Expo',
+                    'login_url' => route('login'),
+                    'phone_number' => $booking->phone_number,
+                    'password' => $plainPassword,
+                ]
+            );
+        }
     }
 
-    public function moveToExhibitor(int $bookingId): void
+    public function openMoveConfirmModal(int $bookingId, string $brandName): void
+    {
+        $this->confirmMoveId = $bookingId;
+        $this->confirmMoveName = $brandName;
+        $this->showMoveConfirmModal = true;
+    }
+
+    public function moveToExhibitor(): void
     {
         if (! Auth::user()->isSuperAdmin()) {
             Flux::toast(heading: 'Unauthorized', variant: 'danger', text: 'Only super admins can move inquiries to exhibitors.');
+            $this->showMoveConfirmModal = false;
 
             return;
         }
 
-        $booking = Booking::findOrFail($bookingId);
+        $booking = Booking::findOrFail($this->confirmMoveId);
 
         if ($booking->status !== BookingStatus::PaymentPending || $booking->amount_paid <= 0) {
             Flux::toast(heading: 'Invalid Booking', variant: 'danger', text: 'Only payment-pending bookings with a partial payment can be moved to exhibitor status.');
+            $this->showMoveConfirmModal = false;
 
             return;
         }
 
         if ($booking->login_password) {
             Flux::toast(heading: 'Already an Exhibitor', variant: 'warning', text: 'This booking already has exhibitor credentials.');
+            $this->showMoveConfirmModal = false;
 
             return;
         }
 
         $this->createExhibitorAccount($booking);
+
+        $this->showMoveConfirmModal = false;
+        $this->confirmMoveId = null;
+        $this->confirmMoveName = '';
 
         Flux::toast(heading: 'Moved to Exhibitor!', variant: 'success', text: "{$booking->brand_name} has been added to the exhibitors list with login credentials generated.");
     }
