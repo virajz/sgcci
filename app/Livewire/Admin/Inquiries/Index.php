@@ -142,7 +142,7 @@ class Index extends Component
 
     public function bulkMoveToExhibitor(): void
     {
-        if (! Auth::user()->isSuperAdmin()) {
+        if (! Auth::user()->isAdmin()) {
             Flux::toast(heading: 'Unauthorized', variant: 'danger', text: 'Only super admins can move inquiries to exhibitors.');
             $this->showBulkMoveModal = false;
 
@@ -221,7 +221,7 @@ class Index extends Component
 
     public function moveToExhibitor(): void
     {
-        if (! Auth::user()->isSuperAdmin()) {
+        if (! Auth::user()->isAdmin()) {
             Flux::toast(heading: 'Unauthorized', variant: 'danger', text: 'Only super admins can move inquiries to exhibitors.');
             $this->showMoveConfirmModal = false;
 

@@ -2,7 +2,7 @@
     <div class="flex items-center justify-between mb-6">
         <flux:heading size="xl">Booking Inquiries</flux:heading>
         <div class="flex items-center gap-2">
-            @if (count($selectedBookings) > 0 && Auth::user()->isSuperAdmin())
+            @if (count($selectedBookings) > 0 && Auth::user()->isAdmin())
                 <flux:button variant="primary" icon="arrow-right-circle" iconVariant="outline"
                     wire:click="openBulkMoveModal">
                     Move to Exhibitor ({{ count($selectedBookings) }})
@@ -57,7 +57,7 @@
                 <flux:checkbox.group wire:model.live="selectedBookings">
                     <flux:table>
                         <flux:table.columns>
-                            @if (Auth::user()->isSuperAdmin())
+                            @if (Auth::user()->isAdmin())
                                 <flux:table.column class="w-10">
                                     <flux:checkbox.all />
                                 </flux:table.column>
@@ -98,7 +98,7 @@
                         <flux:table.rows>
                             @foreach ($bookings as $booking)
                                 <flux:table.row :key="$booking->id">
-                                    @if (Auth::user()->isSuperAdmin())
+                                    @if (Auth::user()->isAdmin())
                                         <flux:table.cell>
                                             @if ($booking->status === \App\BookingStatus::PaymentPending && $booking->amount_paid > 0 && ! $booking->login_password)
                                                 <flux:checkbox :value="$booking->id" />
@@ -252,7 +252,7 @@
                                                                 </flux:menu.item>
                                                             @endif
 
-                                                            @if ($booking->amount_paid > 0 && ! $booking->login_password && Auth::user()->isSuperAdmin())
+                                                            @if ($booking->amount_paid > 0 && ! $booking->login_password && Auth::user()->isAdmin())
                                                                 <flux:menu.item icon="arrow-right-circle" iconVariant="outline"
                                                                     wire:click="openMoveConfirmModal({{ $booking->id }}, '{{ addslashes($booking->brand_name) }}')">
                                                                     Move to Exhibitor
