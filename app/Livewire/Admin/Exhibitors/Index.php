@@ -5,6 +5,7 @@ namespace App\Livewire\Admin\Exhibitors;
 use App\BookingStatus;
 use App\Jobs\SendSmsMessage;
 use App\Models\Booking;
+use App\Models\Exhibition;
 use App\Models\User;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
@@ -37,6 +38,28 @@ class Index extends Component
     public ?int $confirmGenerateId = null;
 
     public string $confirmGenerateName = '';
+
+    public bool $showDeleteExhibitorModal = false;
+
+    public ?int $deleteExhibitorId = null;
+
+    public string $deleteExhibitorName = '';
+
+    public bool $showAddExhibitorModal = false;
+
+    public string $addExhibitorBrandName = '';
+
+    public string $addExhibitorContactPerson = '';
+
+    public string $addExhibitorEmail = '';
+
+    public string $addExhibitorPhoneCode = '+91';
+
+    public string $addExhibitorPhoneNumber = '';
+
+    public ?int $addExhibitorExhibitionId = null;
+
+    public string $addExhibitorStalls = '';
 
     public function mount(): void
     {
@@ -212,6 +235,102 @@ class Index extends Component
         );
     }
 
+    public function confirmDeleteExhibitor(int $bookingId, string $brandName): void
+    {
+        $this->deleteExhibitorId = $bookingId;
+        $this->deleteExhibitorName = $brandName;
+        $this->showDeleteExhibitorModal = true;
+    }
+
+    public function deleteExhibitor(): void
+    {
+        $booking = Booking::findOrFail($this->deleteExhibitorId);
+
+        if (! $booking->is_manually_added) {
+            Flux::toast(heading: 'Not Allowed', variant: 'danger', text: 'Only manually added exhibitors can be deleted.');
+            $this->showDeleteExhibitorModal = false;
+
+            return;
+        }
+
+        $userId = $booking->exhibitor_user_id;
+        $booking->delete();
+
+        if ($userId) {
+            User::destroy($userId);
+        }
+
+        $this->showDeleteExhibitorModal = false;
+        $this->deleteExhibitorId = null;
+        $this->deleteExhibitorName = '';
+
+        Flux::toast(heading: 'Deleted', variant: 'success', text: 'Exhibitor has been deleted.');
+    }
+
+    public function openAddExhibitorModal(): void
+    {
+        $this->addExhibitorBrandName = '';
+        $this->addExhibitorContactPerson = '';
+        $this->addExhibitorEmail = '';
+        $this->addExhibitorPhoneCode = '+91';
+        $this->addExhibitorPhoneNumber = '';
+        $this->addExhibitorStalls = '';
+        $this->addExhibitorExhibitionId = Exhibition::latest()->value('id');
+        $this->showAddExhibitorModal = true;
+    }
+
+    public function addExhibitor(): void
+    {
+        if (! Auth::user()->isAdmin()) {
+            Flux::toast(heading: 'Unauthorized', variant: 'danger', text: 'Only admins can add exhibitors.');
+
+            return;
+        }
+
+        $this->validate([
+            'addExhibitorBrandName' => ['required', 'string', 'max:255'],
+            'addExhibitorContactPerson' => ['required', 'string', 'max:255'],
+            'addExhibitorEmail' => ['required', 'email', 'max:255'],
+            'addExhibitorPhoneCode' => ['required', 'string', 'max:10'],
+            'addExhibitorPhoneNumber' => ['required', 'string', 'max:20'],
+            'addExhibitorExhibitionId' => ['required', 'integer', 'exists:exhibitions,id'],
+            'addExhibitorStalls' => ['nullable', 'string'],
+        ]);
+
+        $stalls = array_values(array_filter(array_map('trim', explode(',', $this->addExhibitorStalls))));
+
+        $booking = Booking::create([
+            'exhibition_id' => $this->addExhibitorExhibitionId,
+            'brand_name' => $this->addExhibitorBrandName,
+            'facia_name' => $this->addExhibitorBrandName,
+            'contact_person' => $this->addExhibitorContactPerson,
+            'email' => $this->addExhibitorEmail,
+            'phone_code' => $this->addExhibitorPhoneCode,
+            'phone_number' => $this->addExhibitorPhoneNumber,
+            'city' => '',
+            'product_profile' => [],
+            'participation_years' => [],
+            'selected_stalls' => $stalls,
+            'space_type' => 'standard',
+            'status' => BookingStatus::PaymentCompleted,
+            'payment_completed_at' => now(),
+            'is_manual_block' => false,
+            'is_manually_added' => true,
+            'has_exhibited_before' => false,
+            'is_sgcci_member' => false,
+        ]);
+
+        $this->createExhibitorAccount($booking);
+
+        $this->showAddExhibitorModal = false;
+
+        Flux::toast(
+            heading: 'Exhibitor Added!',
+            variant: 'success',
+            text: "Exhibitor {$booking->brand_name} has been added and credentials generated."
+        );
+    }
+
     protected function dispatchCredentialsSms(Booking $booking): void
     {
         if (! config('services.sms.enabled')) {
@@ -292,6 +411,7 @@ class Index extends Component
 
         return view('livewire.admin.exhibitors.index', [
             'bookings' => $bookings,
+            'exhibitions' => Exhibition::orderByDesc('id')->get(),
         ]);
     }
 }

@@ -1,6 +1,7 @@
 <div class="space-y-6" x-data="{ smsBookingId: null, smsBookingName: '' }">
     <div class="flex items-center justify-between mb-6">
         <flux:heading size="xl">Exhibitors</flux:heading>
+        <flux:button variant="primary" icon="plus" wire:click="openAddExhibitorModal">Add Exhibitor</flux:button>
     </div>
 
     <div class="flex items-center gap-4">
@@ -57,6 +58,9 @@
                                             </a>
                                             @if ($booking->status === \App\BookingStatus::PaymentPending)
                                                 <flux:badge size="sm" color="orange" variant="pill">Part Paid</flux:badge>
+                                            @endif
+                                            @if ($booking->is_manually_added)
+                                                <flux:badge size="sm" color="blue" variant="pill">Manual</flux:badge>
                                             @endif
                                         </div>
                                     </flux:table.cell>
@@ -142,6 +146,13 @@
                                                 :href="route('admin.exhibitors.badges', $booking)" wire:navigate>
                                                 Badges
                                             </flux:button>
+                                            @if ($booking->is_manually_added)
+                                                <flux:button size="sm" variant="ghost" icon="trash" iconVariant="outline"
+                                                    class="text-red-500 hover:text-red-600"
+                                                    wire:click="confirmDeleteExhibitor({{ $booking->id }}, '{{ addslashes($booking->brand_name) }}')">
+                                                    Delete
+                                                </flux:button>
+                                            @endif
                                         </div>
                                     </flux:table.cell>
                                 </flux:table.row>
@@ -251,6 +262,92 @@
                 </flux:modal.close>
                 <flux:button wire:click="bulkSendCredentialsSms" variant="primary" icon="chat-bubble-left-ellipsis" iconVariant="outline">
                     Send SMS
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    {{-- Delete Exhibitor Modal --}}
+    <flux:modal wire:model="showDeleteExhibitorModal" class="min-w-[22rem]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Delete Exhibitor?</flux:heading>
+                <flux:text class="mt-2">
+                    Permanently delete <strong>{{ $deleteExhibitorName }}</strong>? This will remove the booking and their user account. This cannot be undone.
+                </flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
+                <flux:button wire:click="deleteExhibitor" variant="danger" icon="trash" iconVariant="outline">
+                    Delete
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    {{-- Add Exhibitor Modal --}}
+    <flux:modal wire:model="showAddExhibitorModal" class="w-full max-w-lg">
+        <div class="space-y-5">
+            <flux:heading size="lg">Add Exhibitor Manually</flux:heading>
+
+            <flux:field>
+                <flux:label>Exhibition</flux:label>
+                <flux:select wire:model="addExhibitorExhibitionId">
+                    @foreach ($exhibitions as $exhibition)
+                        <flux:select.option :value="$exhibition->id">{{ $exhibition->title }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+                <flux:error name="addExhibitorExhibitionId" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>Brand / Company Name</flux:label>
+                <flux:input wire:model="addExhibitorBrandName" placeholder="e.g. Acme Pvt. Ltd." />
+                <flux:error name="addExhibitorBrandName" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>Contact Person</flux:label>
+                <flux:input wire:model="addExhibitorContactPerson" placeholder="Full name" />
+                <flux:error name="addExhibitorContactPerson" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>Email</flux:label>
+                <flux:input type="email" wire:model="addExhibitorEmail" placeholder="exhibitor@example.com" />
+                <flux:error name="addExhibitorEmail" />
+            </flux:field>
+
+            <div class="grid grid-cols-3 gap-3">
+                <flux:field>
+                    <flux:label>Code</flux:label>
+                    <flux:input wire:model="addExhibitorPhoneCode" placeholder="+91" />
+                    <flux:error name="addExhibitorPhoneCode" />
+                </flux:field>
+                <flux:field class="col-span-2">
+                    <flux:label>Phone Number</flux:label>
+                    <flux:input wire:model="addExhibitorPhoneNumber" placeholder="9876543210" />
+                    <flux:error name="addExhibitorPhoneNumber" />
+                </flux:field>
+            </div>
+
+            <flux:field>
+                <flux:label>Stall Numbers <span class="text-zinc-400">(optional, comma-separated)</span></flux:label>
+                <flux:input wire:model="addExhibitorStalls" placeholder="e.g. 12, 13, 45" />
+                <flux:description>Enter stall numbers separated by commas.</flux:description>
+                <flux:error name="addExhibitorStalls" />
+            </flux:field>
+
+            <div class="flex justify-end gap-2 pt-2">
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
+                <flux:button variant="primary" icon="user-plus" wire:click="addExhibitor" wire:loading.attr="disabled">
+                    <span wire:loading.remove wire:target="addExhibitor">Add Exhibitor</span>
+                    <span wire:loading wire:target="addExhibitor">Adding...</span>
                 </flux:button>
             </div>
         </div>

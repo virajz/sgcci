@@ -84,6 +84,7 @@ class Booking extends Model
         'exhibitor_user_id',
         'login_password',
         'badge_limit',
+        'is_manually_added',
     ];
 
     protected $attributes = [
@@ -101,6 +102,7 @@ class Booking extends Model
             'has_exhibited_before' => 'boolean',
             'is_sgcci_member' => 'boolean',
             'is_manual_block' => 'boolean',
+            'is_manually_added' => 'boolean',
             'total_area' => 'decimal:2',
             'price_per_sqm' => 'decimal:2',
             'total_price' => 'decimal:2',
