@@ -2,9 +2,13 @@
 
 namespace App\Livewire\Admin\Inquiries;
 
+use App\BookingStatus;
 use App\Models\Booking;
+use App\Models\User;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -23,6 +27,11 @@ class Index extends Component
     public bool $showConfirmReleaseModal = false;
 
     public ?int $stallToRelease = null;
+
+    /** @var array<int> */
+    public array $selectedBookings = [];
+
+    public bool $showBulkMoveModal = false;
 
     public array $visibleColumns = [
         'booking_code' => true,
@@ -58,11 +67,13 @@ class Index extends Component
     public function updatingSearch(): void
     {
         $this->resetPage();
+        $this->selectedBookings = [];
     }
 
     public function updatingStatusFilter(): void
     {
         $this->resetPage();
+        $this->selectedBookings = [];
     }
 
     protected $listeners = ['refresh-inquiries' => '$refresh'];
@@ -109,6 +120,102 @@ class Index extends Component
 
         $this->showConfirmReleaseModal = false;
         $this->stallToRelease = null;
+    }
+
+    public function openBulkMoveModal(): void
+    {
+        if (empty($this->selectedBookings)) {
+            Flux::toast(heading: 'No Selection', variant: 'warning', text: 'Please select at least one booking.');
+
+            return;
+        }
+
+        $this->showBulkMoveModal = true;
+    }
+
+    public function bulkMoveToExhibitor(): void
+    {
+        if (! Auth::user()->isSuperAdmin()) {
+            Flux::toast(heading: 'Unauthorized', variant: 'danger', text: 'Only super admins can move inquiries to exhibitors.');
+            $this->showBulkMoveModal = false;
+
+            return;
+        }
+
+        $bookings = Booking::whereIn('id', $this->selectedBookings)
+            ->where('status', BookingStatus::PaymentPending)
+            ->where('amount_paid', '>', 0)
+            ->whereNull('login_password')
+            ->get();
+
+        $count = 0;
+        foreach ($bookings as $booking) {
+            $this->createExhibitorAccount($booking);
+            $count++;
+        }
+
+        $this->selectedBookings = [];
+        $this->showBulkMoveModal = false;
+
+        Flux::toast(
+            heading: 'Moved to Exhibitor!',
+            variant: 'success',
+            text: "{$count} booking(s) added to the exhibitors list with login credentials generated."
+        );
+    }
+
+    protected function createExhibitorAccount(Booking $booking): void
+    {
+        $plainPassword = 'SGCCI@'.strtoupper(Str::random(6));
+
+        $user = User::firstOrCreate(
+            ['email' => $booking->email],
+            [
+                'name' => $booking->contact_person,
+                'role' => 'exhibitor',
+                'password' => Hash::make($plainPassword),
+                'email_verified_at' => now(),
+            ]
+        );
+
+        if (! $user->wasRecentlyCreated) {
+            $user->update([
+                'role' => 'exhibitor',
+                'password' => Hash::make($plainPassword),
+            ]);
+        }
+
+        $booking->update([
+            'exhibitor_user_id' => $user->id,
+            'login_password' => $plainPassword,
+        ]);
+    }
+
+    public function moveToExhibitor(int $bookingId): void
+    {
+        if (! Auth::user()->isSuperAdmin()) {
+            Flux::toast(heading: 'Unauthorized', variant: 'danger', text: 'Only super admins can move inquiries to exhibitors.');
+
+            return;
+        }
+
+        $booking = Booking::findOrFail($bookingId);
+
+        if ($booking->status !== BookingStatus::PaymentPending || $booking->amount_paid <= 0) {
+            Flux::toast(heading: 'Invalid Booking', variant: 'danger', text: 'Only payment-pending bookings with a partial payment can be moved to exhibitor status.');
+
+            return;
+        }
+
+        if ($booking->login_password) {
+            Flux::toast(heading: 'Already an Exhibitor', variant: 'warning', text: 'This booking already has exhibitor credentials.');
+
+            return;
+        }
+
+        $this->createExhibitorAccount($booking);
+
+        Flux::toast(heading: 'Moved to Exhibitor!', variant: 'success', text: "{$booking->brand_name} has been added to the exhibitors list with login credentials generated.");
     }
 
     public function updatedVisibleColumns(): void
@@ -187,9 +294,7 @@ class Index extends Component
                 $query->where('status', $this->statusFilter)
                     ->where('is_manual_block', false);
             })
-            ->when($this->statusFilter === 'all', function ($query) {
-                // Show all bookings including manual blocks
-            })
+            ->when($this->statusFilter === 'all', fn ($query) => $query)
             ->latest()
             ->paginate(15);
 

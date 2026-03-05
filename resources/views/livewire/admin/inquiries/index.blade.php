@@ -2,6 +2,13 @@
     <div class="flex items-center justify-between mb-6">
         <flux:heading size="xl">Booking Inquiries</flux:heading>
         <div class="flex items-center gap-2">
+            @if (count($selectedBookings) > 0 && Auth::user()->isSuperAdmin())
+                <flux:button variant="primary" icon="arrow-right-circle" iconVariant="outline"
+                    wire:click="openBulkMoveModal">
+                    Move to Exhibitor ({{ count($selectedBookings) }})
+                </flux:button>
+            @endif
+
             <flux:dropdown position="bottom" align="end">
                 <flux:button variant="ghost" icon="view-columns" iconVariant="outline">
                     Columns
@@ -47,197 +54,222 @@
     <flux:card class="overflow-hidden">
         @if ($bookings->count() > 0)
             <div class="overflow-x-auto">
-                <flux:table>
-                    <flux:table.columns>
-                        @if ($visibleColumns['booking_code'])
-                            <flux:table.column>Booking Code</flux:table.column>
-                        @endif
-                        @if ($visibleColumns['brand_name'])
-                            <flux:table.column>Brand Name</flux:table.column>
-                        @endif
-                        @if ($visibleColumns['contact_person'])
-                            <flux:table.column>Contact Person</flux:table.column>
-                        @endif
-                        @if ($visibleColumns['phone'])
-                            <flux:table.column>Phone</flux:table.column>
-                        @endif
-                        @if ($visibleColumns['membership'])
-                            <flux:table.column>Membership</flux:table.column>
-                        @endif
-                        @if ($visibleColumns['stalls'])
-                            <flux:table.column>Stalls</flux:table.column>
-                        @endif
-                        @if ($visibleColumns['amount'])
-                            <flux:table.column>Amount</flux:table.column>
-                        @endif
-                        @if ($visibleColumns['part_payment'])
-                            <flux:table.column>Part Payment</flux:table.column>
-                        @endif
-                        @if ($visibleColumns['status'])
-                            <flux:table.column>Status</flux:table.column>
-                        @endif
-                        @if ($visibleColumns['date'])
-                            <flux:table.column>Date</flux:table.column>
-                        @endif
-                        <flux:table.column>Actions</flux:table.column>
-                    </flux:table.columns>
+                <flux:checkbox.group wire:model.live="selectedBookings">
+                    <flux:table>
+                        <flux:table.columns>
+                            @if (Auth::user()->isSuperAdmin())
+                                <flux:table.column class="w-10">
+                                    <flux:checkbox.all />
+                                </flux:table.column>
+                            @endif
+                            @if ($visibleColumns['booking_code'])
+                                <flux:table.column>Booking Code</flux:table.column>
+                            @endif
+                            @if ($visibleColumns['brand_name'])
+                                <flux:table.column>Brand Name</flux:table.column>
+                            @endif
+                            @if ($visibleColumns['contact_person'])
+                                <flux:table.column>Contact Person</flux:table.column>
+                            @endif
+                            @if ($visibleColumns['phone'])
+                                <flux:table.column>Phone</flux:table.column>
+                            @endif
+                            @if ($visibleColumns['membership'])
+                                <flux:table.column>Membership</flux:table.column>
+                            @endif
+                            @if ($visibleColumns['stalls'])
+                                <flux:table.column>Stalls</flux:table.column>
+                            @endif
+                            @if ($visibleColumns['amount'])
+                                <flux:table.column>Amount</flux:table.column>
+                            @endif
+                            @if ($visibleColumns['part_payment'])
+                                <flux:table.column>Part Payment</flux:table.column>
+                            @endif
+                            @if ($visibleColumns['status'])
+                                <flux:table.column>Status</flux:table.column>
+                            @endif
+                            @if ($visibleColumns['date'])
+                                <flux:table.column>Date</flux:table.column>
+                            @endif
+                            <flux:table.column>Actions</flux:table.column>
+                        </flux:table.columns>
 
-                    <flux:table.rows>
-                        @foreach ($bookings as $booking)
-                            <flux:table.row :key="$booking->id">
-                                @if ($visibleColumns['booking_code'])
-                                    <flux:table.cell>
-                                        <a href="{{ route('admin.inquiries.show', $booking) }}"
-                                            class="font-semibold text-black dark:text-white" wire:navigate>
-                                            {{ $booking->booking_code }}
-                                        </a>
-                                    </flux:table.cell>
-                                @endif
-
-                                @if ($visibleColumns['brand_name'])
-                                    <flux:table.cell>{{ $booking->brand_name }}</flux:table.cell>
-                                @endif
-
-                                @if ($visibleColumns['contact_person'])
-                                    <flux:table.cell>
-                                        <div>{{ $booking->contact_person }}</div>
-                                        <div class="text-xs text-zinc-500">{{ $booking->email }}</div>
-                                    </flux:table.cell>
-                                @endif
-
-                                @if ($visibleColumns['phone'])
-                                    <flux:table.cell>
-                                        <div class="text-sm">{{ $booking->phone_code }} {{ $booking->phone_number }}
-                                        </div>
-                                    </flux:table.cell>
-                                @endif
-
-                                @if ($visibleColumns['membership'])
-                                    <flux:table.cell>
-                                        @if ($booking->is_sgcci_member && $booking->membership_number)
-                                            <div class="text-sm">
-                                                <div class="font-medium">{{ $booking->membership_number }}</div>
-                                                <div class="text-xs text-zinc-500">
-                                                    {{ ucwords(str_replace('-', ' ', $booking->membership_type)) }}
-                                                </div>
-                                            </div>
-                                        @elseif ($booking->is_sgcci_member)
-                                            <div class="text-xs text-zinc-500">
-                                                {{ ucwords(str_replace('-', ' ', $booking->membership_type)) }}</div>
-                                        @else
-                                            <div class="text-xs text-zinc-400">-</div>
-                                        @endif
-                                    </flux:table.cell>
-                                @endif
-
-                                @if ($visibleColumns['stalls'])
-                                    <flux:table.cell>
-                                        <div class="flex flex-wrap gap-1">
-                                            @foreach ($booking->selected_stalls as $stall)
-                                                <flux:badge variant="outline" size="sm">{{ $stall }}
-                                                </flux:badge>
-                                            @endforeach
-                                        </div>
-                                    </flux:table.cell>
-                                @endif
-
-                                @if ($visibleColumns['amount'])
-                                    <flux:table.cell>
-                                        <div class="font-semibold">
-                                            @if ($booking->is_manual_block)
-                                                ₹0.00
-                                            @else
-                                                ₹{{ number_format((float) $booking->total_with_gst, 2) }}
+                        <flux:table.rows>
+                            @foreach ($bookings as $booking)
+                                <flux:table.row :key="$booking->id">
+                                    @if (Auth::user()->isSuperAdmin())
+                                        <flux:table.cell>
+                                            @if ($booking->status === \App\BookingStatus::PaymentPending && $booking->amount_paid > 0 && ! $booking->login_password)
+                                                <flux:checkbox :value="$booking->id" />
                                             @endif
-                                        </div>
-                                    </flux:table.cell>
-                                @endif
+                                        </flux:table.cell>
+                                    @endif
 
-                                @if ($visibleColumns['part_payment'])
-                                    <flux:table.cell>
-                                        @if ($booking->is_manual_block)
-                                            <div class="text-xs text-zinc-400">-</div>
-                                        @elseif ($booking->amount_paid > 0)
-                                            <div class="text-sm">
-                                                <div class="font-medium text-green-600 dark:text-green-400">
-                                                    ₹{{ number_format((float) $booking->amount_paid, 2) }}
-                                                </div>
-                                                @if ($booking->remaining_amount > 0)
+                                    @if ($visibleColumns['booking_code'])
+                                        <flux:table.cell>
+                                            <a href="{{ route('admin.inquiries.show', $booking) }}"
+                                                class="font-semibold text-black dark:text-white" wire:navigate>
+                                                {{ $booking->booking_code }}
+                                            </a>
+                                        </flux:table.cell>
+                                    @endif
+
+                                    @if ($visibleColumns['brand_name'])
+                                        <flux:table.cell>{{ $booking->brand_name }}</flux:table.cell>
+                                    @endif
+
+                                    @if ($visibleColumns['contact_person'])
+                                        <flux:table.cell>
+                                            <div>{{ $booking->contact_person }}</div>
+                                            <div class="text-xs text-zinc-500">{{ $booking->email }}</div>
+                                        </flux:table.cell>
+                                    @endif
+
+                                    @if ($visibleColumns['phone'])
+                                        <flux:table.cell>
+                                            <div class="text-sm">{{ $booking->phone_code }} {{ $booking->phone_number }}
+                                            </div>
+                                        </flux:table.cell>
+                                    @endif
+
+                                    @if ($visibleColumns['membership'])
+                                        <flux:table.cell>
+                                            @if ($booking->is_sgcci_member && $booking->membership_number)
+                                                <div class="text-sm">
+                                                    <div class="font-medium">{{ $booking->membership_number }}</div>
                                                     <div class="text-xs text-zinc-500">
-                                                        {{ number_format($booking->getPaymentPercentage(), 0) }}% paid
+                                                        {{ ucwords(str_replace('-', ' ', $booking->membership_type)) }}
                                                     </div>
+                                                </div>
+                                            @elseif ($booking->is_sgcci_member)
+                                                <div class="text-xs text-zinc-500">
+                                                    {{ ucwords(str_replace('-', ' ', $booking->membership_type)) }}</div>
+                                            @else
+                                                <div class="text-xs text-zinc-400">-</div>
+                                            @endif
+                                        </flux:table.cell>
+                                    @endif
+
+                                    @if ($visibleColumns['stalls'])
+                                        <flux:table.cell>
+                                            <div class="flex flex-wrap gap-1">
+                                                @foreach ($booking->selected_stalls as $stall)
+                                                    <flux:badge variant="outline" size="sm">{{ $stall }}
+                                                    </flux:badge>
+                                                @endforeach
+                                            </div>
+                                        </flux:table.cell>
+                                    @endif
+
+                                    @if ($visibleColumns['amount'])
+                                        <flux:table.cell>
+                                            <div class="font-semibold">
+                                                @if ($booking->is_manual_block)
+                                                    ₹0.00
+                                                @else
+                                                    ₹{{ number_format((float) $booking->total_with_gst, 2) }}
                                                 @endif
                                             </div>
-                                        @else
-                                            <div class="text-xs text-zinc-400">Not paid</div>
-                                        @endif
-                                    </flux:table.cell>
-                                @endif
+                                        </flux:table.cell>
+                                    @endif
 
-                                @if ($visibleColumns['status'])
+                                    @if ($visibleColumns['part_payment'])
+                                        <flux:table.cell>
+                                            @if ($booking->is_manual_block)
+                                                <div class="text-xs text-zinc-400">-</div>
+                                            @elseif ($booking->amount_paid > 0)
+                                                <div class="text-sm">
+                                                    <div class="font-medium text-green-600 dark:text-green-400">
+                                                        ₹{{ number_format((float) $booking->amount_paid, 2) }}
+                                                    </div>
+                                                    @if ($booking->remaining_amount > 0)
+                                                        <div class="text-xs text-zinc-500">
+                                                            {{ number_format($booking->getPaymentPercentage(), 0) }}% paid
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @else
+                                                <div class="text-xs text-zinc-400">Not paid</div>
+                                            @endif
+                                        </flux:table.cell>
+                                    @endif
+
+                                    @if ($visibleColumns['status'])
+                                        <flux:table.cell>
+                                            @if ($booking->is_manual_block)
+                                                <flux:badge color="zinc" variant="solid">
+                                                    Manual Block
+                                                </flux:badge>
+                                            @else
+                                                <flux:badge :color="$booking->status->color()" size="sm"
+                                                    variant="solid">
+                                                    {{ $booking->status->label() }}
+                                                </flux:badge>
+                                            @endif
+                                        </flux:table.cell>
+                                    @endif
+
+                                    @if ($visibleColumns['date'])
+                                        <flux:table.cell>
+                                            <div class="text-sm">{{ $booking->created_at->format('M d, Y') }}</div>
+                                            <div class="text-xs text-zinc-500">{{ $booking->created_at->format('h:i A') }}
+                                            </div>
+                                        </flux:table.cell>
+                                    @endif
+
                                     <flux:table.cell>
                                         @if ($booking->is_manual_block)
-                                            <flux:badge color="zinc" variant="solid">
-                                                Manual Block
-                                            </flux:badge>
+                                            <flux:button size="sm" variant="ghost" icon="lock-open"
+                                                class="cursor-pointer" iconVariant="outline"
+                                                wire:click="confirmRelease({{ $booking->id }})">
+                                                Release
+                                            </flux:button>
                                         @else
-                                            <flux:badge :color="$booking->status->color()" size="sm"
-                                                variant="solid">
-                                                {{ $booking->status->label() }}
-                                            </flux:badge>
+                                            <div class="flex items-center gap-2">
+                                                <flux:button size="sm" variant="ghost" icon="eye"
+                                                    iconVariant="outline"
+                                                    href="{{ route('admin.inquiries.show', $booking) }}" wire:navigate>
+                                                    View
+                                                </flux:button>
+
+                                                @if ($booking->status === \App\BookingStatus::PaymentPending && ($booking->payment_link || $booking->amount_paid > 0))
+                                                    <flux:dropdown position="bottom" align="end">
+                                                        <flux:button size="sm" variant="ghost"
+                                                            icon="ellipsis-horizontal" iconVariant="outline" />
+
+                                                        <flux:menu>
+                                                            @if ($booking->payment_link)
+                                                                <flux:menu.item icon="link" x-data
+                                                                    x-on:click="navigator.clipboard.writeText('{{ $booking->payment_link }}').then(() => {
+                                                                        $flux.toast({
+                                                                            variant: 'success',
+                                                                            heading: 'Copied!',
+                                                                            text: 'Payment link copied to clipboard'
+                                                                        });
+                                                                    })">
+                                                                    Copy Payment Link
+                                                                </flux:menu.item>
+                                                            @endif
+
+                                                            @if ($booking->amount_paid > 0 && ! $booking->login_password && Auth::user()->isSuperAdmin())
+                                                                <flux:menu.item icon="arrow-right-circle" iconVariant="outline"
+                                                                    wire:click="moveToExhibitor({{ $booking->id }})"
+                                                                    wire:confirm="Move '{{ $booking->brand_name }}' to exhibitor status? Login credentials will be generated.">
+                                                                    Move to Exhibitor
+                                                                </flux:menu.item>
+                                                            @endif
+                                                        </flux:menu>
+                                                    </flux:dropdown>
+                                                @endif
+                                            </div>
                                         @endif
                                     </flux:table.cell>
-                                @endif
-
-                                @if ($visibleColumns['date'])
-                                    <flux:table.cell>
-                                        <div class="text-sm">{{ $booking->created_at->format('M d, Y') }}</div>
-                                        <div class="text-xs text-zinc-500">{{ $booking->created_at->format('h:i A') }}
-                                        </div>
-                                    </flux:table.cell>
-                                @endif
-
-                                <flux:table.cell>
-                                    @if ($booking->is_manual_block)
-                                        <flux:button size="sm" variant="ghost" icon="lock-open"
-                                            class="cursor-pointer" iconVariant="outline"
-                                            wire:click="confirmRelease({{ $booking->id }})">
-                                            Release
-                                        </flux:button>
-                                    @else
-                                        <div class="flex items-center gap-2">
-                                            <flux:button size="sm" variant="ghost" icon="eye"
-                                                iconVariant="outline"
-                                                href="{{ route('admin.inquiries.show', $booking) }}" wire:navigate>
-                                                View
-                                            </flux:button>
-
-                                            @if ($booking->status === \App\BookingStatus::PaymentPending && $booking->payment_link)
-                                                <flux:dropdown position="bottom" align="end">
-                                                    <flux:button size="sm" variant="ghost"
-                                                        icon="ellipsis-horizontal" iconVariant="outline" />
-
-                                                    <flux:menu>
-                                                        <flux:menu.item icon="link" x-data
-                                                            x-on:click="navigator.clipboard.writeText('{{ $booking->payment_link }}').then(() => {
-                                                                $flux.toast({
-                                                                    variant: 'success',
-                                                                    heading: 'Copied!',
-                                                                    text: 'Payment link copied to clipboard'
-                                                                });
-                                                            })">
-                                                            Copy Payment Link
-                                                        </flux:menu.item>
-                                                    </flux:menu>
-                                                </flux:dropdown>
-                                            @endif
-                                        </div>
-                                    @endif
-                                </flux:table.cell>
-                            </flux:table.row>
-                        @endforeach
-                    </flux:table.rows>
-                </flux:table>
+                                </flux:table.row>
+                            @endforeach
+                        </flux:table.rows>
+                    </flux:table>
+                </flux:checkbox.group>
             </div>
 
             <div class="p-4 border-t dark:border-zinc-700">
@@ -274,6 +306,28 @@
                     <flux:button variant="ghost">Cancel</flux:button>
                 </flux:modal.close>
                 <flux:button wire:click="releaseStall" variant="danger">Release Stall</flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    {{-- Bulk Move to Exhibitor Modal --}}
+    <flux:modal wire:model="showBulkMoveModal" class="min-w-[22rem]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Move to Exhibitor?</flux:heading>
+                <flux:text class="mt-2">
+                    Move <strong>{{ count($selectedBookings) }}</strong> selected booking(s) to exhibitor status?
+                    Login credentials will be generated for each. Payment status will remain as Payment Pending.
+                </flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
+                <flux:button wire:click="bulkMoveToExhibitor" variant="primary" icon="arrow-right-circle" iconVariant="outline">
+                    Move to Exhibitor
+                </flux:button>
             </div>
         </div>
     </flux:modal>
