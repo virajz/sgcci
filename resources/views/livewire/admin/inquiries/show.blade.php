@@ -247,7 +247,7 @@
                 <flux:card>
                     <flux:heading size="lg" class="mb-4">Payment History</flux:heading>
                     <div class="space-y-3">
-                        @foreach ($booking->payment_history as $payment)
+                        @foreach ($booking->payment_history as $index => $payment)
                             <div class="pb-3 border-b last:border-0 dark:border-zinc-700">
                                 <div class="flex items-start justify-between mb-1">
                                     <div class="flex-1">
@@ -270,6 +270,16 @@
                                             </flux:text>
                                         @endif
                                     </div>
+                                    @if (Auth::user()->isSuperAdmin())
+                                        <flux:button
+                                            size="sm"
+                                            variant="ghost"
+                                            wire:click="openRevokePaymentModal({{ $index }})"
+                                            class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                                        >
+                                            Revoke
+                                        </flux:button>
+                                    @endif
                                 </div>
                                 <flux:text class="text-xs text-zinc-500">
                                     {{ \Carbon\Carbon::parse($payment['recorded_at'])->format('M d, Y h:i A') }}
@@ -795,5 +805,38 @@
                 </flux:button>
             </div>
         </form>
+    </flux:modal>
+
+    <flux:modal wire:model="showRevokePaymentModal">
+        <flux:heading size="lg" class="mb-2">Revoke Payment Entry</flux:heading>
+
+        <flux:subheading class="mb-4">
+            Are you sure you want to revoke this payment entry? The amount will be deducted from the total amount paid
+            and the booking status will be updated accordingly.
+        </flux:subheading>
+
+        @if ($revokePaymentIndex !== null && isset($booking->payment_history[$revokePaymentIndex]))
+            <flux:callout variant="warning" class="mb-4">
+                <flux:text class="text-sm">
+                    <strong>Amount to be revoked:</strong>
+                    ₹{{ number_format($booking->payment_history[$revokePaymentIndex]['amount'], 2) }}
+                    &mdash;
+                    {{ ucwords(str_replace('_', ' ', $booking->payment_history[$revokePaymentIndex]['method'])) }}
+                    @if (isset($booking->payment_history[$revokePaymentIndex]['transaction_id']) && $booking->payment_history[$revokePaymentIndex]['transaction_id'])
+                        (Ref: {{ $booking->payment_history[$revokePaymentIndex]['transaction_id'] }})
+                    @endif
+                </flux:text>
+            </flux:callout>
+        @endif
+
+        <div class="flex justify-end gap-3 mt-6">
+            <flux:button type="button" variant="ghost" wire:click="$set('showRevokePaymentModal', false)">
+                Cancel
+            </flux:button>
+            <flux:button variant="danger" wire:click="revokePayment" wire:loading.attr="disabled">
+                <span wire:loading.remove wire:target="revokePayment">Revoke Payment</span>
+                <span wire:loading wire:target="revokePayment">Processing...</span>
+            </flux:button>
+        </div>
     </flux:modal>
 </div>

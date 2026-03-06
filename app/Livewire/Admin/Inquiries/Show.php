@@ -37,6 +37,10 @@ class Show extends Component
 
     public bool $showPaymentLinkModal = false;
 
+    public bool $showRevokePaymentModal = false;
+
+    public ?int $revokePaymentIndex = null;
+
     public function mount(Booking $booking): void
     {
         // Ensure user has admin privileges
@@ -544,6 +548,95 @@ class Show extends Component
             heading: 'Stalls Released',
             variant: 'success',
             text: 'The stalls have been released and the customer has been notified.'
+        );
+        $this->dispatch('booking-updated');
+    }
+
+    public function openRevokePaymentModal(int $index): void
+    {
+        // Only super admin can revoke payments
+        if (! Auth::user()->isSuperAdmin()) {
+            Flux::toast(
+                heading: 'Unauthorized',
+                variant: 'danger',
+                text: 'Only super admin can revoke payment entries.'
+            );
+
+            return;
+        }
+
+        $history = $this->booking->payment_history ?? [];
+
+        if (! isset($history[$index])) {
+            Flux::toast(
+                heading: 'Invalid Entry',
+                variant: 'danger',
+                text: 'Payment entry not found.'
+            );
+
+            return;
+        }
+
+        $this->revokePaymentIndex = $index;
+        $this->showRevokePaymentModal = true;
+    }
+
+    public function revokePayment(): void
+    {
+        // Only super admin can revoke payments
+        if (! Auth::user()->isSuperAdmin()) {
+            Flux::toast(
+                heading: 'Unauthorized',
+                variant: 'danger',
+                text: 'Only super admin can revoke payment entries.'
+            );
+            $this->showRevokePaymentModal = false;
+
+            return;
+        }
+
+        $history = $this->booking->payment_history ?? [];
+
+        if (! isset($history[$this->revokePaymentIndex])) {
+            Flux::toast(
+                heading: 'Invalid Entry',
+                variant: 'danger',
+                text: 'Payment entry not found.'
+            );
+            $this->showRevokePaymentModal = false;
+
+            return;
+        }
+
+        $revokedAmount = (float) $history[$this->revokePaymentIndex]['amount'];
+
+        // Remove the entry from history
+        array_splice($history, $this->revokePaymentIndex, 1);
+
+        $newAmountPaid = max(0, $this->booking->amount_paid - $revokedAmount);
+        $newRemainingAmount = $this->booking->total_with_gst - $newAmountPaid;
+
+        $updateData = [
+            'payment_history' => $history,
+            'amount_paid' => $newAmountPaid,
+            'remaining_amount' => $newRemainingAmount,
+        ];
+
+        // If payment was previously completed but is no longer fully paid, revert status
+        if ($this->booking->status === BookingStatus::PaymentCompleted && $newRemainingAmount > 0) {
+            $updateData['status'] = BookingStatus::PaymentPending;
+            $updateData['payment_completed_at'] = null;
+        }
+
+        $this->booking->update($updateData);
+
+        $this->showRevokePaymentModal = false;
+        $this->revokePaymentIndex = null;
+
+        Flux::toast(
+            heading: 'Payment Entry Revoked',
+            variant: 'success',
+            text: 'The payment entry of ₹'.number_format($revokedAmount, 2).' has been revoked.'
         );
         $this->dispatch('booking-updated');
     }
