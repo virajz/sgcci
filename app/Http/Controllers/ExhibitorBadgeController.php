@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\BookingStatus;
 use App\Models\Booking;
 use App\Models\ExhibitorBadgeMember;
 use App\Services\QrCodeService;
@@ -37,6 +38,42 @@ class ExhibitorBadgeController extends Controller
         return response($imageData)
             ->header('Content-Type', 'image/jpeg')
             ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
+    }
+
+    public function downloadAllSvgs(): Response
+    {
+        abort_unless(Auth::user()?->isAdmin(), 403);
+
+        $bookings = Booking::query()
+            ->where(function ($q) {
+                $q->where('status', BookingStatus::PaymentCompleted)
+                    ->orWhere(function ($q2) {
+                        $q2->where('status', BookingStatus::PaymentPending)
+                            ->where('amount_paid', '>', 0)
+                            ->whereNotNull('login_password');
+                    });
+            })
+            ->where('is_manual_block', false)
+            ->get(['id', 'brand_name', 'booking_code']);
+
+        $zip = new ZipArchive;
+        $tmpPath = tempnam(sys_get_temp_dir(), 'exhibitor_svgs_').'zip';
+        $zip->open($tmpPath, ZipArchive::CREATE);
+
+        foreach ($bookings as $booking) {
+            $scanUrl = route('exhibitor.scan', $booking->booking_code);
+            $svgContent = $this->qrCodeService->generateSvg($scanUrl, 400);
+            $filename = $booking->brand_name.' - '.$booking->booking_code.'.svg';
+            $zip->addFromString($filename, $svgContent);
+        }
+
+        $zip->close();
+        $zipData = file_get_contents($tmpPath);
+        unlink($tmpPath);
+
+        return response($zipData)
+            ->header('Content-Type', 'application/zip')
+            ->header('Content-Disposition', 'attachment; filename="exhibitor-svgs.zip"');
     }
 
     public function downloadAll(Booking $booking): Response

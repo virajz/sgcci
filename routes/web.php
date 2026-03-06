@@ -111,6 +111,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('exhibitions', ExhibitionsIndex::class)->name('exhibitions.index');
         Route::get('exhibitors', ExhibitorsIndex::class)->name('exhibitors.index');
         Route::get('exhibitors/{booking}/badges', AdminExhibitorBadges::class)->name('exhibitors.badges');
+        Route::get('exhibitors/download-svgs', [ExhibitorBadgeController::class, 'downloadAllSvgs'])->name('exhibitors.download-svgs');
         Route::get('inquiries', InquiriesIndex::class)->name('inquiries.index');
         Route::get('inquiries/{booking}', InquiriesShow::class)->name('inquiries.show');
         Route::get('inquiries/{booking}/edit', AdminEditBooking::class)->name('inquiries.edit');
@@ -147,4 +148,4 @@ Route::get('exhibitor/{bookingCode}', ExhibitorScanController::class)->name('exh
 //     ]);
 // });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

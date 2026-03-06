@@ -1,7 +1,11 @@
 <div class="space-y-6" x-data="{ smsBookingId: null, smsBookingName: '' }">
     <div class="flex items-center justify-between mb-6">
         <flux:heading size="xl">Exhibitors</flux:heading>
-        <flux:button variant="primary" icon="plus" wire:click="openAddExhibitorModal">Add Exhibitor</flux:button>
+        <div class="flex gap-2">
+            <flux:button variant="filled" icon="arrow-down-tray" iconVariant="outline"
+                :href="route('admin.exhibitors.download-svgs')">Download SVGs</flux:button>
+            <flux:button variant="primary" icon="plus" wire:click="openAddExhibitorModal" :loading="false">Add Exhibitor</flux:button>
+        </div>
     </div>
 
     <div class="flex items-center gap-4">
@@ -10,12 +14,11 @@
             iconVariant="outline" class="max-w-md" />
 
         @if (count($selectedBookings) > 0)
-            <flux:button variant="primary" icon="key" iconVariant="outline"
-                wire:click="openBulkConfirmModal">
+            <flux:button variant="primary" icon="key" iconVariant="outline" wire:click="openBulkConfirmModal" :loading="false">
                 Generate Credentials ({{ count($selectedBookings) }})
             </flux:button>
             <flux:button variant="filled" icon="chat-bubble-left-ellipsis" iconVariant="outline"
-                wire:click="openBulkSmsConfirmModal">
+                wire:click="openBulkSmsConfirmModal" :loading="false">
                 Send SMS ({{ count($selectedBookings) }})
             </flux:button>
         @endif
@@ -52,22 +55,24 @@
                                     <flux:table.cell>
                                         <div class="flex items-center gap-2">
                                             <a href="{{ route('admin.inquiries.show', $booking) }}"
-                                                class="font-mono text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
-                                                wire:navigate>
+                                                class="font-mono text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">
                                                 {{ $booking->booking_code }}
                                             </a>
                                             @if ($booking->status === \App\BookingStatus::PaymentPending)
-                                                <flux:badge size="sm" color="orange" variant="pill">Part Paid</flux:badge>
+                                                <flux:badge size="sm" color="orange" variant="pill">Part Paid
+                                                </flux:badge>
                                             @endif
                                             @if ($booking->is_manually_added)
-                                                <flux:badge size="sm" color="blue" variant="pill">Manual</flux:badge>
+                                                <flux:badge size="sm" color="blue" variant="pill">Manual
+                                                </flux:badge>
                                             @endif
                                         </div>
                                     </flux:table.cell>
 
                                     <flux:table.cell>
                                         <div class="font-medium">{{ $booking->brand_name }}</div>
-                                        <div class="text-sm text-zinc-500 dark:text-zinc-400">{{ $booking->contact_person }}</div>
+                                        <div class="text-sm text-zinc-500 dark:text-zinc-400">
+                                            {{ $booking->contact_person }}</div>
                                     </flux:table.cell>
 
                                     <flux:table.cell>
@@ -75,7 +80,8 @@
                                     </flux:table.cell>
 
                                     <flux:table.cell>
-                                        <flux:text class="text-sm">{{ $booking->phone_code }} {{ $booking->phone_number }}</flux:text>
+                                        <flux:text class="text-sm">{{ $booking->phone_code }}
+                                            {{ $booking->phone_number }}</flux:text>
                                     </flux:table.cell>
 
                                     <flux:table.cell>
@@ -85,7 +91,8 @@
                                     <flux:table.cell>
                                         <div class="flex flex-wrap gap-1">
                                             @foreach ($booking->selected_stalls as $stall)
-                                                <flux:badge size="sm" color="zinc">{{ $stall }}</flux:badge>
+                                                <flux:badge size="sm" color="zinc">{{ $stall }}
+                                                </flux:badge>
                                             @endforeach
                                         </div>
                                     </flux:table.cell>
@@ -93,17 +100,23 @@
                                     <flux:table.cell>
                                         @if ($editingBadgeLimitId === $booking->id)
                                             <div class="flex items-center gap-2">
-                                                <flux:input type="number" wire:model="editingBadgeLimit" min="1" max="100" class="w-20" size="sm" />
-                                                <flux:button size="sm" variant="primary" wire:click="saveBadgeLimit" icon="check" />
-                                                <flux:button size="sm" variant="ghost" wire:click="cancelEditingBadgeLimit" icon="x-mark" />
+                                                <flux:input type="number" wire:model="editingBadgeLimit" min="1"
+                                                    max="100" class="w-20" size="sm" />
+                                                <flux:button size="sm" variant="primary"
+                                                    wire:click="saveBadgeLimit" icon="check" />
+                                                <flux:button size="sm" variant="ghost"
+                                                    wire:click="cancelEditingBadgeLimit" icon="x-mark" />
                                             </div>
                                         @else
                                             <div class="flex items-center gap-2">
                                                 <flux:text class="text-sm">
-                                                    {{ $booking->badgeMembers->count() }} / {{ $booking->badge_limit }}
+                                                    {{ $booking->badgeMembers->count() }} /
+                                                    {{ $booking->badge_limit }}
                                                 </flux:text>
-                                                <flux:button size="sm" variant="ghost" icon="pencil" iconVariant="outline"
-                                                    wire:click="startEditingBadgeLimit({{ $booking->id }}, {{ $booking->badge_limit }})" />
+                                                <flux:button size="sm" variant="ghost" icon="pencil"
+                                                    iconVariant="outline"
+                                                    wire:click="startEditingBadgeLimit({{ $booking->id }}, {{ $booking->badge_limit }})"
+                                                    :loading="false" />
                                             </div>
                                         @endif
                                     </flux:table.cell>
@@ -111,8 +124,10 @@
                                     <flux:table.cell>
                                         @if ($booking->login_password)
                                             <div class="flex items-center gap-2" x-data>
-                                                <flux:text class="font-mono text-sm">{{ $booking->login_password }}</flux:text>
-                                                <flux:button size="sm" variant="ghost" icon="clipboard-document" iconVariant="outline"
+                                                <flux:text class="font-mono text-sm">{{ $booking->login_password }}
+                                                </flux:text>
+                                                <flux:button size="sm" variant="ghost" icon="clipboard-document"
+                                                    iconVariant="outline"
                                                     x-on:click="navigator.clipboard.writeText(
                                                         'Login URL: {{ route('login') }}\nEmail: {{ $booking->email }}\nPhone: {{ $booking->phone_number }}\nPassword: {{ $booking->login_password }}'
                                                     ).then(() => {
@@ -121,8 +136,10 @@
                                                 </flux:button>
                                             </div>
                                         @else
-                                            <flux:button size="sm" variant="ghost" icon="key" iconVariant="outline"
-                                                wire:click="openGenerateConfirmModal({{ $booking->id }}, '{{ addslashes($booking->brand_name) }}')">
+                                            <flux:button size="sm" variant="ghost" icon="key"
+                                                iconVariant="outline"
+                                                wire:click="openGenerateConfirmModal({{ $booking->id }}, '{{ addslashes($booking->brand_name) }}')"
+                                                :loading="false">
                                                 Generate
                                             </flux:button>
                                         @endif
@@ -137,19 +154,22 @@
                                     <flux:table.cell>
                                         <div class="flex items-center gap-2">
                                             @if ($booking->login_password)
-                                                <flux:button size="sm" variant="ghost" icon="chat-bubble-left-ellipsis" iconVariant="outline"
+                                                <flux:button size="sm" variant="ghost"
+                                                    icon="chat-bubble-left-ellipsis" iconVariant="outline"
                                                     x-on:click="smsBookingId = {{ $booking->id }}; smsBookingName = '{{ addslashes($booking->brand_name) }}'; $flux.modal('send-sms-confirm').show()">
                                                     Send SMS
                                                 </flux:button>
                                             @endif
-                                            <flux:button size="sm" variant="ghost" icon="identification" iconVariant="outline"
-                                                :href="route('admin.exhibitors.badges', $booking)" wire:navigate>
+                                            <flux:button size="sm" variant="ghost" icon="identification"
+                                                iconVariant="outline"
+                                                x-on:click="window.location.href = '{{ route('admin.exhibitors.badges', $booking) }}'">
                                                 Badges
                                             </flux:button>
                                             @if ($booking->is_manually_added)
-                                                <flux:button size="sm" variant="ghost" icon="trash" iconVariant="outline"
-                                                    class="text-red-500 hover:text-red-600"
-                                                    wire:click="confirmDeleteExhibitor({{ $booking->id }}, '{{ addslashes($booking->brand_name) }}')">
+                                                <flux:button size="sm" variant="ghost" icon="trash"
+                                                    iconVariant="outline" class="text-red-500 hover:text-red-600"
+                                                    wire:click="confirmDeleteExhibitor({{ $booking->id }}, '{{ addslashes($booking->brand_name) }}')"
+                                                    :loading="false">
                                                     Delete
                                                 </flux:button>
                                             @endif
@@ -173,7 +193,8 @@
                     @if ($search)
                         No exhibitors match your search.
                     @else
-                        Exhibitors appear here once their payment is completed or they have been moved to exhibitor status.
+                        Exhibitors appear here once their payment is completed or they have been moved to exhibitor
+                        status.
                     @endif
                 </flux:text>
             </div>
@@ -195,7 +216,8 @@
                 <flux:modal.close>
                     <flux:button variant="ghost">Cancel</flux:button>
                 </flux:modal.close>
-                <flux:button wire:click="generateCredentials" variant="primary" icon="key" iconVariant="outline">
+                <flux:button wire:click="generateCredentials" variant="primary" icon="key"
+                    iconVariant="outline">
                     Generate
                 </flux:button>
             </div>
@@ -208,7 +230,8 @@
             <div>
                 <flux:heading size="lg">Generate Credentials?</flux:heading>
                 <flux:text class="mt-2">
-                    Generate login credentials for <strong>{{ count($selectedBookings) }}</strong> selected exhibitor(s)?
+                    Generate login credentials for <strong>{{ count($selectedBookings) }}</strong> selected
+                    exhibitor(s)?
                     This will create user accounts, generate passwords, and send an SMS to each.
                 </flux:text>
             </div>
@@ -217,7 +240,8 @@
                 <flux:modal.close>
                     <flux:button variant="ghost">Cancel</flux:button>
                 </flux:modal.close>
-                <flux:button wire:click="bulkGenerateCredentials" variant="primary" icon="key" iconVariant="outline">
+                <flux:button wire:click="bulkGenerateCredentials" variant="primary" icon="key"
+                    iconVariant="outline">
                     Generate
                 </flux:button>
             </div>
@@ -238,7 +262,9 @@
                 <flux:modal.close>
                     <flux:button variant="ghost">Cancel</flux:button>
                 </flux:modal.close>
-                <flux:button x-on:click="$wire.sendCredentialsSms(smsBookingId); $flux.modal('send-sms-confirm').close()" variant="primary" icon="chat-bubble-left-ellipsis" iconVariant="outline">
+                <flux:button
+                    x-on:click="$wire.sendCredentialsSms(smsBookingId); $flux.modal('send-sms-confirm').close()"
+                    variant="primary" icon="chat-bubble-left-ellipsis" iconVariant="outline">
                     Send SMS
                 </flux:button>
             </div>
@@ -251,7 +277,8 @@
             <div>
                 <flux:heading size="lg">Send SMS?</flux:heading>
                 <flux:text class="mt-2">
-                    Send login credentials via SMS to <strong>{{ count($selectedBookings) }}</strong> selected exhibitor(s)?
+                    Send login credentials via SMS to <strong>{{ count($selectedBookings) }}</strong> selected
+                    exhibitor(s)?
                     Only exhibitors with generated credentials will receive an SMS.
                 </flux:text>
             </div>
@@ -260,7 +287,8 @@
                 <flux:modal.close>
                     <flux:button variant="ghost">Cancel</flux:button>
                 </flux:modal.close>
-                <flux:button wire:click="bulkSendCredentialsSms" variant="primary" icon="chat-bubble-left-ellipsis" iconVariant="outline">
+                <flux:button wire:click="bulkSendCredentialsSms" variant="primary" icon="chat-bubble-left-ellipsis"
+                    iconVariant="outline">
                     Send SMS
                 </flux:button>
             </div>
@@ -273,7 +301,8 @@
             <div>
                 <flux:heading size="lg">Delete Exhibitor?</flux:heading>
                 <flux:text class="mt-2">
-                    Permanently delete <strong>{{ $deleteExhibitorName }}</strong>? This will remove the booking and their user account. This cannot be undone.
+                    Permanently delete <strong>{{ $deleteExhibitorName }}</strong>? This will remove the booking and
+                    their user account. This cannot be undone.
                 </flux:text>
             </div>
             <div class="flex gap-2">
@@ -345,7 +374,8 @@
                 <flux:modal.close>
                     <flux:button variant="ghost">Cancel</flux:button>
                 </flux:modal.close>
-                <flux:button variant="primary" icon="user-plus" wire:click="addExhibitor" wire:loading.attr="disabled">
+                <flux:button variant="primary" icon="user-plus" wire:click="addExhibitor"
+                    wire:loading.attr="disabled">
                     <span wire:loading.remove wire:target="addExhibitor">Add Exhibitor</span>
                     <span wire:loading wire:target="addExhibitor">Adding...</span>
                 </flux:button>
