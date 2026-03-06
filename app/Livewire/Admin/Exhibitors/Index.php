@@ -47,6 +47,19 @@ class Index extends Component
 
     public bool $showAddExhibitorModal = false;
 
+    /** @var array<string, bool> */
+    public array $visibleColumns = [
+        'booking_code' => true,
+        'brand_contact' => true,
+        'email' => true,
+        'phone' => true,
+        'exhibition' => true,
+        'stalls' => true,
+        'badges' => true,
+        'login_password' => true,
+        'paid_at' => false,
+    ];
+
     public string $addExhibitorBrandName = '';
 
     public string $addExhibitorContactPerson = '';
@@ -65,6 +78,11 @@ class Index extends Component
     {
         if (! Auth::user()->isAdmin()) {
             abort(403, 'Unauthorized access.');
+        }
+
+        $savedColumns = session('admin.exhibitors.visible_columns');
+        if ($savedColumns && is_array($savedColumns)) {
+            $this->visibleColumns = array_merge($this->visibleColumns, $savedColumns);
         }
     }
 
@@ -378,6 +396,45 @@ class Index extends Component
 
         $booking->refresh();
         $this->dispatchCredentialsSms($booking);
+    }
+
+    public function updatedVisibleColumns(): void
+    {
+        session(['admin.exhibitors.visible_columns' => $this->visibleColumns]);
+    }
+
+    public function resetColumns(): void
+    {
+        $this->visibleColumns = [
+            'booking_code' => true,
+            'brand_contact' => true,
+            'email' => true,
+            'phone' => true,
+            'exhibition' => true,
+            'stalls' => true,
+            'badges' => true,
+            'login_password' => true,
+            'paid_at' => false,
+        ];
+        session(['admin.exhibitors.visible_columns' => $this->visibleColumns]);
+
+        Flux::toast(heading: 'Columns Reset', variant: 'success', text: 'Columns reset to default.');
+    }
+
+    public function getColumnLabel(string $column): string
+    {
+        return match ($column) {
+            'booking_code' => 'Booking Code',
+            'brand_contact' => 'Brand / Contact',
+            'email' => 'Email',
+            'phone' => 'Phone',
+            'exhibition' => 'Exhibition',
+            'stalls' => 'Stalls',
+            'badges' => 'Badges',
+            'login_password' => 'Login Password',
+            'paid_at' => 'Paid At',
+            default => ucfirst($column),
+        };
     }
 
     public function render()

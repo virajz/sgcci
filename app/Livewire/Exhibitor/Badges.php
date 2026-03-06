@@ -23,13 +23,11 @@ class Badges extends Component
 
     public bool $showEditModal = false;
 
-    public bool $showBadgePreviewModal = false;
-
     public bool $showDeleteModal = false;
 
     public ?int $editingMemberId = null;
 
-    public ?int $previewingMemberId = null;
+    public ?int $selectedMemberId = null;
 
     public ?int $deletingMemberId = null;
 
@@ -54,12 +52,13 @@ class Badges extends Component
         if (! $this->booking) {
             abort(404, 'No booking found for this exhibitor.');
         }
+
+        $this->selectedMemberId = $this->booking->badgeMembers()->value('id');
     }
 
-    public function openBadgePreview(int $memberId): void
+    public function selectMember(int $memberId): void
     {
-        $this->previewingMemberId = $memberId;
-        $this->showBadgePreviewModal = true;
+        $this->selectedMemberId = $memberId;
     }
 
     public function openAddModal(): void
@@ -155,10 +154,16 @@ class Badges extends Component
             Storage::delete($member->photo);
         }
 
+        $deletedId = $member->id;
         $member->delete();
         $this->showDeleteModal = false;
         $this->deletingMemberId = null;
         $this->deletingMemberName = '';
+
+        if ($this->selectedMemberId === $deletedId) {
+            $this->selectedMemberId = $this->booking->badgeMembers()->value('id');
+        }
+
         $this->dispatch('member-deleted');
     }
 
@@ -173,10 +178,13 @@ class Badges extends Component
     public function render()
     {
         $scanUrl = route('exhibitor.scan', $this->booking->booking_code);
-        $qrSvg = app(QrCodeService::class)->generateSvg($scanUrl, 220);
+        $qrSvg = app(QrCodeService::class)->generateSvg($scanUrl, 80);
+
+        $members = $this->booking->badgeMembers()->get();
 
         return view('livewire.exhibitor.badges', [
-            'members' => $this->booking->badgeMembers()->get(),
+            'members' => $members,
+            'selectedMember' => $members->firstWhere('id', $this->selectedMemberId),
             'qrSvg' => $qrSvg,
             'scanUrl' => $scanUrl,
         ]);

@@ -26,17 +26,17 @@ class Badges extends Component
 
     public bool $showDeleteModal = false;
 
-    public bool $showBadgePreviewModal = false;
-
     public ?int $editingMemberId = null;
+
+    public ?int $selectedMemberId = null;
 
     public ?int $deletingMemberId = null;
 
     public string $deletingMemberName = '';
 
-    public ?int $previewingMemberId = null;
-
     public string $memberName = '';
+
+    public string $memberPhoneNumber = '';
 
     public $memberPhoto = null;
 
@@ -47,6 +47,12 @@ class Badges extends Component
         }
 
         $this->booking = $booking;
+        $this->selectedMemberId = $booking->badgeMembers()->value('id');
+    }
+
+    public function selectMember(int $memberId): void
+    {
+        $this->selectedMemberId = $memberId;
     }
 
     public function openAddModal(): void
@@ -60,20 +66,16 @@ class Badges extends Component
         $member = $this->booking->badgeMembers()->findOrFail($memberId);
         $this->editingMemberId = $memberId;
         $this->memberName = $member->name;
+        $this->memberPhoneNumber = $member->phone_number ?? '';
         $this->memberPhoto = null;
         $this->showEditModal = true;
-    }
-
-    public function openBadgePreview(int $memberId): void
-    {
-        $this->previewingMemberId = $memberId;
-        $this->showBadgePreviewModal = true;
     }
 
     public function addMember(): void
     {
         $this->validate([
             'memberName' => ['required', 'string', 'max:255'],
+            'memberPhoneNumber' => ['required', 'string', 'max:20'],
             'memberPhoto' => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -91,6 +93,7 @@ class Badges extends Component
 
         $this->booking->badgeMembers()->create([
             'name' => $this->memberName,
+            'phone_number' => $this->memberPhoneNumber ?: null,
             'photo' => $photoPath,
         ]);
 
@@ -104,6 +107,7 @@ class Badges extends Component
     {
         $this->validate([
             'memberName' => ['required', 'string', 'max:255'],
+            'memberPhoneNumber' => ['required', 'string', 'max:20'],
             'memberPhoto' => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -120,6 +124,7 @@ class Badges extends Component
 
         $member->update([
             'name' => $this->memberName,
+            'phone_number' => $this->memberPhoneNumber ?: null,
             'photo' => $photoPath,
         ]);
 
@@ -145,10 +150,15 @@ class Badges extends Component
             Storage::delete($member->photo);
         }
 
+        $deletedId = $member->id;
         $member->delete();
         $this->showDeleteModal = false;
         $this->deletingMemberId = null;
         $this->deletingMemberName = '';
+
+        if ($this->selectedMemberId === $deletedId) {
+            $this->selectedMemberId = $this->booking->badgeMembers()->value('id');
+        }
 
         Flux::toast(heading: 'Member Removed', variant: 'success', text: 'Badge member removed.');
     }
@@ -156,6 +166,7 @@ class Badges extends Component
     private function resetMemberForm(): void
     {
         $this->memberName = '';
+        $this->memberPhoneNumber = '';
         $this->memberPhoto = null;
         $this->editingMemberId = null;
     }
@@ -163,10 +174,13 @@ class Badges extends Component
     public function render()
     {
         $scanUrl = route('exhibitor.scan', $this->booking->booking_code);
-        $qrSvg = app(QrCodeService::class)->generateSvg($scanUrl, 180);
+        $qrSvg = app(QrCodeService::class)->generateSvg($scanUrl, 80);
+
+        $members = $this->booking->badgeMembers()->get();
 
         return view('livewire.admin.exhibitors.badges', [
-            'members' => $this->booking->badgeMembers()->get(),
+            'members' => $members,
+            'selectedMember' => $members->firstWhere('id', $this->selectedMemberId),
             'qrSvg' => $qrSvg,
         ]);
     }

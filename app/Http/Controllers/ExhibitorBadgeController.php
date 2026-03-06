@@ -40,6 +40,19 @@ class ExhibitorBadgeController extends Controller
             ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
     }
 
+    public function downloadSvg(Booking $booking): Response
+    {
+        abort_unless(Auth::user()?->isAdmin(), 403);
+
+        $scanUrl = route('exhibitor.scan', $booking->booking_code);
+        $svgContent = $this->qrCodeService->generateSvg($scanUrl, 400);
+        $filename = $booking->brand_name.' - '.$booking->booking_code.'.svg';
+
+        return response($svgContent)
+            ->header('Content-Type', 'image/svg+xml')
+            ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
+    }
+
     public function downloadAllSvgs(): Response
     {
         abort_unless(Auth::user()?->isAdmin(), 403);
@@ -74,6 +87,18 @@ class ExhibitorBadgeController extends Controller
         return response($zipData)
             ->header('Content-Type', 'application/zip')
             ->header('Content-Disposition', 'attachment; filename="exhibitor-svgs.zip"');
+    }
+
+    public function photo(Booking $booking, ExhibitorBadgeMember $member): Response
+    {
+        $this->authorizeAccess($booking, $member);
+
+        abort_unless($member->photo && Storage::exists($member->photo), 404);
+
+        $contents = Storage::get($member->photo);
+        $mime = Storage::mimeType($member->photo) ?: 'image/jpeg';
+
+        return response($contents)->header('Content-Type', $mime);
     }
 
     public function downloadAll(Booking $booking): Response

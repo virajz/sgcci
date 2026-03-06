@@ -102,6 +102,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('exhibitor')->name('exhibitor.')->group(function () {
         Route::get('badges', ExhibitorBadges::class)->name('badges.index');
         Route::get('badges/{booking}/{member}/image', [ExhibitorBadgeController::class, 'inline'])->name('badges.inline');
+        Route::get('badges/{booking}/{member}/photo', [ExhibitorBadgeController::class, 'photo'])->name('badges.photo');
         Route::get('badges/{booking}/{member}/download', [ExhibitorBadgeController::class, 'download'])->name('badges.download');
         Route::get('badges/{booking}/download-all', [ExhibitorBadgeController::class, 'downloadAll'])->name('badges.download-all');
     });
@@ -112,6 +113,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('exhibitors', ExhibitorsIndex::class)->name('exhibitors.index');
         Route::get('exhibitors/{booking}/badges', AdminExhibitorBadges::class)->name('exhibitors.badges');
         Route::get('exhibitors/download-svgs', [ExhibitorBadgeController::class, 'downloadAllSvgs'])->name('exhibitors.download-svgs');
+        Route::get('exhibitors/{booking}/download-svg', [ExhibitorBadgeController::class, 'downloadSvg'])->name('exhibitors.download-svg');
         Route::get('inquiries', InquiriesIndex::class)->name('inquiries.index');
         Route::get('inquiries/{booking}', InquiriesShow::class)->name('inquiries.show');
         Route::get('inquiries/{booking}/edit', AdminEditBooking::class)->name('inquiries.edit');
