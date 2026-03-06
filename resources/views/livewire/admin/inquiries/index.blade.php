@@ -112,7 +112,7 @@
                                 <flux:table.row :key="$booking->id">
                                     @if (Auth::user()->isAdmin())
                                         <flux:table.cell>
-                                            @if ($booking->status === \App\BookingStatus::PaymentPending && $booking->amount_paid > 0 && ! $booking->login_password)
+                                            @if (! $booking->login_password && ! $booking->is_manual_block)
                                                 <flux:checkbox :value="$booking->id" />
                                             @endif
                                         </flux:table.cell>
@@ -222,7 +222,7 @@
                                                     View
                                                 </flux:button>
 
-                                                @if ($booking->status === \App\BookingStatus::PaymentPending && ($booking->payment_link || $booking->amount_paid > 0))
+                                                @if ($booking->payment_link || (! $booking->login_password && Auth::user()->isAdmin()))
                                                     <flux:dropdown position="bottom" align="end">
                                                         <flux:button size="sm" variant="ghost"
                                                             icon="ellipsis-horizontal" iconVariant="outline" />
@@ -241,7 +241,7 @@
                                                                 </flux:menu.item>
                                                             @endif
 
-                                                            @if ($booking->amount_paid > 0 && ! $booking->login_password && Auth::user()->isAdmin())
+                                                            @if (! $booking->login_password && Auth::user()->isAdmin())
                                                                 <flux:menu.item icon="arrow-right-circle" iconVariant="outline"
                                                                     wire:click="openMoveConfirmModal({{ $booking->id }}, '{{ addslashes($booking->brand_name) }}')">
                                                                     Move to Exhibitor

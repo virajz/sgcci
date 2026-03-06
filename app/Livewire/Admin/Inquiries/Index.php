@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Admin\Inquiries;
 
-use App\BookingStatus;
 use App\Jobs\SendSmsMessage;
 use App\Models\Booking;
 use App\Models\User;
@@ -151,8 +150,6 @@ class Index extends Component
         }
 
         $bookings = Booking::whereIn('id', $this->selectedBookings)
-            ->where('status', BookingStatus::PaymentPending)
-            ->where('amount_paid', '>', 0)
             ->whereNull('login_password')
             ->get();
 
@@ -230,13 +227,6 @@ class Index extends Component
         }
 
         $booking = Booking::findOrFail($this->confirmMoveId);
-
-        if ($booking->status !== BookingStatus::PaymentPending || $booking->amount_paid <= 0) {
-            Flux::toast(heading: 'Invalid Booking', variant: 'danger', text: 'Only payment-pending bookings with a partial payment can be moved to exhibitor status.');
-            $this->showMoveConfirmModal = false;
-
-            return;
-        }
 
         if ($booking->login_password) {
             Flux::toast(heading: 'Already an Exhibitor', variant: 'warning', text: 'This booking already has exhibitor credentials.');
