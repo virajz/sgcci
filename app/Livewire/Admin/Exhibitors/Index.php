@@ -48,7 +48,7 @@ class Index extends Component
     public bool $showAddExhibitorModal = false;
 
     /** @var array<string, bool> */
-    public array $visibleColumns = [
+    public array $defaultColumns = [
         'booking_code' => true,
         'brand_contact' => true,
         'email' => true,
@@ -82,7 +82,7 @@ class Index extends Component
 
         $savedColumns = session('admin.exhibitors.visible_columns');
         if ($savedColumns && is_array($savedColumns)) {
-            $this->visibleColumns = array_merge($this->visibleColumns, $savedColumns);
+            $this->defaultColumns = array_merge($this->defaultColumns, $savedColumns);
         }
     }
 
@@ -398,14 +398,9 @@ class Index extends Component
         $this->dispatchCredentialsSms($booking);
     }
 
-    public function updatedVisibleColumns(): void
-    {
-        session(['admin.exhibitors.visible_columns' => $this->visibleColumns]);
-    }
-
     public function resetColumns(): void
     {
-        $this->visibleColumns = [
+        $defaults = [
             'booking_code' => true,
             'brand_contact' => true,
             'email' => true,
@@ -416,7 +411,9 @@ class Index extends Component
             'login_password' => true,
             'paid_at' => false,
         ];
-        session(['admin.exhibitors.visible_columns' => $this->visibleColumns]);
+
+        session(['admin.exhibitors.visible_columns' => $defaults]);
+        $this->dispatch('columns-reset', columns: $defaults);
 
         Flux::toast(heading: 'Columns Reset', variant: 'success', text: 'Columns reset to default.');
     }

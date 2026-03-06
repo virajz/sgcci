@@ -40,7 +40,8 @@ class Index extends Component
 
     public string $confirmMoveName = '';
 
-    public array $visibleColumns = [
+    /** @var array<string, bool> */
+    public array $defaultColumns = [
         'booking_code' => true,
         'brand_name' => true,
         'contact_person' => true,
@@ -64,10 +65,10 @@ class Index extends Component
             $this->statusFilter = 'approved_by_admin';
         }
 
-        // Load column preferences from session
+        // Load column preferences from session to pass to Alpine as initial state
         $savedColumns = session('admin.inquiries.visible_columns');
         if ($savedColumns && is_array($savedColumns)) {
-            $this->visibleColumns = array_merge($this->visibleColumns, $savedColumns);
+            $this->defaultColumns = array_merge($this->defaultColumns, $savedColumns);
         }
     }
 
@@ -253,14 +254,9 @@ class Index extends Component
         Flux::toast(heading: 'Moved to Exhibitor!', variant: 'success', text: "{$booking->brand_name} has been added to the exhibitors list with login credentials generated.");
     }
 
-    public function updatedVisibleColumns(): void
-    {
-        $this->saveColumnPreferences();
-    }
-
     public function resetColumns(): void
     {
-        $this->visibleColumns = [
+        $defaults = [
             'booking_code' => true,
             'brand_name' => true,
             'contact_person' => true,
@@ -272,18 +268,15 @@ class Index extends Component
             'status' => true,
             'date' => true,
         ];
-        $this->saveColumnPreferences();
+
+        session(['admin.inquiries.visible_columns' => $defaults]);
+        $this->dispatch('columns-reset', columns: $defaults);
 
         Flux::toast(
             heading: 'Columns Reset',
             variant: 'success',
             text: 'All columns are now visible.'
         );
-    }
-
-    protected function saveColumnPreferences(): void
-    {
-        session(['admin.inquiries.visible_columns' => $this->visibleColumns]);
     }
 
     public function getColumnLabel(string $column): string

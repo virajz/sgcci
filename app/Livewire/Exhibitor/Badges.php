@@ -21,10 +21,6 @@ class Badges extends Component
 
     public bool $showAddModal = false;
 
-    public bool $showEditModal = false;
-
-    public bool $showDeleteModal = false;
-
     public ?int $editingMemberId = null;
 
     public ?int $selectedMemberId = null;
@@ -56,25 +52,10 @@ class Badges extends Component
         $this->selectedMemberId = $this->booking->badgeMembers()->value('id');
     }
 
-    public function selectMember(int $memberId): void
-    {
-        $this->selectedMemberId = $memberId;
-    }
-
     public function openAddModal(): void
     {
         $this->resetMemberForm();
         $this->showAddModal = true;
-    }
-
-    public function openEditModal(int $memberId): void
-    {
-        $member = $this->booking->badgeMembers()->findOrFail($memberId);
-        $this->editingMemberId = $memberId;
-        $this->memberName = $member->name;
-        $this->memberPhoneNumber = $member->phone_number ?? '';
-        $this->memberPhoto = null;
-        $this->showEditModal = true;
     }
 
     public function addMember(): void
@@ -133,17 +114,8 @@ class Badges extends Component
             'photo' => $photoPath,
         ]);
 
-        $this->showEditModal = false;
         $this->resetMemberForm();
         $this->dispatch('member-updated');
-    }
-
-    public function confirmDelete(int $memberId): void
-    {
-        $member = $this->booking->badgeMembers()->findOrFail($memberId);
-        $this->deletingMemberId = $memberId;
-        $this->deletingMemberName = $member->name;
-        $this->showDeleteModal = true;
     }
 
     public function deleteMember(): void
@@ -156,7 +128,6 @@ class Badges extends Component
 
         $deletedId = $member->id;
         $member->delete();
-        $this->showDeleteModal = false;
         $this->deletingMemberId = null;
         $this->deletingMemberName = '';
 
@@ -164,7 +135,7 @@ class Badges extends Component
             $this->selectedMemberId = $this->booking->badgeMembers()->value('id');
         }
 
-        $this->dispatch('member-deleted');
+        $this->dispatch('member-deleted', selectedMemberId: $this->selectedMemberId);
     }
 
     private function resetMemberForm(): void

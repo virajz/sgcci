@@ -54,17 +54,47 @@
                     {{ $booking->badge_limit }} members.</flux:text>
             </div>
         @else
-            <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div
+                class="grid grid-cols-1 gap-6 lg:grid-cols-3"
+                x-data="{
+                    selectedMemberId: {{ $selectedMemberId ?? 'null' }},
+                    deletingMemberId: null,
+                    deletingMemberName: '',
+                    editingMemberId: null,
+                    editingMemberName: '',
+                    editingMemberPhone: '',
+                    openDeleteModal(id, name) {
+                        this.deletingMemberId = id;
+                        this.deletingMemberName = name;
+                        $wire.set('deletingMemberId', id);
+                        $wire.set('deletingMemberName', name);
+                        $flux.modal('delete-member').show();
+                    },
+                    openEditModal(id, name, phone) {
+                        this.editingMemberId = id;
+                        this.editingMemberName = name;
+                        this.editingMemberPhone = phone;
+                        $wire.set('editingMemberId', id);
+                        $wire.set('memberName', name);
+                        $wire.set('memberPhoneNumber', phone);
+                        $wire.set('memberPhoto', null);
+                        $flux.modal('edit-member').show();
+                    }
+                }"
+                x-on:member-deleted.window="selectedMemberId = $event.detail.selectedMemberId"
+            >
                 {{-- Left: member list --}}
                 <div class="flex flex-col gap-2">
                     @foreach ($members as $member)
-                        <button type="button" wire:click="selectMember({{ $member->id }})"
+                        <button
+                            type="button"
                             wire:key="member-{{ $member->id }}"
-                            @class([
-                                'flex items-center gap-3 w-full text-left rounded-xl border px-4 py-3 transition-colors',
-                                'border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800' => $selectedMemberId !== $member->id,
-                                'border-blue-500 bg-blue-50 dark:bg-blue-950/40' => $selectedMemberId === $member->id,
-                            ])>
+                            x-on:click="selectedMemberId = {{ $member->id }}"
+                            x-bind:class="selectedMemberId === {{ $member->id }}
+                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40'
+                                : 'border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800'"
+                            class="flex items-center gap-3 w-full text-left rounded-xl border px-4 py-3 transition-colors"
+                        >
                             @if ($member->photo)
                                 <img src="{{ route('exhibitor.badges.photo', [$booking, $member]) }}"
                                     alt="{{ $member->name }}"
@@ -84,40 +114,41 @@
                     @endforeach
                 </div>
 
-                {{-- Right: badge preview + actions --}}
-                @if ($selectedMember)
-                    <div class="relative lg:col-span-2">
-                        <div class="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700">
-                            <img src="{{ route('exhibitor.badges.inline', [$booking, $selectedMember]) }}"
-                                alt="Badge — {{ $selectedMember->name }}"
-                                class="w-full h-auto"
-                                wire:key="preview-{{ $selectedMember->id }}"
-                                loading="lazy">
-                        </div>
+                {{-- Right: badge previews (one per member, shown/hidden via Alpine) --}}
+                <div class="lg:col-span-2">
+                    @foreach ($members as $member)
+                        <div class="relative" x-show="selectedMemberId === {{ $member->id }}" x-cloak>
+                            <div class="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700">
+                                <img src="{{ route('exhibitor.badges.inline', [$booking, $member]) }}"
+                                    alt="Badge — {{ $member->name }}"
+                                    class="w-full h-auto"
+                                    loading="lazy">
+                            </div>
 
-                        <div class="absolute bottom-3 right-3 flex items-center gap-1 rounded-lg bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm px-1.5 py-1 shadow">
-                            <flux:tooltip content="Download">
-                                <flux:button variant="ghost" size="sm" icon="arrow-down-tray" iconVariant="outline"
-                                    :href="route('exhibitor.badges.download', [$booking, $selectedMember])" />
-                            </flux:tooltip>
-                            <flux:tooltip content="Edit">
-                                <flux:button variant="ghost" size="sm" icon="pencil" iconVariant="outline"
-                                    wire:click="openEditModal({{ $selectedMember->id }})" />
-                            </flux:tooltip>
-                            <flux:tooltip content="Delete">
-                                <flux:button variant="ghost" size="sm" icon="trash" iconVariant="outline"
-                                    class="text-red-500 hover:text-red-600"
-                                    wire:click="confirmDelete({{ $selectedMember->id }})" />
-                            </flux:tooltip>
+                            <div class="absolute bottom-3 right-3 flex items-center gap-1 rounded-lg bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm px-1.5 py-1 shadow">
+                                <flux:tooltip content="Download">
+                                    <flux:button variant="ghost" size="sm" icon="arrow-down-tray" iconVariant="outline"
+                                        :href="route('exhibitor.badges.download', [$booking, $member])" />
+                                </flux:tooltip>
+                                <flux:tooltip content="Edit">
+                                    <flux:button variant="ghost" size="sm" icon="pencil" iconVariant="outline"
+                                        x-on:click="openEditModal({{ $member->id }}, @js($member->name), @js($member->phone_number ?? ''))" />
+                                </flux:tooltip>
+                                <flux:tooltip content="Delete">
+                                    <flux:button variant="ghost" size="sm" icon="trash" iconVariant="outline"
+                                        class="text-red-500 hover:text-red-600"
+                                        x-on:click="openDeleteModal({{ $member->id }}, @js($member->name))" />
+                                </flux:tooltip>
+                            </div>
                         </div>
-                    </div>
-                @endif
+                    @endforeach
+                </div>
             </div>
         @endif
     </flux:card>
 
     {{-- Delete Confirmation Modal --}}
-    <flux:modal wire:model="showDeleteModal" name="delete-member" class="w-full max-w-sm">
+    <flux:modal name="delete-member" class="w-full max-w-sm">
         <div class="space-y-4">
             <div>
                 <flux:heading size="lg">Remove member?</flux:heading>
@@ -128,7 +159,9 @@
                 </flux:text>
             </div>
             <div class="flex justify-end gap-2">
-                <flux:button variant="ghost" wire:click="$set('showDeleteModal', false)">Cancel</flux:button>
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
                 <flux:button variant="danger" wire:click="deleteMember" wire:loading.attr="disabled">
                     <span wire:loading.remove wire:target="deleteMember">Remove</span>
                     <span wire:loading wire:target="deleteMember">Removing...</span>
@@ -171,7 +204,9 @@
             @endif
 
             <div class="flex justify-end gap-2">
-                <flux:button variant="ghost" wire:click="$set('showAddModal', false)">Cancel</flux:button>
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
                 <flux:button variant="primary" wire:click="addMember" wire:loading.attr="disabled">
                     <span wire:loading.remove wire:target="addMember">Add Member</span>
                     <span wire:loading wire:target="addMember">Adding...</span>
@@ -181,7 +216,7 @@
     </flux:modal>
 
     {{-- Edit Member Modal --}}
-    <flux:modal wire:model="showEditModal" name="edit-member" class="w-full max-w-md">
+    <flux:modal name="edit-member" class="w-full max-w-md">
         <div class="space-y-4">
             <flux:heading size="lg">Edit Badge Member</flux:heading>
 
@@ -214,7 +249,9 @@
             @endif
 
             <div class="flex justify-end gap-2">
-                <flux:button variant="ghost" wire:click="$set('showEditModal', false)">Cancel</flux:button>
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
                 <flux:button variant="primary" wire:click="updateMember" wire:loading.attr="disabled">
                     <span wire:loading.remove wire:target="updateMember">Save Changes</span>
                     <span wire:loading wire:target="updateMember">Saving...</span>
