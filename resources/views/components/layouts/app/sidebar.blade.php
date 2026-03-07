@@ -24,6 +24,9 @@
                     <flux:navlist.item icon="identification" :href="route('exhibitor.badges.index')"
                         :current="request()->routeIs('exhibitor.badges.*')" wire:navigate>{{ __('Badges') }}
                     </flux:navlist.item>
+                    <flux:navlist.item icon="building-storefront" :href="route('exhibitor.company-profile')"
+                        :current="request()->routeIs('exhibitor.company-profile')" wire:navigate>{{ __('Company Profile') }}
+                    </flux:navlist.item>
                 </flux:navlist.group>
             @endif
 

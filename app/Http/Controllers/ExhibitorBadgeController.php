@@ -89,6 +89,18 @@ class ExhibitorBadgeController extends Controller
             ->header('Content-Disposition', 'attachment; filename="exhibitor-svgs.zip"');
     }
 
+    public function profileMedia(Booking $booking): Response
+    {
+        $this->authorizeBookingAccess($booking);
+
+        abort_unless($booking->profile_message_media && Storage::exists($booking->profile_message_media), 404);
+
+        $contents = Storage::get($booking->profile_message_media);
+        $mime = Storage::mimeType($booking->profile_message_media) ?: 'application/octet-stream';
+
+        return response($contents)->header('Content-Type', $mime);
+    }
+
     public function photo(Booking $booking, ExhibitorBadgeMember $member): Response
     {
         $this->authorizeAccess($booking, $member);

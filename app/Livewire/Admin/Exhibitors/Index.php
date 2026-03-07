@@ -441,11 +441,10 @@ class Index extends Component
 
         $bookings = Booking::query()
             ->where(function ($q) {
-                // Full payment completed OR partial payment with credentials already generated
+                // Full payment completed OR credentials already generated (including revoked-to-zero payments)
                 $q->where('status', BookingStatus::PaymentCompleted)
                     ->orWhere(function ($q2) {
                         $q2->where('status', BookingStatus::PaymentPending)
-                            ->where('amount_paid', '>', 0)
                             ->whereNotNull('login_password');
                     });
             })
