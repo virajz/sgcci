@@ -77,6 +77,11 @@ class User extends Authenticatable
         return $this->role === 'exhibitor';
     }
 
+    public function isFrontDesk(): bool
+    {
+        return $this->role === 'front_desk';
+    }
+
     public function booking(): HasOne
     {
         return $this->hasOne(Booking::class, 'exhibitor_user_id');

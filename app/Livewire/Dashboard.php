@@ -15,6 +15,13 @@ class Dashboard extends Component
     // Total stalls available in the exhibition (based on the map)
     private const TOTAL_STALLS = 104;
 
+    public function mount(): void
+    {
+        if (auth()->user()?->isFrontDesk()) {
+            $this->redirect(route('front-desk.index'), navigate: true);
+        }
+    }
+
     public function getAvailableStallsProperty(): int
     {
         $exhibition = \App\Models\Exhibition::first();

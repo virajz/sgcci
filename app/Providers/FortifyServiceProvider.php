@@ -15,7 +15,20 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->instance(\Laravel\Fortify\Contracts\LoginResponse::class, new class implements \Laravel\Fortify\Contracts\LoginResponse
+        {
+            public function toResponse($request): \Symfony\Component\HttpFoundation\Response
+            {
+                /** @var \App\Models\User|null $user */
+                $user = auth()->user();
+
+                if ($user?->isFrontDesk()) {
+                    return redirect()->route('front-desk.index');
+                }
+
+                return redirect()->intended(route('dashboard'));
+            }
+        });
     }
 
     /**

@@ -44,6 +44,9 @@
                     <flux:navlist.item icon="user-group" :href="route('admin.visitors.index')"
                         :current="request()->routeIs('admin.visitors.*')" wire:navigate>{{ __('Visitors') }}
                     </flux:navlist.item>
+                    <flux:navlist.item icon="user-plus" :href="route('admin.walk-in-visitors.index')"
+                        :current="request()->routeIs('admin.walk-in-visitors.*')" wire:navigate>{{ __('Walk-in Visitors') }}
+                    </flux:navlist.item>
                     <flux:navlist.item icon="users" :href="route('admin.staff-members.index')"
                         :current="request()->routeIs('admin.staff-members.*')" wire:navigate>{{ __('Staff Members') }}
                     </flux:navlist.item>
@@ -55,6 +58,14 @@
                             :current="request()->routeIs('admin.database-backups')" wire:navigate>{{ __('Database Backups') }}
                         </flux:navlist.item>
                     @endif
+                </flux:navlist.group>
+            @endif
+
+            @if(auth()->user()->isFrontDesk())
+                <flux:navlist.group :heading="__('Front Desk')" class="grid">
+                    <flux:navlist.item icon="computer-desktop" :href="route('front-desk.index')"
+                        :current="request()->routeIs('front-desk.index')" wire:navigate>{{ __('Visitor Station') }}
+                    </flux:navlist.item>
                 </flux:navlist.group>
             @endif
         </flux:navlist>

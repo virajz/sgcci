@@ -25,6 +25,12 @@ class VisitorScanController extends Controller
             ]);
         }
 
+        if ($user?->isFrontDesk()) {
+            return redirect()->route('front-desk.index', [
+                'lookup' => $registrationCode,
+            ]);
+        }
+
         return redirect()->route('visitors-registration.thank-you', [
             'exhibition' => $exhibition->slug,
             'registrationCode' => $registrationCode,

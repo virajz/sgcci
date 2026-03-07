@@ -332,6 +332,105 @@ class QrCodeService
     }
 
     /**
+     * Generate a walk-in visitor badge using the exhibitor badge template,
+     * but without a photo (initials placeholder only).
+     *
+     * @param  string  $qrData  URL/text to encode in the QR
+     * @param  string  $visitorName  Full name of the visitor
+     * @param  string  $companyName  Company / organisation (empty string if none)
+     * @param  string  $registrationCode  e.g. VIS-ABCDEF
+     */
+    public function generateWalkInBadgeImage(
+        string $qrData,
+        string $visitorName,
+        string $companyName,
+        string $registrationCode,
+    ): string {
+        /** @var Imagick $badge */
+        $badge = new Imagick(public_path('badge.jpeg'));
+
+        // --- Initials placeholder circle ---
+        /** @var ImagickDraw $circleDraw */
+        $circleDraw = new ImagickDraw;
+        $circleDraw->setFillColor(new ImagickPixel('#d1d5db'));
+        $cx = self::BADGE_PHOTO_X + self::BADGE_PHOTO_DIAMETER / 2;
+        $cy = self::BADGE_PHOTO_Y + self::BADGE_PHOTO_DIAMETER / 2;
+        $r = self::BADGE_PHOTO_DIAMETER / 2;
+        $circleDraw->circle($cx, $cy, $cx + $r, $cy);
+        $badge->drawImage($circleDraw);
+
+        $initials = collect(explode(' ', $visitorName))
+            ->take(2)
+            ->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))
+            ->implode('');
+
+        /** @var ImagickDraw $initDraw */
+        $initDraw = new ImagickDraw;
+        $initDraw->setFont(self::fontPath());
+        $initDraw->setFontSize(80);
+        $initDraw->setFillColor(new ImagickPixel('#6b7280'));
+        $initDraw->setTextAlignment(Imagick::ALIGN_CENTER);
+        $badge->annotateImage($initDraw, (int) $cx, (int) ($cy + 30), 0, $initials);
+
+        // --- QR code ---
+        $qrPng = (new Writer(
+            new ImageRenderer(
+                new RendererStyle(self::BADGE_QR_SIZE, 0, null, null, Fill::uniformColor(
+                    new Rgb(...self::BADGE_QR_BG),
+                    new Rgb(...self::BADGE_QR_FG),
+                )),
+                new ImagickImageBackEnd
+            )
+        ))->writeString($qrData);
+
+        /** @var Imagick $qrImage */
+        $qrImage = new Imagick;
+        $qrImage->readImageBlob($qrPng);
+        $badge->compositeImage($qrImage, Imagick::COMPOSITE_OVER, self::BADGE_QR_X, self::BADGE_QR_Y);
+
+        // --- Text: Name ---
+        $nameText = mb_strtoupper($visitorName);
+        $nameFontSize = $this->fitTextToWidth($badge, $nameText, self::BADGE_NAME_FONT_MAX, self::BADGE_NAME_FONT_MIN, self::BADGE_TEXT_MAX_WIDTH);
+
+        /** @var ImagickDraw $nameDraw */
+        $nameDraw = new ImagickDraw;
+        $nameDraw->setFont(self::fontPath());
+        $nameDraw->setFontSize($nameFontSize);
+        $nameDraw->setFillColor(new ImagickPixel(self::BADGE_TEXT_DARK));
+        $nameDraw->setTextAlignment(Imagick::ALIGN_CENTER);
+        $nameDraw->setTextAntialias(true);
+        $badge->annotateImage($nameDraw, self::BADGE_PANEL_CENTER_X, self::BADGE_NAME_Y, 0, $nameText);
+
+        // --- Text: Company ---
+        $companyText = $companyName ?: 'Visitor';
+        $companyFontSize = $this->fitTextToWidth($badge, $companyText, self::BADGE_COMPANY_FONT_MAX, self::BADGE_COMPANY_FONT_MIN, self::BADGE_TEXT_MAX_WIDTH);
+
+        /** @var ImagickDraw $companyDraw */
+        $companyDraw = new ImagickDraw;
+        $companyDraw->setFont(self::fontPath());
+        $companyDraw->setFontSize($companyFontSize);
+        $companyDraw->setFillColor(new ImagickPixel(self::BADGE_TEXT_DARK));
+        $companyDraw->setTextAlignment(Imagick::ALIGN_CENTER);
+        $companyDraw->setTextAntialias(true);
+        $badge->annotateImage($companyDraw, self::BADGE_PANEL_CENTER_X, self::BADGE_COMPANY_Y, 0, $companyText);
+
+        // --- Text: Registration Code ---
+        /** @var ImagickDraw $codeDraw */
+        $codeDraw = new ImagickDraw;
+        $codeDraw->setFont(self::fontPath());
+        $codeDraw->setFontSize(self::BADGE_STALL_FONT);
+        $codeDraw->setFillColor(new ImagickPixel('#6b7280'));
+        $codeDraw->setTextAlignment(Imagick::ALIGN_CENTER);
+        $codeDraw->setTextAntialias(true);
+        $badge->annotateImage($codeDraw, self::BADGE_PANEL_CENTER_X, self::BADGE_STALL_Y, 0, $registrationCode);
+
+        $badge->setImageFormat('jpeg');
+        $badge->setImageCompressionQuality(92);
+
+        return $badge->getImageBlob();
+    }
+
+    /**
      * Find the largest font size where the text fits within the given max width.
      */
     private function fitFontSize(Imagick $img, string $text): int
