@@ -48,6 +48,10 @@
                 </div>
                 <div class="flex items-center gap-1.5">
                     @if ($members->isNotEmpty())
+                        <flux:tooltip content="Print All Badges">
+                            <flux:button variant="ghost" size="sm" icon="printer"
+                                :href="route('admin.exhibitors.print-badges', $booking)" target="_blank" />
+                        </flux:tooltip>
                         <flux:tooltip content="Download All Badges">
                             <flux:button variant="ghost" size="sm" icon="arrow-down-tray"
                                 :href="route('exhibitor.badges.download-all', $booking)" />
