@@ -16,7 +16,7 @@ use ImagickPixel;
 class QrCodeService
 {
     // -------------------------------------------------------------------------
-    // Exhibitor badge constants (badge.jpeg — 1600×1048, landscape)
+    // Exhibitor badge constants (badge.jpg — 1600×1048, landscape)
     // Left white panel: x=1..784, y=195..1048 (usable area below top logos)
     // Panel centre X = 392
     // -------------------------------------------------------------------------
@@ -202,7 +202,7 @@ class QrCodeService
     }
 
     /**
-     * Generate the exhibitor badge composite: badge.jpeg with photo, name,
+     * Generate the exhibitor badge composite: badge.jpg with photo, name,
      * company, stall number(s), and the QR code placed on the left white panel.
      *
      * @param  string  $qrData  URL/text to encode in the QR
@@ -219,7 +219,7 @@ class QrCodeService
         ?string $photoPath = null,
     ): string {
         /** @var Imagick $badge */
-        $badge = new Imagick(public_path('badge.jpeg'));
+        $badge = new Imagick(public_path('badge.jpg'));
 
         // --- Circular photo ---
         if ($photoPath && file_exists($photoPath)) {
@@ -347,7 +347,7 @@ class QrCodeService
         string $registrationCode,
     ): string {
         /** @var Imagick $badge */
-        $badge = new Imagick(public_path('badge.jpeg'));
+        $badge = new Imagick(public_path('badge.jpg'));
 
         // --- Initials placeholder circle ---
         /** @var ImagickDraw $circleDraw */

@@ -27,6 +27,9 @@ class Index extends Component
     /** @var array{registration_code: string, name: string, phone_number: string, company_name: string|null, designation: string|null, city: string, state: string, status_label: string, status_color: string, additional_persons: array<int, array{name: string, phone_number: string}>}|null */
     public ?array $foundVisitor = null;
 
+    /** @var array<int, array{registration_code: string, name: string, phone_number: string, company_name: string|null, city: string, state: string, status_label: string, status_color: string}> */
+    public array $matchedVisitors = [];
+
     // ── Add Visitor ───────────────────────────────────────────────────────────
     public string $phoneNumber = '';
 
@@ -90,38 +93,76 @@ class Index extends Component
     {
         $this->validate(['lookupCode' => ['required', 'string']]);
 
-        $code = strtoupper(trim($this->lookupCode));
+        $term = trim($this->lookupCode);
+        $code = strtoupper($term);
 
         $exhibition = $this->activeExhibition();
 
-        $visitor = ExhibitionVisitor::where('exhibition_id', $exhibition->id)
-            ->where('registration_code', $code)
-            ->first();
+        $visitors = ExhibitionVisitor::where('exhibition_id', $exhibition->id)
+            ->where(function ($q) use ($term, $code): void {
+                $q->where('registration_code', $code)
+                    ->orWhere('phone_number', 'like', "%{$term}%")
+                    ->orWhere('name', 'ilike', "%{$term}%");
+            })
+            ->orderBy('name')
+            ->get();
 
-        if ($visitor) {
-            $this->foundVisitor = [
-                'registration_code' => $visitor->registration_code,
-                'name' => $visitor->name,
-                'phone_number' => $visitor->phone_number,
-                'company_name' => $visitor->company_name,
-                'designation' => $visitor->designation,
-                'city' => $visitor->city,
-                'state' => $visitor->state,
-                'status_label' => $visitor->status->label(),
-                'status_color' => $visitor->status->color(),
-                'additional_persons' => is_array($visitor->additional_persons) ? $visitor->additional_persons : [],
-            ];
+        if ($visitors->count() === 1) {
+            $this->setFoundVisitor($visitors->first());
+            $this->matchedVisitors = [];
+        } elseif ($visitors->count() > 1) {
+            $this->foundVisitor = null;
+            $this->matchedVisitors = $visitors->map(fn (ExhibitionVisitor $v) => [
+                'registration_code' => $v->registration_code,
+                'name' => $v->name,
+                'phone_number' => $v->phone_number,
+                'company_name' => $v->company_name,
+                'city' => $v->city,
+                'state' => $v->state,
+                'status_label' => $v->status->label(),
+                'status_color' => $v->status->color(),
+            ])->values()->all();
         } else {
             $this->foundVisitor = null;
+            $this->matchedVisitors = [];
         }
 
         $this->lookupPerformed = true;
+    }
+
+    public function selectVisitor(string $registrationCode): void
+    {
+        $exhibition = $this->activeExhibition();
+
+        $visitor = ExhibitionVisitor::where('exhibition_id', $exhibition->id)
+            ->where('registration_code', $registrationCode)
+            ->firstOrFail();
+
+        $this->setFoundVisitor($visitor);
+        $this->matchedVisitors = [];
+    }
+
+    private function setFoundVisitor(ExhibitionVisitor $visitor): void
+    {
+        $this->foundVisitor = [
+            'registration_code' => $visitor->registration_code,
+            'name' => $visitor->name,
+            'phone_number' => $visitor->phone_number,
+            'company_name' => $visitor->company_name,
+            'designation' => $visitor->designation,
+            'city' => $visitor->city,
+            'state' => $visitor->state,
+            'status_label' => $visitor->status->label(),
+            'status_color' => $visitor->status->color(),
+            'additional_persons' => is_array($visitor->additional_persons) ? $visitor->additional_persons : [],
+        ];
     }
 
     public function resetLookup(): void
     {
         $this->lookupCode = '';
         $this->foundVisitor = null;
+        $this->matchedVisitors = [];
         $this->lookupPerformed = false;
     }
 

@@ -142,10 +142,47 @@
                     <flux:button variant="ghost" size="sm" wire:click="resetLookup" icon="arrow-left" class="w-full">
                         Search Again
                     </flux:button>
+                @elseif (! empty($matchedVisitors))
+                    {{-- Multiple matches --}}
+                    <flux:callout variant="warning" icon="users">
+                        <flux:callout.heading>{{ count($matchedVisitors) }} visitors found</flux:callout.heading>
+                        <flux:callout.text>Select the correct visitor below.</flux:callout.text>
+                    </flux:callout>
+
+                    <div class="space-y-2">
+                        @foreach ($matchedVisitors as $index => $match)
+                            <button
+                                wire:click="selectVisitor('{{ $match['registration_code'] }}')"
+                                wire:key="match-{{ $index }}"
+                                class="w-full text-left rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-colors"
+                            >
+                                <div class="p-3 flex items-center gap-3">
+                                    <div class="flex items-center justify-center text-xs font-bold text-blue-700 bg-blue-100 rounded-full size-9 dark:bg-blue-900/50 dark:text-blue-300 shrink-0">
+                                        {{ mb_strtoupper(mb_substr($match['name'], 0, 1)) }}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-semibold text-sm truncate">{{ $match['name'] }}</p>
+                                        <p class="text-xs text-zinc-500 font-mono">{{ $match['phone_number'] }}</p>
+                                        @if ($match['company_name'])
+                                            <p class="text-xs text-zinc-400 truncate">{{ $match['company_name'] }}</p>
+                                        @endif
+                                    </div>
+                                    <div class="flex flex-col items-end gap-1 shrink-0">
+                                        <flux:badge color="{{ $match['status_color'] }}" size="sm">{{ $match['status_label'] }}</flux:badge>
+                                        <span class="text-xs text-zinc-400">{{ $match['city'] }}, {{ $match['state'] }}</span>
+                                    </div>
+                                </div>
+                            </button>
+                        @endforeach
+                    </div>
+
+                    <flux:button variant="ghost" size="sm" wire:click="resetLookup" icon="arrow-left" class="w-full">
+                        Search Again
+                    </flux:button>
                 @else
                     <flux:callout variant="danger" icon="exclamation-circle">
                         <flux:callout.heading>Not found</flux:callout.heading>
-                        <flux:callout.text>No visitor with code <span class="font-mono font-semibold">{{ strtoupper($lookupCode) }}</span>.</flux:callout.text>
+                        <flux:callout.text>No visitor matches <span class="font-mono font-semibold">{{ $lookupCode }}</span>.</flux:callout.text>
                     </flux:callout>
                 @endif
             @endif

@@ -149,7 +149,9 @@ class Badges extends Component
     public function render()
     {
         $scanUrl = route('exhibitor.scan', $this->booking->booking_code);
-        $qrSvg = app(QrCodeService::class)->generateSvg($scanUrl, 80);
+        $qrService = app(QrCodeService::class);
+        $qrSvg = $qrService->generateSvg($scanUrl, 80);
+        $qrSvgDownload = $qrService->generateSvg($scanUrl, 400);
 
         $members = $this->booking->badgeMembers()->get();
 
@@ -157,7 +159,8 @@ class Badges extends Component
             'members' => $members,
             'selectedMember' => $members->firstWhere('id', $this->selectedMemberId),
             'qrSvg' => $qrSvg,
-            'scanUrl' => $scanUrl,
+            'qrSvgDownload' => $qrSvgDownload,
+            'bookingCode' => $this->booking->booking_code,
         ]);
     }
 }
