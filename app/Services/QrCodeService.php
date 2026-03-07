@@ -25,27 +25,27 @@ class QrCodeService
     private const BADGE_PANEL_CENTER_X = 392;
 
     /** Circular photo: diameter and top-left corner (centered in panel). */
-    private const BADGE_PHOTO_DIAMETER = 320;
+    private const BADGE_PHOTO_DIAMETER = 200;
 
-    private const BADGE_PHOTO_X = 232;   // (392 - 320/2)
+    private const BADGE_PHOTO_X = 292;   // (392 - 200/2)
 
-    private const BADGE_PHOTO_Y = 250;   // just below the top logo area
+    private const BADGE_PHOTO_Y = 230;   // just below the top logo area
 
-    /** Name text Y baseline (below photo bottom at y=570, +50 gap). */
-    private const BADGE_NAME_Y = 630;
+    /** Name text Y baseline (below photo bottom at y=430, +40 gap). */
+    private const BADGE_NAME_Y = 490;
 
     /** Company text Y baseline. */
-    private const BADGE_COMPANY_Y = 685;
+    private const BADGE_COMPANY_Y = 545;
 
     /** Stall text Y baseline. */
-    private const BADGE_STALL_Y = 730;
+    private const BADGE_STALL_Y = 590;
 
     /** QR code size and top-left (centered in panel). */
-    private const BADGE_QR_SIZE = 128;
+    private const BADGE_QR_SIZE = 230;
 
-    private const BADGE_QR_X = 328;     // (392 - 128/2)
+    private const BADGE_QR_X = 277;     // (392 - 230/2)
 
-    private const BADGE_QR_Y = 770;
+    private const BADGE_QR_Y = 625;
 
     /** Max text width for left panel text (leave ~30px margin each side). */
     private const BADGE_TEXT_MAX_WIDTH = 560;
@@ -81,7 +81,7 @@ class QrCodeService
     private const BOX_Y2 = 1105;
 
     /** Padding inside the blue box so the QR doesn't touch the edges. */
-    private const BOX_PADDING = 28;
+    private const BOX_PADDING = 10;
 
     /** Y baseline for the visitor name (below "REGISTRATION" which ends at ~1289). */
     private const NAME_Y = 1390;
