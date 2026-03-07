@@ -164,7 +164,7 @@ class ExportVisitors extends Component
 
             $totalPersons = 1 + count($visitor->additional_persons ?? []);
 
-            $commonPaymentFields = $this->includePaymentInfo ? [
+            $primaryPaymentFields = $this->includePaymentInfo ? [
                 $totalPersons,
                 $visitor->payment_amount ? number_format((float) $visitor->payment_amount, 2) : '',
                 $visitor->payment_status ?? '',
@@ -172,6 +172,8 @@ class ExportVisitors extends Component
                 $visitor->payment_completed_at?->format('Y-m-d H:i:s') ?? '',
                 $visitor->payment_transaction_id ?? '',
             ] : [];
+
+            $additionalPaymentFields = $this->includePaymentInfo ? ['', '', '', '', '', ''] : [];
 
             // Primary visitor row
             $row = array_merge(
@@ -184,7 +186,7 @@ class ExportVisitors extends Component
                     $visitor->designation ?? '',
                 ] : [],
                 $commonBusinessFields,
-                $commonPaymentFields,
+                $primaryPaymentFields,
             );
 
             fputcsv($handle, $row);
@@ -201,7 +203,7 @@ class ExportVisitors extends Component
                         '',
                     ] : [],
                     $commonBusinessFields,
-                    $commonPaymentFields,
+                    $additionalPaymentFields,
                 );
 
                 fputcsv($handle, $row);
