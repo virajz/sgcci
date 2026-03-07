@@ -30,12 +30,6 @@
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
-                @if ($members->isNotEmpty())
-                    <flux:button variant="ghost" icon="arrow-down-tray"
-                        :href="route('exhibitor.badges.download-all', $booking)">
-                        Download All
-                    </flux:button>
-                @endif
                 @if ($members->count() < $booking->badge_limit)
                     <flux:button variant="primary" icon="plus" wire:click="openAddModal">Add Member</flux:button>
                 @endif
@@ -126,10 +120,6 @@
                             </div>
 
                             <div class="absolute bottom-3 right-3 flex items-center gap-1 rounded-lg bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm px-1.5 py-1 shadow">
-                                <flux:tooltip content="Download">
-                                    <flux:button variant="ghost" size="sm" icon="arrow-down-tray" iconVariant="outline"
-                                        :href="route('exhibitor.badges.download', [$booking, $member])" />
-                                </flux:tooltip>
                                 <flux:tooltip content="Edit">
                                     <flux:button variant="ghost" size="sm" icon="pencil" iconVariant="outline"
                                         x-on:click="openEditModal({{ $member->id }}, @js($member->name), @js($member->phone_number ?? ''))" />

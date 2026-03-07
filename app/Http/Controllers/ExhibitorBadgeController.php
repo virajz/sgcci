@@ -113,6 +113,20 @@ class ExhibitorBadgeController extends Controller
         return response($contents)->header('Content-Type', $mime);
     }
 
+    public function printAll(Booking $booking): \Illuminate\View\View
+    {
+        abort_unless(Auth::user()?->isAdmin(), 403);
+
+        $members = $booking->badgeMembers()->get();
+
+        $badges = $members->map(fn (ExhibitorBadgeMember $member) => [
+            'name' => $member->name,
+            'url' => route('exhibitor.badges.inline', [$booking, $member]),
+        ])->all();
+
+        return view('front-desk.print-badge', compact('badges'));
+    }
+
     public function downloadAll(Booking $booking): Response
     {
         $this->authorizeBookingAccess($booking);

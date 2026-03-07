@@ -1,4 +1,4 @@
-<div class="flex h-screen overflow-hidden bg-zinc-100 dark:bg-zinc-900" x-data="qrScanner()" x-init="init()">
+<div class="flex h-full overflow-hidden bg-zinc-100 dark:bg-zinc-900" x-data="qrScanner()" x-init="init()">
 
     {{-- ── PANEL 1: QR CAMERA SCANNER ─────────────────────────────────────── --}}
     <div class="flex flex-col w-1/3 border-e border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800">

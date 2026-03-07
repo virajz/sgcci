@@ -35,6 +35,10 @@
                         :href="route('exhibitor.badges.download-all', $booking)">
                         Download All
                     </flux:button>
+                    <flux:button variant="ghost" icon="printer"
+                        :href="route('admin.exhibitors.print-badges', $booking)" target="_blank">
+                        Print All
+                    </flux:button>
                 @endif
                 @if ($members->count() < $booking->badge_limit)
                     <flux:button variant="primary" icon="plus" wire:click="openAddModal">Add Member</flux:button>
