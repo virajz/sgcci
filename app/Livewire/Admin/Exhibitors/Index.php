@@ -26,6 +26,10 @@ class Index extends Component
 
     public int $editingBadgeLimit = 5;
 
+    public ?int $editingInvitedGuestsLimitId = null;
+
+    public int $editingInvitedGuestsLimit = 50;
+
     /** @var array<int> */
     public array $selectedBookings = [];
 
@@ -56,6 +60,7 @@ class Index extends Component
         'exhibition' => true,
         'stalls' => true,
         'badges' => true,
+        'invites' => true,
         'login_password' => true,
         'paid_at' => false,
     ];
@@ -115,6 +120,31 @@ class Index extends Component
     public function cancelEditingBadgeLimit(): void
     {
         $this->editingBadgeLimitId = null;
+    }
+
+    public function startEditingInvitedGuestsLimit(int $bookingId, int $currentLimit): void
+    {
+        $this->editingInvitedGuestsLimitId = $bookingId;
+        $this->editingInvitedGuestsLimit = $currentLimit;
+    }
+
+    public function saveInvitedGuestsLimit(): void
+    {
+        $this->validate([
+            'editingInvitedGuestsLimit' => ['required', 'integer', 'min:1', 'max:500'],
+        ]);
+
+        $booking = Booking::findOrFail($this->editingInvitedGuestsLimitId);
+        $booking->update(['invited_guests_limit' => $this->editingInvitedGuestsLimit]);
+
+        $this->editingInvitedGuestsLimitId = null;
+
+        $this->dispatch('invited-guests-limit-saved');
+    }
+
+    public function cancelEditingInvitedGuestsLimit(): void
+    {
+        $this->editingInvitedGuestsLimitId = null;
     }
 
     public function openGenerateConfirmModal(int $bookingId, string $brandName): void
@@ -408,6 +438,7 @@ class Index extends Component
             'exhibition' => true,
             'stalls' => true,
             'badges' => true,
+            'invites' => true,
             'login_password' => true,
             'paid_at' => false,
         ];
@@ -428,6 +459,7 @@ class Index extends Component
             'exhibition' => 'Exhibition',
             'stalls' => 'Stalls',
             'badges' => 'Badges',
+            'invites' => 'Invites',
             'login_password' => 'Login Password',
             'paid_at' => 'Paid At',
             default => ucfirst($column),
@@ -449,7 +481,7 @@ class Index extends Component
                     });
             })
             ->where('is_manual_block', false)
-            ->with(['exhibition', 'exhibitorUser', 'badgeMembers'])
+            ->with(['exhibition', 'exhibitorUser', 'badgeMembers', 'invitedGuests'])
             ->when($this->search, function ($query) use ($search, $phoneSearch) {
                 $query->where(function ($q) use ($search, $phoneSearch) {
                     $q->whereRaw('LOWER(booking_code) LIKE ?', ["%{$search}%"])

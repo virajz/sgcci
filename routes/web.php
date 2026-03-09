@@ -12,6 +12,7 @@ use App\Livewire\Admin\DatabaseBackups;
 use App\Livewire\Admin\Exhibitions\Index as ExhibitionsIndex;
 use App\Livewire\Admin\Exhibitors\Badges as AdminExhibitorBadges;
 use App\Livewire\Admin\Exhibitors\Index as ExhibitorsIndex;
+use App\Livewire\Admin\Exhibitors\InvitedGuests as AdminExhibitorInvitedGuests;
 use App\Livewire\Admin\Inquiries\EditBooking as AdminEditBooking;
 use App\Livewire\Admin\Inquiries\Index as InquiriesIndex;
 use App\Livewire\Admin\Inquiries\Show as InquiriesShow;
@@ -31,6 +32,7 @@ use App\Livewire\Exhibitions\VisitorsRegistration;
 use App\Livewire\Exhibitions\VisitorThankYou;
 use App\Livewire\Exhibitor\Badges as ExhibitorBadges;
 use App\Livewire\Exhibitor\CompanyProfile as ExhibitorCompanyProfile;
+use App\Livewire\Exhibitor\InvitedGuests as ExhibitorInvitedGuests;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -104,6 +106,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('exhibitor')->name('exhibitor.')->group(function () {
         Route::get('badges', ExhibitorBadges::class)->name('badges.index');
         Route::get('company-profile', ExhibitorCompanyProfile::class)->name('company-profile');
+        Route::get('invited-guests', ExhibitorInvitedGuests::class)->name('invited-guests');
         Route::get('badges/{booking}/{member}/image', [ExhibitorBadgeController::class, 'inline'])->name('badges.inline');
         Route::get('badges/{booking}/{member}/photo', [ExhibitorBadgeController::class, 'photo'])->name('badges.photo');
         Route::get('badges/{booking}/{member}/download', [ExhibitorBadgeController::class, 'download'])->name('badges.download');
@@ -116,6 +119,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('exhibitions', ExhibitionsIndex::class)->name('exhibitions.index');
         Route::get('exhibitors', ExhibitorsIndex::class)->name('exhibitors.index');
         Route::get('exhibitors/{booking}/badges', AdminExhibitorBadges::class)->name('exhibitors.badges');
+        Route::get('exhibitors/{booking}/invited-guests', AdminExhibitorInvitedGuests::class)->name('exhibitors.invited-guests');
         Route::get('exhibitors/download-svgs', [ExhibitorBadgeController::class, 'downloadAllSvgs'])->name('exhibitors.download-svgs');
         Route::get('exhibitors/{booking}/download-svg', [ExhibitorBadgeController::class, 'downloadSvg'])->name('exhibitors.download-svg');
         Route::get('exhibitors/{booking}/print-badges', [ExhibitorBadgeController::class, 'printAll'])->name('exhibitors.print-badges');

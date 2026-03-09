@@ -15,6 +15,7 @@ class ExhibitionVisitor extends Model
     protected $fillable = [
         'registration_code',
         'exhibition_id',
+        'invited_by_booking_id',
         'phone_number',
         'name',
         'company_name',
@@ -76,8 +77,25 @@ class ExhibitionVisitor extends Model
         return $code;
     }
 
+    /**
+     * Generate a unique invited guest registration code in INVIS-XXXXXX format.
+     */
+    public static function generateUniqueInvitedGuestCode(): string
+    {
+        do {
+            $code = 'INVIS-'.strtoupper(substr(str_shuffle('ABCDEFGHJKLMNPQRSTUVWXYZ23456789'), 0, 6));
+        } while (static::where('registration_code', $code)->exists());
+
+        return $code;
+    }
+
     public function exhibition(): BelongsTo
     {
         return $this->belongsTo(Exhibition::class);
+    }
+
+    public function invitedByBooking(): BelongsTo
+    {
+        return $this->belongsTo(Booking::class, 'invited_by_booking_id');
     }
 }

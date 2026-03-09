@@ -90,6 +90,7 @@
                             <flux:table.column x-show="columns['exhibition']">Exhibition</flux:table.column>
                             <flux:table.column x-show="columns['stalls']">Stalls</flux:table.column>
                             <flux:table.column x-show="columns['badges']">Badges</flux:table.column>
+                            <flux:table.column x-show="columns['invites']">Invites</flux:table.column>
                             <flux:table.column x-show="columns['login_password']">Login Password</flux:table.column>
                             <flux:table.column x-show="columns['paid_at']">Paid At</flux:table.column>
                             <flux:table.column></flux:table.column>
@@ -167,6 +168,31 @@
                                         @endif
                                     </flux:table.cell>
 
+                                    <flux:table.cell x-show="columns['invites']">
+                                        @if ($editingInvitedGuestsLimitId === $booking->id)
+                                            <div class="flex items-center gap-2">
+                                                <flux:input type="number" wire:model="editingInvitedGuestsLimit"
+                                                    min="1" max="500" class="w-20" size="sm" />
+                                                <flux:button size="sm" variant="primary"
+                                                    wire:click="saveInvitedGuestsLimit" icon="check" />
+                                                <flux:button size="sm" variant="ghost"
+                                                    wire:click="cancelEditingInvitedGuestsLimit" icon="x-mark" />
+                                            </div>
+                                        @else
+                                            <div class="flex items-center gap-2">
+                                                <flux:text class="text-sm">
+                                                    {{ $booking->invitedGuests->count() }} / {{ $booking->invited_guests_limit }}
+                                                </flux:text>
+                                                <flux:tooltip content="Edit invite limit">
+                                                    <flux:button size="sm" variant="ghost" icon="pencil"
+                                                        iconVariant="outline"
+                                                        wire:click="startEditingInvitedGuestsLimit({{ $booking->id }}, {{ $booking->invited_guests_limit }})"
+                                                        :loading="false" />
+                                                </flux:tooltip>
+                                            </div>
+                                        @endif
+                                    </flux:table.cell>
+
                                     <flux:table.cell x-show="columns['login_password']">
                                         @if ($booking->login_password)
                                             <div class="flex items-center gap-2" x-data>
@@ -211,6 +237,11 @@
                                                 <flux:button size="sm" variant="ghost" icon="identification"
                                                     iconVariant="outline"
                                                     x-on:click="window.location.href = '{{ route('admin.exhibitors.badges', $booking) }}'" />
+                                            </flux:tooltip>
+                                            <flux:tooltip content="View invited guests">
+                                                <flux:button size="sm" variant="ghost" icon="user-plus"
+                                                    iconVariant="outline"
+                                                    x-on:click="window.location.href = '{{ route('admin.exhibitors.invited-guests', $booking) }}'" />
                                             </flux:tooltip>
                                             <flux:tooltip content="Download QR SVG">
                                                 <flux:button size="sm" variant="ghost" icon="qr-code"

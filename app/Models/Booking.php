@@ -88,6 +88,7 @@ class Booking extends Model
         'exhibitor_user_id',
         'login_password',
         'badge_limit',
+        'invited_guests_limit',
         'is_manually_added',
     ];
 
@@ -580,5 +581,10 @@ class Booking extends Model
     public function badgeMembers(): HasMany
     {
         return $this->hasMany(ExhibitorBadgeMember::class);
+    }
+
+    public function invitedGuests(): HasMany
+    {
+        return $this->hasMany(ExhibitionVisitor::class, 'invited_by_booking_id');
     }
 }
