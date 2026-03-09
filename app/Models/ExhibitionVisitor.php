@@ -38,6 +38,8 @@ class ExhibitionVisitor extends Model
         'payment_initiated_at',
         'payment_completed_at',
         'payment_notes',
+        'entered_at',
+        'exited_at',
     ];
 
     protected $attributes = [
@@ -52,6 +54,8 @@ class ExhibitionVisitor extends Model
             'payment_response' => 'array',
             'payment_initiated_at' => 'datetime',
             'payment_completed_at' => 'datetime',
+            'entered_at' => 'datetime',
+            'exited_at' => 'datetime',
             'status' => VisitorRegistrationStatus::class,
         ];
     }

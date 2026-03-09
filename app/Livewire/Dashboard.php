@@ -20,6 +20,10 @@ class Dashboard extends Component
         if (auth()->user()?->isFrontDesk()) {
             $this->redirect(route('front-desk.index'), navigate: true);
         }
+
+        if (auth()->user()?->isSecurityDesk()) {
+            $this->redirect(route('security-desk.index'), navigate: true);
+        }
     }
 
     public function getAvailableStallsProperty(): int

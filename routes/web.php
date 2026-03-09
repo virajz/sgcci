@@ -139,6 +139,11 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('front-desk')->name('front-desk.')->middleware('front_desk')->group(function () {
         Route::get('/', \App\Livewire\FrontDesk\Index::class)->name('index');
     });
+
+    // Security desk routes
+    Route::prefix('security-desk')->name('security-desk.')->middleware('security_desk')->group(function () {
+        Route::get('/', \App\Livewire\SecurityDesk\Index::class)->name('index');
+    });
 });
 
 // Walk-in visitor badge routes (auth required, controller handles role check)

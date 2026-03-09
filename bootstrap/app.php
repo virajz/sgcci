@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'front_desk' => \App\Http\Middleware\EnsureUserIsFrontDesk::class,
+            'security_desk' => \App\Http\Middleware\EnsureUserIsSecurityDesk::class,
         ]);
 
         // Exclude CCAvenue callback routes from CSRF verification
