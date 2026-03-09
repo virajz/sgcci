@@ -120,6 +120,36 @@ class Dashboard extends Component
         return '₹'.number_format($amount, 0);
     }
 
+    /** @return array{total_entered: int, today: int, inside: int, daily: array<string, int>} */
+    public function getScanStatsProperty(): array
+    {
+        $totalEntered = ExhibitionVisitor::whereNotNull('entered_at')->count();
+        $totalExited = ExhibitionVisitor::whereNotNull('exited_at')->count();
+        $today = ExhibitionVisitor::whereNotNull('entered_at')->whereDate('entered_at', today())->count();
+
+        $rows = ExhibitionVisitor::query()
+            ->whereNotNull('entered_at')
+            ->where('entered_at', '>=', now()->subDays(6)->startOfDay())
+            ->selectRaw('DATE(entered_at) as day, COUNT(*) as total')
+            ->groupBy('day')
+            ->orderBy('day')
+            ->pluck('total', 'day')
+            ->toArray();
+
+        $daily = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $day = now()->subDays($i)->format('Y-m-d');
+            $daily[] = ['date' => $day, 'entries' => $rows[$day] ?? 0];
+        }
+
+        return [
+            'total_entered' => $totalEntered,
+            'today' => $today,
+            'inside' => $totalEntered - $totalExited,
+            'daily' => $daily,
+        ];
+    }
+
     public function render()
     {
         return view('livewire.dashboard', [
@@ -131,6 +161,7 @@ class Dashboard extends Component
             'visitorsTotal' => $this->visitorsTotal,
             'visitorPaymentToday' => $this->visitorPaymentToday,
             'visitorPaymentTotal' => $this->visitorPaymentTotal,
+            'scanStats' => $this->scanStats,
         ]);
     }
 }

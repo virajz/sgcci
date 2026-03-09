@@ -16,6 +16,7 @@ use App\Livewire\Admin\Exhibitors\InvitedGuests as AdminExhibitorInvitedGuests;
 use App\Livewire\Admin\Inquiries\EditBooking as AdminEditBooking;
 use App\Livewire\Admin\Inquiries\Index as InquiriesIndex;
 use App\Livewire\Admin\Inquiries\Show as InquiriesShow;
+use App\Livewire\Admin\Scans\Index as ScansIndex;
 use App\Livewire\Admin\StaffMembers\Index as StaffMembersIndex;
 use App\Livewire\Admin\SupportTickets\Index as SupportTicketsIndex;
 use App\Livewire\Admin\SupportTickets\Show as SupportTicketsShow;
@@ -129,6 +130,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('visitors', VisitorsIndex::class)->name('visitors.index');
         Route::get('visitors/{visitor}', VisitorsShow::class)->name('visitors.show');
         Route::get('walk-in-visitors', WalkInVisitorsIndex::class)->name('walk-in-visitors.index');
+        Route::get('scans', ScansIndex::class)->name('scans.index');
         Route::get('staff-members', StaffMembersIndex::class)->name('staff-members.index');
         Route::get('support-tickets', SupportTicketsIndex::class)->name('support-tickets.index');
         Route::get('support-tickets/{ticket}', SupportTicketsShow::class)->name('support-tickets.show');

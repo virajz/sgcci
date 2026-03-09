@@ -119,6 +119,37 @@
         </div>
     @endif
 
+    {{-- Entry Scans Widget (admin only) --}}
+    @if (!auth()->user()->isExhibitor())
+        <a href="{{ route('admin.scans.index') }}" wire:navigate class="block">
+            <flux:card class="hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <flux:heading size="sm">Entry Scans — Last 7 Days</flux:heading>
+                        <flux:text class="text-xs text-zinc-500 mt-0.5">
+                            {{ number_format($scanStats['total_entered']) }} total &middot;
+                            {{ number_format($scanStats['today']) }} today &middot;
+                            <span class="text-green-600 dark:text-green-400">{{ number_format($scanStats['inside']) }} inside now</span>
+                        </flux:text>
+                    </div>
+                    <div class="p-3 bg-green-100 rounded-lg dark:bg-green-900/20">
+                        <flux:icon.shield-check class="size-6 text-green-600 dark:text-green-400" variant="outline" />
+                    </div>
+                </div>
+                {{-- Mini bar chart --}}
+                <flux:chart :value="$scanStats['daily']" class="h-14">
+                    <flux:chart.svg gutter="4">
+                        <flux:chart.bar field="entries" class="text-green-500 dark:text-green-400" radius="2" width="75%" />
+                    </flux:chart.svg>
+                    <flux:chart.tooltip>
+                        <flux:chart.tooltip.heading field="date" />
+                        <flux:chart.tooltip.value field="entries" label="Entries" />
+                    </flux:chart.tooltip>
+                </flux:chart>
+            </flux:card>
+        </a>
+    @endif
+
     {{-- Quick Actions or Additional Content --}}
     {{-- <flux:card>
         <div class="p-8 text-center">

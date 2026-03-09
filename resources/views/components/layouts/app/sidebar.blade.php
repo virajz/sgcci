@@ -50,6 +50,9 @@
                     <flux:navlist.item icon="user-plus" :href="route('admin.walk-in-visitors.index')"
                         :current="request()->routeIs('admin.walk-in-visitors.*')" wire:navigate>{{ __('Walk-in Visitors') }}
                     </flux:navlist.item>
+                    <flux:navlist.item icon="shield-check" :href="route('admin.scans.index')"
+                        :current="request()->routeIs('admin.scans.*')" wire:navigate>{{ __('Entry Scans') }}
+                    </flux:navlist.item>
                     <flux:navlist.item icon="users" :href="route('admin.staff-members.index')"
                         :current="request()->routeIs('admin.staff-members.*')" wire:navigate>{{ __('Staff Members') }}
                     </flux:navlist.item>
