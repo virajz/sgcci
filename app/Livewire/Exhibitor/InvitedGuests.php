@@ -23,6 +23,8 @@ class InvitedGuests extends Component
 
     public bool $showAddModal = false;
 
+    public bool $showDeleteModal = false;
+
     public ?int $deletingGuestId = null;
 
     public string $deletingGuestName = '';
@@ -151,6 +153,7 @@ class InvitedGuests extends Component
 
         $this->deletingGuestId = null;
         $this->deletingGuestName = '';
+        $this->showDeleteModal = false;
 
         Flux::toast(heading: 'Guest Removed', variant: 'success', text: 'The invited guest has been removed.');
     }

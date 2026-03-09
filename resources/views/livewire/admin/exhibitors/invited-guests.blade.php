@@ -7,7 +7,7 @@
             this.deletingGuestName = name;
             $wire.set('deletingGuestId', id);
             $wire.set('deletingGuestName', name);
-            $flux.modal('delete-guest').show();
+            $wire.set('showDeleteModal', true);
         }
     }"
     class="space-y-6"
@@ -91,7 +91,7 @@
     </flux:card>
 
     {{-- Delete Confirmation Modal --}}
-    <flux:modal name="delete-guest" class="w-full max-w-sm">
+    <flux:modal wire:model="showDeleteModal" class="w-full max-w-sm">
         <div class="space-y-4">
             <div>
                 <flux:heading size="lg">Remove guest?</flux:heading>

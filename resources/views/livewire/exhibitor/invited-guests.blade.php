@@ -1,22 +1,21 @@
-<div
-    x-data="{
-        deletingGuestId: null,
-        deletingGuestName: '',
-        openDeleteModal(id, name) {
-            this.deletingGuestId = id;
-            this.deletingGuestName = name;
-            $wire.set('deletingGuestId', id);
-            $wire.set('deletingGuestName', name);
-            $flux.modal('delete-guest').show();
-        }
-    }"
-    class="space-y-6"
->
+<div x-data="{
+    deletingGuestId: null,
+    deletingGuestName: '',
+    openDeleteModal(id, name) {
+        this.deletingGuestId = id;
+        this.deletingGuestName = name;
+        $wire.set('deletingGuestId', id);
+        $wire.set('deletingGuestName', name);
+        $wire.set('showDeleteModal', true);
+    }
+}"
+class="space-y-6">
     <div class="flex items-center justify-between">
         <div>
             <flux:heading size="xl">Invited Guests</flux:heading>
             <flux:text class="mt-1 text-zinc-500 dark:text-zinc-400">
-                Invite visitors to the exhibition on your behalf. They will receive a WhatsApp confirmation with their pass.
+                Invite visitors to the exhibition on your behalf. They will receive a WhatsApp confirmation with their
+                pass.
             </flux:text>
         </div>
         @if ($guestCount < $booking->invited_guests_limit)
@@ -36,10 +35,9 @@
                     @endif
                 </div>
                 <div class="w-full h-1.5 rounded-full bg-zinc-100 dark:bg-zinc-700 overflow-hidden">
-                    <div
-                        class="h-full rounded-full transition-all {{ $guestCount >= $booking->invited_guests_limit ? 'bg-red-500' : 'bg-blue-500' }}"
-                        style="width: {{ $booking->invited_guests_limit > 0 ? min(100, round($guestCount / $booking->invited_guests_limit * 100)) : 0 }}%"
-                    ></div>
+                    <div class="h-full rounded-full transition-all {{ $guestCount >= $booking->invited_guests_limit ? 'bg-red-500' : 'bg-blue-500' }}"
+                        style="width: {{ $booking->invited_guests_limit > 0 ? min(100, round(($guestCount / $booking->invited_guests_limit) * 100)) : 0 }}%">
+                    </div>
                 </div>
             </div>
         </div>
@@ -84,7 +82,8 @@
                                 </flux:text>
                             </flux:table.cell>
                             <flux:table.cell>
-                                <flux:badge size="sm" color="zinc" class="font-mono">{{ $guest->registration_code }}</flux:badge>
+                                <flux:badge size="sm" color="zinc" class="font-mono">
+                                    {{ $guest->registration_code }}</flux:badge>
                             </flux:table.cell>
                             <flux:table.cell>
                                 <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">
@@ -93,14 +92,9 @@
                             </flux:table.cell>
                             <flux:table.cell>
                                 <flux:tooltip content="Remove guest">
-                                    <flux:button
-                                        variant="ghost"
-                                        size="sm"
-                                        icon="trash"
-                                        iconVariant="outline"
+                                    <flux:button variant="ghost" size="sm" icon="trash" iconVariant="outline"
                                         class="text-red-500 hover:text-red-600"
-                                        x-on:click="openDeleteModal({{ $guest->id }}, @js($guest->name))"
-                                    />
+                                        x-on:click="openDeleteModal({{ $guest->id }}, @js($guest->name))" />
                                 </flux:tooltip>
                             </flux:table.cell>
                         </flux:table.row>
@@ -111,12 +105,13 @@
     </flux:card>
 
     {{-- Delete Confirmation Modal --}}
-    <flux:modal name="delete-guest" class="w-full max-w-sm">
+    <flux:modal wire:model="showDeleteModal" class="w-full max-w-sm">
         <div class="space-y-4">
             <div>
                 <flux:heading size="lg">Remove guest?</flux:heading>
                 <flux:text class="mt-2 text-zinc-500 dark:text-zinc-400">
-                    <strong x-text="deletingGuestName"></strong> will be removed from your invited guests. This cannot be undone.
+                    <strong x-text="deletingGuestName"></strong> will be removed from your invited guests. This cannot
+                    be undone.
                 </flux:text>
             </div>
             <div class="flex justify-end gap-2">
@@ -138,13 +133,16 @@
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <flux:field>
-                    <flux:label>Phone Number <flux:badge size="sm" color="red" class="ms-1">Required</flux:badge></flux:label>
-                    <flux:input wire:model="phoneNumber" placeholder="+91 98765 43210" />
+                    <flux:label>Phone Number <flux:badge size="sm" color="red" class="ms-1">Required
+                        </flux:badge>
+                    </flux:label>
+                    <flux:input wire:model="phoneNumber" placeholder="9876543210" />
                     <flux:error name="phoneNumber" />
                 </flux:field>
 
                 <flux:field>
-                    <flux:label>Full Name <flux:badge size="sm" color="red" class="ms-1">Required</flux:badge></flux:label>
+                    <flux:label>Full Name <flux:badge size="sm" color="red" class="ms-1">Required</flux:badge>
+                    </flux:label>
                     <flux:input wire:model="name" placeholder="Guest's full name" />
                     <flux:error name="name" />
                 </flux:field>
@@ -152,7 +150,8 @@
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <flux:field>
-                    <flux:label>State <flux:badge size="sm" color="red" class="ms-1">Required</flux:badge></flux:label>
+                    <flux:label>State <flux:badge size="sm" color="red" class="ms-1">Required</flux:badge>
+                    </flux:label>
                     <flux:select wire:model.live="state" searchable placeholder="Select state...">
                         @foreach ($states as $stateName)
                             <flux:select.option :value="$stateName">{{ $stateName }}</flux:select.option>
@@ -162,7 +161,8 @@
                 </flux:field>
 
                 <flux:field>
-                    <flux:label>City <flux:badge size="sm" color="red" class="ms-1">Required</flux:badge></flux:label>
+                    <flux:label>City <flux:badge size="sm" color="red" class="ms-1">Required</flux:badge>
+                    </flux:label>
                     <flux:select wire:model="city" searchable placeholder="Select city..." :disabled="empty($state)">
                         @foreach ($this->cities as $cityName)
                             <flux:select.option :value="$cityName">{{ $cityName }}</flux:select.option>
@@ -198,7 +198,8 @@
                     <flux:select wire:model="segment" placeholder="Select segment...">
                         <flux:select.option value="">— None —</flux:select.option>
                         <flux:select.option value="Business">Business</flux:select.option>
-                        <flux:select.option value="Job (Working Professional)">Job (Working Professional)</flux:select.option>
+                        <flux:select.option value="Job (Working Professional)">Job (Working Professional)
+                        </flux:select.option>
                         <flux:select.option value="Student">Student</flux:select.option>
                         <flux:select.option value="Housewife">Housewife</flux:select.option>
                         <flux:select.option value="Other">Other</flux:select.option>
