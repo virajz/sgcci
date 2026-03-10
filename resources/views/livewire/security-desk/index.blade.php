@@ -1,18 +1,18 @@
-<div class="flex flex-col md:flex-row h-full" x-data="qrScanner()" x-init="init()">
+<div class="flex flex-col md:flex-row h-full overflow-hidden" x-data="qrScanner()" x-init="init()">
 
     {{-- ── LEFT PANEL: CAMERA + SEARCH ─────────────────────────────────────── --}}
     <div class="md:w-96 md:shrink-0 md:h-full md:flex md:flex-col md:border-e md:border-zinc-200 md:dark:border-zinc-700 bg-white dark:bg-zinc-800">
 
-        {{-- Camera: full-width square when active --}}
+        {{-- Camera --}}
         <div class="shrink-0 border-b border-zinc-200 dark:border-zinc-700">
             <div
                 class="relative w-full overflow-hidden bg-zinc-900 transition-all duration-300"
-                :class="cameraActive ? 'aspect-square md:aspect-auto md:h-80' : 'h-0'"
+                :class="cameraActive ? 'aspect-square md:aspect-auto md:h-72' : 'h-0'"
             >
                 <video id="qr-video" class="w-full h-full object-cover" playsinline></video>
                 {{-- Scanning frame overlay --}}
                 <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div class="w-48 h-48 md:w-56 md:h-56 relative">
+                    <div class="w-44 h-44 md:w-52 md:h-52 relative">
                         <span class="absolute -top-px -left-px w-8 h-8 border-t-4 border-l-4 border-white/80 rounded-tl-lg"></span>
                         <span class="absolute -top-px -right-px w-8 h-8 border-t-4 border-r-4 border-white/80 rounded-tr-lg"></span>
                         <span class="absolute -bottom-px -left-px w-8 h-8 border-b-4 border-l-4 border-white/80 rounded-bl-lg"></span>
@@ -41,14 +41,13 @@
             </div>
         </div>
 
-        {{-- Search --}}
-        <div class="shrink-0 px-3 pb-3 border-b border-zinc-200 dark:border-zinc-700">
+        {{-- Manual Search --}}
+        <div class="shrink-0 p-3 border-b border-zinc-200 dark:border-zinc-700">
             <form wire:submit="lookup" class="flex gap-2">
                 <flux:field class="flex-1">
                     <flux:input
                         wire:model="lookupCode"
                         placeholder="Code, phone, or name…"
-                        autofocus
                         clearable
                     />
                     <flux:error name="lookupCode" />
@@ -60,16 +59,29 @@
             </form>
         </div>
 
-        {{-- On mobile: results sit below search (inside this panel flow) --}}
-        {{-- On desktop: this space is left empty; results go in right panel --}}
-        <div class="md:hidden flex-1 overflow-y-auto p-3 space-y-3">
-            @include('livewire.security-desk.results')
+        {{-- On mobile: results + log sit below search --}}
+        <div class="md:hidden flex-1 overflow-y-auto">
+            <div class="p-3 space-y-3">
+                @include('livewire.security-desk.results')
+            </div>
+            @include('livewire.security-desk.log')
         </div>
     </div>
 
-    {{-- ── RIGHT PANEL: RESULTS (desktop/iPad only) ─────────────────────────── --}}
-    <div class="hidden md:flex flex-col flex-1 overflow-y-auto p-4 space-y-3 bg-zinc-50 dark:bg-zinc-900">
-        @include('livewire.security-desk.results')
+    {{-- ── RIGHT PANEL (desktop only) ──────────────────────────────────────── --}}
+    <div class="hidden md:flex flex-col flex-1 overflow-hidden bg-zinc-50 dark:bg-zinc-900">
+
+        {{-- Manual search results (shown above log when a search is active) --}}
+        @if ($lookupPerformed)
+            <div class="shrink-0 border-b border-zinc-200 dark:border-zinc-700 p-4 space-y-3 max-w-lg w-full mx-auto overflow-y-auto max-h-[60%]">
+                @include('livewire.security-desk.results')
+            </div>
+        @endif
+
+        {{-- Scan log --}}
+        <div class="flex-1 overflow-y-auto">
+            @include('livewire.security-desk.log')
+        </div>
     </div>
 
 </div>
@@ -128,11 +140,9 @@
         },
 
         handleDetected(raw) {
-            const match = raw.match(/(?:VIS|INVIS)-[A-Z0-9]+/i);
-            const extracted = match ? match[0].toUpperCase() : raw.toUpperCase();
-            if (extracted !== this.lastScanned) {
-                this.lastScanned = extracted;
-                @this.setLookupCode(extracted);
+            if (raw !== this.lastScanned) {
+                this.lastScanned = raw;
+                @this.setLookupCode(raw);
             }
         },
 

@@ -52,7 +52,14 @@ class Leads extends Component
 
     public function setLookupCode(string $code): void
     {
-        $this->lookupCode = strtoupper(trim($code));
+        $trimmed = trim($code);
+
+        if (filter_var($trimmed, FILTER_VALIDATE_URL)) {
+            preg_match('/\b((?:IN)?VIS-[A-Z0-9]+)\b/i', $trimmed, $matches);
+            $trimmed = $matches[1] ?? $trimmed;
+        }
+
+        $this->lookupCode = strtoupper($trimmed);
         $this->lookup();
     }
 
@@ -61,6 +68,13 @@ class Leads extends Component
         $this->validate(['lookupCode' => ['required', 'string']]);
 
         $term = trim($this->lookupCode);
+
+        if (filter_var($term, FILTER_VALIDATE_URL)) {
+            preg_match('/\b((?:IN)?VIS-[A-Z0-9]+)\b/i', $term, $matches);
+            $term = $matches[1] ?? $term;
+            $this->lookupCode = strtoupper($term);
+        }
+
         $code = strtoupper($term);
 
         $exhibition = $this->activeExhibition();

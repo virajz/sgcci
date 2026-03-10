@@ -32,9 +32,13 @@ class VisitorScanController extends Controller
         }
 
         if ($user?->isSecurityDesk()) {
-            return redirect()->route('security-desk.index', [
-                'lookup' => $registrationCode,
-            ]);
+            $params = ['lookup' => $registrationCode];
+
+            if (request()->filled('person')) {
+                $params['person'] = request()->query('person');
+            }
+
+            return redirect()->route('security-desk.index', $params);
         }
 
         return redirect()->route('visitors-registration.thank-you', [
