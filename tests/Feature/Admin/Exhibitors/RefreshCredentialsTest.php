@@ -63,6 +63,31 @@ test('admin can refresh credentials and new password is generated', function () 
     expect(Hash::check('SGCCI@OLDPWD', $exhibitorUser->password))->toBeFalse();
 });
 
+test('refresh credentials syncs user email if booking email was changed', function () {
+    $admin = User::factory()->admin()->create();
+    $exhibition = Exhibition::factory()->create();
+    $exhibitorUser = User::factory()->create([
+        'role' => 'exhibitor',
+        'email' => 'old@example.com',
+    ]);
+    $booking = Booking::factory()->create([
+        'exhibition_id' => $exhibition->id,
+        'status' => BookingStatus::PaymentCompleted,
+        'is_manual_block' => false,
+        'email' => 'new@example.com',
+        'exhibitor_user_id' => $exhibitorUser->id,
+        'login_password' => 'SGCCI@OLDPWD',
+    ]);
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->call('openRefreshCredentialsModal', $booking->id, $booking->brand_name)
+        ->call('refreshCredentials');
+
+    $exhibitorUser->refresh();
+    expect($exhibitorUser->email)->toBe('new@example.com');
+});
+
 test('refresh credentials dispatches sms', function () {
     $admin = User::factory()->admin()->create();
     $exhibition = Exhibition::factory()->create();

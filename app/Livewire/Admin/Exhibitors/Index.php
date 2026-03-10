@@ -510,6 +510,7 @@ class Index extends Component
 
         if ($booking->exhibitorUser) {
             $booking->exhibitorUser->update([
+                'email' => $booking->email,
                 'password' => Hash::make($plainPassword),
             ]);
         }
