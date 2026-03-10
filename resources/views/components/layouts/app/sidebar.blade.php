@@ -34,7 +34,7 @@
             @endif
 
             @if(auth()->user()->isAdmin())
-                <flux:navlist.group :heading="__('Management')" class="grid">
+                <flux:navlist.group :heading="__('Exhibition')" class="grid">
                     <flux:navlist.item icon="building-office" :href="route('admin.exhibitions.index')"
                         :current="request()->routeIs('admin.exhibitions.*')" wire:navigate>{{ __('Exhibitions') }}
                     </flux:navlist.item>
@@ -44,6 +44,9 @@
                     <flux:navlist.item icon="identification" :href="route('admin.exhibitors.index')"
                         :current="request()->routeIs('admin.exhibitors.*')" wire:navigate>{{ __('Exhibitors') }}
                     </flux:navlist.item>
+                </flux:navlist.group>
+
+                <flux:navlist.group :heading="__('Visitors')" class="grid">
                     <flux:navlist.item icon="user-group" :href="route('admin.visitors.index')"
                         :current="request()->routeIs('admin.visitors.*')" wire:navigate>{{ __('Visitors') }}
                     </flux:navlist.item>
@@ -53,6 +56,9 @@
                     <flux:navlist.item icon="shield-check" :href="route('admin.scans.index')"
                         :current="request()->routeIs('admin.scans.*')" wire:navigate>{{ __('Entry Scans') }}
                     </flux:navlist.item>
+                </flux:navlist.group>
+
+                <flux:navlist.group :heading="__('Team')" class="grid">
                     <flux:navlist.item icon="users" :href="route('admin.staff-members.index')"
                         :current="request()->routeIs('admin.staff-members.*')" wire:navigate>{{ __('Staff Members') }}
                     </flux:navlist.item>
