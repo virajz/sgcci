@@ -97,6 +97,13 @@
                             <flux:table.column x-show="columns['invites']">Invites</flux:table.column>
                             <flux:table.column x-show="columns['login_password']">Login Password</flux:table.column>
                             <flux:table.column x-show="columns['paid_at']">Paid At</flux:table.column>
+                            <flux:table.column
+                                x-show="columns['updated_at']"
+                                sortable
+                                :sorted="$sortBy === 'updated_at'"
+                                :direction="$sortDirection"
+                                wire:click="sort('updated_at')"
+                            >Last Updated</flux:table.column>
                             <flux:table.column></flux:table.column>
                         </flux:table.columns>
 
@@ -225,6 +232,12 @@
                                     <flux:table.cell x-show="columns['paid_at']">
                                         <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">
                                             {{ $booking->payment_completed_at?->format('M d, Y') ?? '—' }}
+                                        </flux:text>
+                                    </flux:table.cell>
+
+                                    <flux:table.cell x-show="columns['updated_at']">
+                                        <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">
+                                            {{ $booking->updated_at->format('M d, Y H:i') }}
                                         </flux:text>
                                     </flux:table.cell>
 

@@ -22,6 +22,10 @@ class Index extends Component
 
     public string $search = '';
 
+    public string $sortBy = 'updated_at';
+
+    public string $sortDirection = 'desc';
+
     public ?int $editingBadgeLimitId = null;
 
     public int $editingBadgeLimit = 5;
@@ -71,6 +75,7 @@ class Index extends Component
         'invites' => true,
         'login_password' => true,
         'paid_at' => false,
+        'updated_at' => true,
     ];
 
     public string $addExhibitorBrandName = '';
@@ -103,6 +108,18 @@ class Index extends Component
     {
         $this->resetPage();
         $this->selectedBookings = [];
+    }
+
+    public function sort(string $column): void
+    {
+        if ($this->sortBy === $column) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortBy = $column;
+            $this->sortDirection = 'desc';
+        }
+
+        $this->resetPage();
     }
 
     public function startEditingBadgeLimit(int $bookingId, int $currentLimit): void
@@ -534,6 +551,7 @@ class Index extends Component
             'invites' => true,
             'login_password' => true,
             'paid_at' => false,
+            'updated_at' => true,
         ];
 
         session(['admin.exhibitors.visible_columns' => $defaults]);
@@ -555,6 +573,7 @@ class Index extends Component
             'invites' => 'Invites',
             'login_password' => 'Login Password',
             'paid_at' => 'Paid At',
+            'updated_at' => 'Last Updated',
             default => ucfirst($column),
         };
     }
@@ -584,7 +603,7 @@ class Index extends Component
                         ->orWhereRaw("REPLACE(phone_number, ' ', '') LIKE ?", ["%{$phoneSearch}%"]);
                 });
             })
-            ->latest('payment_completed_at')
+            ->orderBy($this->sortBy, $this->sortDirection)
             ->paginate(20);
 
         return view('livewire.admin.exhibitors.index', [
