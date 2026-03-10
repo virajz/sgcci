@@ -6,6 +6,7 @@ use App\VisitorRegistrationStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ExhibitionVisitor extends Model
 {
@@ -101,5 +102,10 @@ class ExhibitionVisitor extends Model
     public function invitedByBooking(): BelongsTo
     {
         return $this->belongsTo(Booking::class, 'invited_by_booking_id');
+    }
+
+    public function exhibitorLeads(): HasMany
+    {
+        return $this->hasMany(ExhibitorLead::class);
     }
 }

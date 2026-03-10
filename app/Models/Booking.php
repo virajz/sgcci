@@ -587,4 +587,9 @@ class Booking extends Model
     {
         return $this->hasMany(ExhibitionVisitor::class, 'invited_by_booking_id');
     }
+
+    public function leads(): HasMany
+    {
+        return $this->hasMany(ExhibitorLead::class);
+    }
 }

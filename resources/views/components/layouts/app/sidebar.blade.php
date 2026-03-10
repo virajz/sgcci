@@ -30,6 +30,9 @@
                     <flux:navlist.item icon="user-plus" :href="route('exhibitor.invited-guests')"
                         :current="request()->routeIs('exhibitor.invited-guests')" wire:navigate>{{ __('Invited Guests') }}
                     </flux:navlist.item>
+                    <flux:navlist.item icon="bookmark" :href="route('exhibitor.leads')"
+                        :current="request()->routeIs('exhibitor.leads')" wire:navigate>{{ __('Leads') }}
+                    </flux:navlist.item>
                 </flux:navlist.group>
             @endif
 
