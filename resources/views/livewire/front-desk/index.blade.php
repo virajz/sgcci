@@ -65,6 +65,7 @@
                         placeholder="VIS-ABCDEF"
                         autofocus
                         clearable
+                        @refocus-search.window="$el.querySelector('input')?.focus()"
                     />
                     <flux:error name="lookupCode" />
                 </flux:field>
@@ -385,14 +386,9 @@
         },
 
         handleDetected(raw) {
-            console.log('[QR] Raw data:', raw);
-            const match = raw.match(/VIS-[A-Z0-9]+/i);
-            const extracted = match ? match[0].toUpperCase() : raw.toUpperCase();
-            console.log('[QR] Extracted:', extracted, '| previous:', this.lastScanned);
-            if (extracted !== this.lastScanned) {
-                this.lastScanned = extracted;
-                console.log('[QR] Triggering lookup for:', extracted);
-                @this.setLookupCode(extracted);
+            if (raw !== this.lastScanned) {
+                this.lastScanned = raw;
+                @this.setLookupCode(raw);
             }
         },
 

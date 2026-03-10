@@ -59,6 +59,7 @@
                                     wire:model="lookupCode"
                                     placeholder="Code, phone, or name…"
                                     clearable
+                                    autofocus
                                 />
                                 <flux:error name="lookupCode" />
                             </flux:field>
@@ -243,11 +244,9 @@
                 },
 
                 handleDetected(raw) {
-                    const match = raw.match(/(?:VIS|INVIS)-[A-Z0-9]+/i);
-                    const extracted = match ? match[0].toUpperCase() : raw.toUpperCase();
-                    if (extracted !== this.lastScanned) {
-                        this.lastScanned = extracted;
-                        @this.setLookupCode(extracted);
+                    if (raw !== this.lastScanned) {
+                        this.lastScanned = raw;
+                        @this.setLookupCode(raw);
                     }
                 },
 
