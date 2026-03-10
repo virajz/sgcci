@@ -47,6 +47,8 @@ class Index extends Component
 
     public string $segment = '';
 
+    public bool $withInvitationPass = false;
+
     /** @var array<int, array{name: string, phone_number: string}> */
     public array $additionalPersons = [];
 
@@ -71,6 +73,13 @@ class Index extends Component
     public function updatedState(): void
     {
         $this->city = '';
+    }
+
+    public function updatedWithInvitationPass(): void
+    {
+        if ($this->withInvitationPass) {
+            $this->additionalPersons = [];
+        }
     }
 
     public function setLookupCode(string $code): void
@@ -218,6 +227,7 @@ class Index extends Component
             'business_segment' => $this->segment ?: null,
             'additional_persons' => ! empty($additionalPersonsData) ? $additionalPersonsData : null,
             'source' => 'front_desk',
+            'with_invitation_pass' => $this->withInvitationPass,
             'status' => VisitorRegistrationStatus::Confirmed,
         ]);
 
@@ -248,6 +258,7 @@ class Index extends Component
         $this->city = '';
         $this->email = '';
         $this->segment = '';
+        $this->withInvitationPass = false;
         $this->additionalPersons = [];
 
         if (! $preserveSuccessState) {

@@ -292,31 +292,40 @@
                         </flux:field>
                     </div>
 
+                    <div class="flex items-center justify-end">
+                        <flux:field variant="inline">
+                            <flux:label class="text-xs">With Invitation Pass</flux:label>
+                            <flux:switch wire:model.live="withInvitationPass" />
+                        </flux:field>
+                    </div>
+
                     {{-- Additional Persons --}}
-                    @if (count($additionalPersons) > 0)
-                        <flux:separator />
+                    @if (! $withInvitationPass)
+                        @if (count($additionalPersons) > 0)
+                            <flux:separator />
 
-                        @foreach ($additionalPersons as $index => $person)
-                            <div class="flex items-start gap-2 p-2 border rounded-lg border-zinc-200 dark:border-zinc-700" wire:key="add-person-{{ $index }}">
-                                <span class="flex items-center justify-center mt-1 text-xs font-semibold rounded-full size-6 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 shrink-0">{{ $index + 2 }}</span>
-                                <div class="flex-1 grid grid-cols-2 gap-2">
-                                    <div>
-                                        <flux:input wire:model="additionalPersons.{{ $index }}.name" placeholder="Name" size="sm" />
-                                        <flux:error name="additionalPersons.{{ $index }}.name" />
+                            @foreach ($additionalPersons as $index => $person)
+                                <div class="flex items-start gap-2 p-2 border rounded-lg border-zinc-200 dark:border-zinc-700" wire:key="add-person-{{ $index }}">
+                                    <span class="flex items-center justify-center mt-1 text-xs font-semibold rounded-full size-6 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 shrink-0">{{ $index + 2 }}</span>
+                                    <div class="flex-1 grid grid-cols-2 gap-2">
+                                        <div>
+                                            <flux:input wire:model="additionalPersons.{{ $index }}.name" placeholder="Name" size="sm" />
+                                            <flux:error name="additionalPersons.{{ $index }}.name" />
+                                        </div>
+                                        <div>
+                                            <flux:input wire:model="additionalPersons.{{ $index }}.phone_number" type="tel" placeholder="Phone" size="sm" />
+                                            <flux:error name="additionalPersons.{{ $index }}.phone_number" />
+                                        </div>
                                     </div>
-                                    <div>
-                                        <flux:input wire:model="additionalPersons.{{ $index }}.phone_number" type="tel" placeholder="Phone" size="sm" />
-                                        <flux:error name="additionalPersons.{{ $index }}.phone_number" />
-                                    </div>
+                                    <flux:button wire:click="removePerson({{ $index }})" variant="ghost" size="sm" icon="trash" class="mt-0.5 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0" />
                                 </div>
-                                <flux:button wire:click="removePerson({{ $index }})" variant="ghost" size="sm" icon="trash" class="mt-0.5 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0" />
-                            </div>
-                        @endforeach
-                    @endif
+                            @endforeach
+                        @endif
 
-                    <flux:button wire:click="addPerson" variant="ghost" size="sm" icon="plus" class="w-full border border-dashed border-zinc-300 dark:border-zinc-700">
-                        Add Another Person
-                    </flux:button>
+                        <flux:button wire:click="addPerson" variant="ghost" size="sm" icon="plus" class="w-full border border-dashed border-zinc-300 dark:border-zinc-700">
+                            Add Another Person
+                        </flux:button>
+                    @endif
 
                     <flux:button type="submit" variant="primary" size="sm" class="w-full" wire:loading.attr="disabled" wire:target="registerWalkIn" icon="check">
                         <span wire:loading.remove wire:target="registerWalkIn">Register Visitor</span>

@@ -193,6 +193,8 @@
                     <flux:select wire:model.live="invitedFilter" variant="listbox">
                         <flux:select.option value="">All Visitors</flux:select.option>
                         <flux:select.option value="invited">Invited Only</flux:select.option>
+                        <flux:select.option value="with_pass">With Invitation Pass</flux:select.option>
+                        <flux:select.option value="without_pass">Without Invitation Pass</flux:select.option>
                     </flux:select>
                     <flux:description>Filter by how the visitor registered.</flux:description>
                 </flux:field>

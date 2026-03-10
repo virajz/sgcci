@@ -208,6 +208,12 @@ class Index extends Component
             ->when($this->invitedFilter === 'invited', function ($query) {
                 $query->whereNotNull('invited_by_booking_id');
             })
+            ->when($this->invitedFilter === 'with_pass', function ($query) {
+                $query->where('with_invitation_pass', true);
+            })
+            ->when($this->invitedFilter === 'without_pass', function ($query) {
+                $query->where('with_invitation_pass', false);
+            })
             ->latest()
             ->paginate(20);
 
