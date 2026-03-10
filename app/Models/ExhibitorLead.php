@@ -12,6 +12,7 @@ class ExhibitorLead extends Model
     protected $fillable = [
         'booking_id',
         'exhibition_visitor_id',
+        'person_index',
         'captured_at',
     ];
 

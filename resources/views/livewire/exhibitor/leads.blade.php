@@ -9,6 +9,7 @@
     <flux:tabs wire:model.live="activeTab">
         <flux:tab name="capture" icon="qr-code">Capture</flux:tab>
         <flux:tab name="list" icon="list-bullet">List</flux:tab>
+        <flux:tab name="whatsapp" icon="chat-bubble-left-ellipsis" disabled>WhatsApp Inquiries</flux:tab>
     </flux:tabs>
 
     {{-- ── CAPTURE TAB ────────────────────────────────────────────────────────── --}}
@@ -78,7 +79,8 @@
                     @if ($foundVisitor)
 
                         {{-- Visitor card --}}
-                        <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                        <div class="rounded-xl border overflow-hidden
+                            {{ $foundVisitor['scanned_person_index'] === null ? 'border-blue-300 dark:border-blue-700' : 'border-zinc-200 dark:border-zinc-700' }}">
                             <div class="p-4 bg-zinc-50 dark:bg-zinc-900/50 flex items-center gap-3">
                                 <div class="flex items-center justify-center size-12 rounded-full shrink-0 font-bold text-lg bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
                                     {{ mb_strtoupper(mb_substr($foundVisitor['name'], 0, 1)) }}
@@ -88,7 +90,6 @@
                                     <p class="text-sm text-zinc-500 font-mono">{{ $foundVisitor['phone_number'] }}</p>
                                 </div>
                                 <div class="shrink-0 flex flex-col items-end gap-1">
-                                    <flux:badge color="{{ $foundVisitor['status_color'] }}" size="sm">{{ $foundVisitor['status_label'] }}</flux:badge>
                                     @if ($foundVisitor['is_lead'])
                                         <flux:badge color="lime" size="sm" icon="check">Lead</flux:badge>
                                     @endif
@@ -111,24 +112,47 @@
                             </div>
                         </div>
 
-                        @if ($foundVisitor['is_lead'])
-                            <flux:callout variant="success" icon="check-circle">
-                                <flux:callout.heading>Already a lead</flux:callout.heading>
-                                <flux:callout.text>This visitor is already saved in your leads.</flux:callout.text>
-                            </flux:callout>
-                        @else
-                            <flux:button
-                                wire:click="markAsLead"
-                                wire:loading.attr="disabled"
-                                wire:target="markAsLead"
-                                variant="primary"
-                                icon="bookmark"
-                                class="w-full !py-4 !text-base"
-                            >
-                                <span wire:loading.remove wire:target="markAsLead">Save as Lead</span>
-                                <span wire:loading wire:target="markAsLead">Saving…</span>
-                            </flux:button>
+                        {{-- Additional persons --}}
+                        @if (!empty($foundVisitor['additional_persons']))
+                            <div class="space-y-2">
+                                <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide px-1">
+                                    Additional Persons ({{ count($foundVisitor['additional_persons']) }})
+                                </p>
+                                @foreach ($foundVisitor['additional_persons'] as $index => $person)
+                                    @php $isScanned = $foundVisitor['scanned_person_index'] === $index; @endphp
+                                    <div wire:key="lead-person-{{ $index }}"
+                                        class="rounded-xl border px-3 py-2.5 flex items-center gap-3 {{ $isScanned ? 'border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/20' : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800' }}"
+                                    >
+                                        <div class="flex items-center justify-center size-9 rounded-full shrink-0 text-sm font-bold {{ $isScanned ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300' : 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300' }}">
+                                            {{ mb_strtoupper(mb_substr($person['name'], 0, 1)) }}
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold truncate">{{ $person['name'] }}</p>
+                                            @if (!empty($person['phone_number']))
+                                                <p class="text-xs text-zinc-500 font-mono">{{ $person['phone_number'] }}</p>
+                                            @endif
+                                        </div>
+                                        @if ($person['is_lead'])
+                                            <flux:badge color="lime" size="sm" icon="check">Lead</flux:badge>
+                                        @elseif ($isScanned)
+                                            <flux:badge color="blue" size="sm">Scanned</flux:badge>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
                         @endif
+
+                        <flux:button
+                            wire:click="markAsLead"
+                            wire:loading.attr="disabled"
+                            wire:target="markAsLead"
+                            variant="primary"
+                            icon="bookmark"
+                            class="w-full !py-4 !text-base"
+                        >
+                            <span wire:loading.remove wire:target="markAsLead">Save as Lead</span>
+                            <span wire:loading wire:target="markAsLead">Saving…</span>
+                        </flux:button>
 
                         <flux:button variant="ghost" icon="arrow-left" wire:click="resetLookup" class="w-full">
                             Search Again
@@ -205,6 +229,7 @@
                 init() {
                     this.canvas = document.createElement('canvas');
                     this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+                    this.startCamera();
                 },
 
                 async startCamera() {
@@ -282,6 +307,21 @@
 
     {{-- ── LIST TAB ────────────────────────────────────────────────────────────── --}}
     @if ($activeTab === 'list')
+        @if (!$leads->isEmpty())
+            <div class="flex items-center justify-between">
+                <flux:text class="text-zinc-500 dark:text-zinc-400">{{ $leads->count() }} lead{{ $leads->count() === 1 ? '' : 's' }} captured</flux:text>
+                <flux:button
+                    wire:click="exportLeads"
+                    wire:loading.attr="disabled"
+                    wire:target="exportLeads"
+                    variant="ghost"
+                    icon="arrow-down-tray"
+                    size="sm"
+                >
+                    Export CSV
+                </flux:button>
+            </div>
+        @endif
         <flux:card class="space-y-4">
             @if ($leads->isEmpty())
                 <div class="py-12 text-center">
@@ -306,15 +346,21 @@
                     </flux:table.columns>
                     <flux:table.rows>
                         @foreach ($leads as $lead)
+                            @php
+                                $persons = is_array($lead->visitor->additional_persons) ? $lead->visitor->additional_persons : [];
+                                $person  = $lead->person_index !== null ? ($persons[$lead->person_index] ?? null) : null;
+                                $name    = $person ? $person['name'] : $lead->visitor->name;
+                                $phone   = $person ? ($person['phone_number'] ?? '—') : $lead->visitor->phone_number;
+                            @endphp
                             <flux:table.row wire:key="lead-{{ $lead->id }}">
                                 <flux:table.cell>
-                                    <flux:text class="font-medium">{{ $lead->visitor->name }}</flux:text>
-                                    @if ($lead->visitor->designation)
+                                    <flux:text class="font-medium">{{ $name }}</flux:text>
+                                    @if (!$person && $lead->visitor->designation)
                                         <flux:text class="text-xs text-zinc-400">{{ $lead->visitor->designation }}</flux:text>
                                     @endif
                                 </flux:table.cell>
                                 <flux:table.cell>
-                                    <flux:text class="text-sm font-mono">{{ $lead->visitor->phone_number }}</flux:text>
+                                    <flux:text class="text-sm font-mono">{{ $phone }}</flux:text>
                                 </flux:table.cell>
                                 <flux:table.cell>
                                     <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">

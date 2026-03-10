@@ -24,7 +24,7 @@ class Leads extends Component
 
     public bool $lookupPerformed = false;
 
-    /** @var array{registration_code: string, name: string, phone_number: string, company_name: string|null, designation: string|null, city: string, state: string, status_label: string, status_color: string, is_lead: bool}|null */
+    /** @var array{registration_code: string, name: string, phone_number: string, company_name: string|null, designation: string|null, city: string, state: string, status_label: string, status_color: string, is_lead: bool, scanned_person_index: int|null, additional_persons: array<int, array{name: string, phone_number: string}>}|null */
     public ?array $foundVisitor = null;
 
     /** @var array<int, array{registration_code: string, name: string, phone_number: string, company_name: string|null, city: string, state: string, status_label: string, status_color: string}> */
@@ -53,14 +53,22 @@ class Leads extends Component
     public function setLookupCode(string $code): void
     {
         $trimmed = trim($code);
+        $personIndex = null;
 
         if (filter_var($trimmed, FILTER_VALIDATE_URL)) {
+            $parsed = parse_url($trimmed);
+            if (isset($parsed['query'])) {
+                parse_str($parsed['query'], $queryParams);
+                if (isset($queryParams['person'])) {
+                    $personIndex = (int) $queryParams['person'] - 1;
+                }
+            }
             preg_match('/\b((?:IN)?VIS-[A-Z0-9]+)\b/i', $trimmed, $matches);
             $trimmed = $matches[1] ?? $trimmed;
         }
 
         $this->lookupCode = strtoupper($trimmed);
-        $this->lookup();
+        $this->lookupByCode(strtoupper($trimmed), $personIndex);
     }
 
     public function lookup(): void
@@ -75,21 +83,24 @@ class Leads extends Component
             $this->lookupCode = strtoupper($term);
         }
 
-        $code = strtoupper($term);
+        $this->lookupByCode(strtoupper($term), null);
+    }
 
+    private function lookupByCode(string $code, ?int $personIndex): void
+    {
         $exhibition = $this->activeExhibition();
 
         $visitors = ExhibitionVisitor::where('exhibition_id', $exhibition->id)
-            ->where(function ($q) use ($term, $code): void {
+            ->where(function ($q) use ($code): void {
                 $q->where('registration_code', $code)
-                    ->orWhere('phone_number', 'like', "%{$term}%")
-                    ->orWhere('name', 'like', "%{$term}%");
+                    ->orWhere('phone_number', 'like', "%{$code}%")
+                    ->orWhereRaw('lower(name) like ?', ['%'.strtolower($code).'%']);
             })
             ->orderBy('name')
             ->get();
 
         if ($visitors->count() === 1) {
-            $this->setFoundVisitor($visitors->first());
+            $this->setFoundVisitor($visitors->first(), $personIndex);
             $this->matchedVisitors = [];
         } elseif ($visitors->count() > 1) {
             $this->foundVisitor = null;
@@ -119,15 +130,27 @@ class Leads extends Component
             ->where('registration_code', $registrationCode)
             ->firstOrFail();
 
-        $this->setFoundVisitor($visitor);
+        $this->setFoundVisitor($visitor, null);
         $this->matchedVisitors = [];
     }
 
-    private function setFoundVisitor(ExhibitionVisitor $visitor): void
+    private function setFoundVisitor(ExhibitionVisitor $visitor, ?int $personIndex): void
     {
         $isLead = ExhibitorLead::where('booking_id', $this->booking->id)
             ->where('exhibition_visitor_id', $visitor->id)
+            ->where('person_index', $personIndex)
             ->exists();
+
+        $persons = is_array($visitor->additional_persons) ? $visitor->additional_persons : [];
+
+        $additionalPersons = array_map(fn (array $p, int $i) => [
+            'name' => $p['name'],
+            'phone_number' => $p['phone_number'] ?? '',
+            'is_lead' => ExhibitorLead::where('booking_id', $this->booking->id)
+                ->where('exhibition_visitor_id', $visitor->id)
+                ->where('person_index', $i)
+                ->exists(),
+        ], $persons, array_keys($persons));
 
         $this->foundVisitor = [
             'registration_code' => $visitor->registration_code,
@@ -140,6 +163,8 @@ class Leads extends Component
             'status_label' => $visitor->status->label(),
             'status_color' => $visitor->status->color(),
             'is_lead' => $isLead,
+            'scanned_person_index' => $personIndex,
+            'additional_persons' => $additionalPersons,
         ];
     }
 
@@ -149,6 +174,7 @@ class Leads extends Component
             return;
         }
 
+        $personIndex = $this->foundVisitor['scanned_person_index'];
         $exhibition = $this->activeExhibition();
 
         $visitor = ExhibitionVisitor::where('exhibition_id', $exhibition->id)
@@ -159,15 +185,20 @@ class Leads extends Component
             [
                 'booking_id' => $this->booking->id,
                 'exhibition_visitor_id' => $visitor->id,
+                'person_index' => $personIndex,
             ],
             ['captured_at' => now()]
         );
 
-        $this->setFoundVisitor($visitor);
+        $this->setFoundVisitor($visitor, $personIndex);
+
+        $name = $personIndex !== null
+            ? ($visitor->additional_persons[$personIndex]['name'] ?? $visitor->name)
+            : $visitor->name;
 
         Flux::toast(
             heading: 'Lead Saved',
-            text: "{$visitor->name} has been marked as a lead.",
+            text: "{$name} has been marked as a lead.",
             variant: 'success',
         );
     }
@@ -178,6 +209,40 @@ class Leads extends Component
         $this->foundVisitor = null;
         $this->matchedVisitors = [];
         $this->lookupPerformed = false;
+    }
+
+    public function exportLeads(): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $leads = ExhibitorLead::where('booking_id', $this->booking->id)
+            ->with('visitor')
+            ->orderByDesc('captured_at')
+            ->get();
+
+        $filename = 'leads-'.now()->format('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($leads): void {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, ['Name', 'Phone', 'Company', 'Designation', 'City', 'State', 'Pass Code', 'Captured At']);
+
+            foreach ($leads as $lead) {
+                $persons = is_array($lead->visitor->additional_persons) ? $lead->visitor->additional_persons : [];
+                $person = $lead->person_index !== null ? ($persons[$lead->person_index] ?? null) : null;
+
+                fputcsv($handle, [
+                    $person ? $person['name'] : $lead->visitor->name,
+                    $person ? ($person['phone_number'] ?? '') : $lead->visitor->phone_number,
+                    $lead->visitor->company_name ?? '',
+                    $person ? '' : ($lead->visitor->designation ?? ''),
+                    $lead->visitor->city,
+                    $lead->visitor->state,
+                    $lead->visitor->registration_code,
+                    $lead->captured_at->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv']);
     }
 
     public function render(): \Illuminate\View\View
