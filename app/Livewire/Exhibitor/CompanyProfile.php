@@ -92,7 +92,7 @@ class CompanyProfile extends Component
     private function rules(): array
     {
         $rules = [
-            'messageType' => ['required', 'in:text,image,video'],
+            'messageType' => ['required', 'in:text,image,video,pdf'],
             'messageText' => ['nullable', 'string', 'max:2500'],
         ];
 
@@ -100,6 +100,8 @@ class CompanyProfile extends Component
             $rules['messageMedia'] = ['nullable', 'image', 'max:5120']; // 5MB
         } elseif ($this->messageType === 'video') {
             $rules['messageMedia'] = ['nullable', 'mimes:mp4,mov,avi,webm', 'max:16384']; // 16MB
+        } elseif ($this->messageType === 'pdf') {
+            $rules['messageMedia'] = ['nullable', 'mimes:pdf', 'max:16384']; // 16MB
         }
 
         return $rules;

@@ -19,6 +19,7 @@
                     <flux:radio label="Plain Text" value="text" />
                     <flux:radio label="Image with Text" value="image" />
                     <flux:radio label="Video with Text" value="video" />
+                    <flux:radio label="PDF with Text" value="pdf" />
                 </flux:radio.group>
             </div>
 
@@ -111,6 +112,40 @@
                                     class="text-red-500 hover:text-red-600 shrink-0" wire:click="removeMedia"
                                     wire:confirm="Remove the current video?" />
                             </div>
+                        </div>
+                    @endif
+
+                    <flux:error name="messageMedia" />
+                </div>
+            @endif
+
+            {{-- PDF upload (pdf type) --}}
+            @if ($messageType === 'pdf')
+                <div class="space-y-3">
+                    <flux:file-upload wire:model="messageMedia" label="PDF"
+                        description="Max 16MB. PDF only." :error="$errors->first('messageMedia')">
+                        <flux:file-upload.dropzone heading="Drop PDF here or click to browse"
+                            text="PDF, up to 16MB" with-progress inline />
+                    </flux:file-upload>
+
+                    @if ($messageMedia)
+                        <flux:file-item :heading="$messageMedia->getClientOriginalName()"
+                            :size="$messageMedia->getSize()">
+                            <x-slot name="actions">
+                                <flux:file-item.remove wire:click="$set('messageMedia', null)"
+                                    aria-label="Remove PDF" />
+                            </x-slot>
+                        </flux:file-item>
+                    @elseif ($booking->profile_message_media)
+                        <div class="flex items-center gap-3 p-3 border rounded-lg border-zinc-200 dark:border-zinc-700">
+                            <flux:icon.document class="w-8 h-8 text-zinc-400 dark:text-zinc-500 shrink-0" />
+                            <div class="flex-1 min-w-0">
+                                <flux:text class="font-medium truncate">{{ $booking->profile_message_media_original_name }}</flux:text>
+                                <flux:text class="text-xs text-zinc-400 dark:text-zinc-500">Current PDF</flux:text>
+                            </div>
+                            <flux:button variant="ghost" size="sm" icon="trash" iconVariant="outline"
+                                class="text-red-500 hover:text-red-600 shrink-0" wire:click="removeMedia"
+                                wire:confirm="Remove the current PDF?" />
                         </div>
                     @endif
 
