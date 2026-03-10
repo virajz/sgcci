@@ -39,7 +39,7 @@
         @if($foundVisitor['is_paid'])
             @if($foundVisitor['entered_at'] && $foundVisitor['exited_at'])
 
-                {{-- Entered and exited — re-entry would be allowed by scanner --}}
+                {{-- Exited --}}
                 <flux:callout variant="danger" icon="arrow-left-end-on-rectangle">
                     <flux:callout.heading>Exited</flux:callout.heading>
                     <flux:callout.text>
@@ -49,27 +49,29 @@
 
             @elseif($foundVisitor['entered_at'])
 
-                {{-- Currently inside --}}
-                <flux:callout variant="success" icon="check-circle">
-                    <flux:callout.heading>Inside</flux:callout.heading>
-                    <flux:callout.text>Entered {{ $foundVisitor['entered_at'] }}</flux:callout.text>
-                </flux:callout>
-
-                <flux:button
-                    wire:click="markExited"
-                    wire:loading.attr="disabled"
-                    wire:target="markExited"
-                    variant="ghost"
-                    icon="arrow-left-end-on-rectangle"
-                    class="w-full"
-                >
-                    <span wire:loading.remove wire:target="markExited">Mark Exit</span>
-                    <span wire:loading wire:target="markExited">Marking…</span>
-                </flux:button>
+                {{-- Inside — show entry time quietly with exit button --}}
+                <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-3 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+                        <flux:icon name="clock" class="size-4 shrink-0 text-zinc-400" />
+                        <span>Entered {{ $foundVisitor['entered_at'] }}</span>
+                    </div>
+                    <flux:button
+                        wire:click="markExited"
+                        wire:loading.attr="disabled"
+                        wire:target="markExited"
+                        variant="ghost"
+                        size="sm"
+                        icon="arrow-left-end-on-rectangle"
+                        class="shrink-0"
+                    >
+                        <span wire:loading.remove wire:target="markExited">Mark Exit</span>
+                        <span wire:loading wire:target="markExited">Marking…</span>
+                    </flux:button>
+                </div>
 
             @else
 
-                {{-- Not yet entered — scanner will mark entry on next scan --}}
+                {{-- Not yet entered --}}
                 <flux:callout variant="success" icon="check-circle">
                     <flux:callout.heading>Entry allowed</flux:callout.heading>
                     <flux:callout.text>Visitor is confirmed. Entry will be recorded on scan.</flux:callout.text>

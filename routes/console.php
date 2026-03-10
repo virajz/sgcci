@@ -15,6 +15,9 @@ Schedule::command('bookings:send-partial-payment-reminders --force --no-interact
     ->cron('0 9 */2 * *')
     ->when(fn () => now()->lte(Carbon::create(2026, 2, 28)));
 
+// Mark all inside visitors as exited at end of day.
+Schedule::command('visitors:mark-all-exited')->dailyAt('23:55');
+
 // Poll CCAvenue for visitor payments that never returned from the gateway.
 // --limit=50 clears the existing backlog within a few cycles.
 // --expire-hours=24 auto-fails anything CCAvenue still shows as Awaited/Unknown after 24h.

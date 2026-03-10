@@ -342,6 +342,7 @@ class Index extends Component
         $this->foundVisitor = null;
         $this->matchedVisitors = [];
         $this->lookupPerformed = false;
+        $this->dispatch('refocus-search');
     }
 
     private function addScanLog(string $type, string $name, string $code, int $duration, ?string $enteredAt = null): void

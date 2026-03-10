@@ -49,6 +49,8 @@
                         wire:model="lookupCode"
                         placeholder="Code, phone, or name…"
                         clearable
+                        autofocus
+                        @refocus-search.window="$el.querySelector('input')?.focus()"
                     />
                     <flux:error name="lookupCode" />
                 </flux:field>
