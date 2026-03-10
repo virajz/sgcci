@@ -79,6 +79,15 @@
                                 <flux:text>{{ $visitor->source }}</flux:text>
                             </div>
                         @endif
+                        @if ($visitor->invited_by_booking_id && $visitor->invitedByBooking)
+                            <div>
+                                <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Invited by</flux:text>
+                                <a href="{{ route('admin.exhibitors.invited-guests', $visitor->invitedByBooking) }}"
+                                    wire:navigate class="font-semibold hover:underline">
+                                    {{ $visitor->invitedByBooking->brand_name }}
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </flux:card>

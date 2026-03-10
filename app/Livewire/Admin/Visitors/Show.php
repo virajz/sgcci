@@ -25,7 +25,7 @@ class Show extends Component
 
     public function mount(ExhibitionVisitor $visitor): void
     {
-        $this->visitor = $visitor->load('exhibition');
+        $this->visitor = $visitor->load(['exhibition', 'invitedByBooking']);
     }
 
     public function confirmMarkPaid(): void

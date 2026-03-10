@@ -21,6 +21,8 @@ class InvitedGuests extends Component
 
     public string $deletingGuestName = '';
 
+    public string $search = '';
+
     public function mount(Booking $booking): void
     {
         if (! Auth::user()->isAdmin()) {
@@ -47,12 +49,22 @@ class InvitedGuests extends Component
     {
         $guests = $this->booking->invitedGuests()
             ->where('exhibition_id', $this->booking->exhibition_id)
+            ->when($this->search, function ($query) {
+                $search = strtolower($this->search);
+
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(company_name) LIKE ?', ["%{$search}%"])
+                        ->orWhere('phone_number', 'like', "%{$search}%")
+                        ->orWhereRaw('LOWER(registration_code) LIKE ?', ["%{$search}%"]);
+                });
+            })
             ->latest()
             ->get();
 
         return view('livewire.admin.exhibitors.invited-guests', [
             'guests' => $guests,
-            'guestCount' => $guests->count(),
+            'guestCount' => $this->booking->invitedGuests()->where('exhibition_id', $this->booking->exhibition_id)->count(),
         ]);
     }
 }

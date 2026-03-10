@@ -19,6 +19,8 @@ class Index extends Component
 
     public string $statusFilter = '';
 
+    public string $invitedFilter = '';
+
     public bool $showDeleteModal = false;
 
     public ?int $visitorToDelete = null;
@@ -38,6 +40,27 @@ class Index extends Component
     public function updatingStatusFilter(): void
     {
         $this->resetPage();
+    }
+
+    public function updatingInvitedFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function applyFilters(): void
+    {
+        $this->resetPage();
+    }
+
+    public function clearFilters(): void
+    {
+        $this->invitedFilter = '';
+        $this->resetPage();
+    }
+
+    public function hasActiveFilters(): bool
+    {
+        return $this->invitedFilter !== '';
     }
 
     public function confirmDelete(int $visitorId): void
@@ -167,7 +190,7 @@ class Index extends Component
     public function render()
     {
         $visitors = ExhibitionVisitor::query()
-            ->with('exhibition')
+            ->with(['exhibition', 'invitedByBooking'])
             ->when($this->search, function ($query) {
                 $search = strtolower($this->search);
 
@@ -182,12 +205,16 @@ class Index extends Component
             ->when($this->statusFilter, function ($query) {
                 $query->where('status', $this->statusFilter);
             })
+            ->when($this->invitedFilter === 'invited', function ($query) {
+                $query->whereNotNull('invited_by_booking_id');
+            })
             ->latest()
             ->paginate(20);
 
         return view('livewire.admin.visitors.index', [
             'visitors' => $visitors,
             'statuses' => VisitorRegistrationStatus::cases(),
+            'hasActiveFilters' => $this->hasActiveFilters(),
         ]);
     }
 }
