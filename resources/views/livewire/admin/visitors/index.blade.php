@@ -198,6 +198,18 @@
                     </flux:select>
                     <flux:description>Filter by how the visitor registered.</flux:description>
                 </flux:field>
+
+                <flux:field>
+                    <flux:label>Registration Date</flux:label>
+                    <flux:date-picker wire:model.live="dateRange" mode="range" clearable with-presets presets="today yesterday last7Days thisMonth" />
+                    <flux:description>Filter by registration date range.</flux:description>
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>Entry Date</flux:label>
+                    <flux:date-picker wire:model.live="entryDate" clearable with-presets presets="today yesterday" />
+                    <flux:description>Filter by when visitors entered.</flux:description>
+                </flux:field>
             </div>
 
             <div class="flex gap-2 pt-4 border-t border-zinc-200 dark:border-zinc-700">

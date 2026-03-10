@@ -5,6 +5,7 @@ namespace App\Livewire\Admin\Visitors;
 use App\Jobs\SendWhatsAppCampaign;
 use App\Models\ExhibitionVisitor;
 use App\VisitorRegistrationStatus;
+use Flux\DateRange;
 use Flux\Flux;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -20,6 +21,10 @@ class Index extends Component
     public string $statusFilter = '';
 
     public string $invitedFilter = '';
+
+    public ?DateRange $dateRange = null;
+
+    public string $entryDate = '';
 
     public bool $showDeleteModal = false;
 
@@ -47,6 +52,16 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function updatingDateRange(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingEntryDate(): void
+    {
+        $this->resetPage();
+    }
+
     public function applyFilters(): void
     {
         $this->resetPage();
@@ -55,12 +70,14 @@ class Index extends Component
     public function clearFilters(): void
     {
         $this->invitedFilter = '';
+        $this->dateRange = null;
+        $this->entryDate = '';
         $this->resetPage();
     }
 
     public function hasActiveFilters(): bool
     {
-        return $this->invitedFilter !== '';
+        return $this->invitedFilter !== '' || $this->dateRange !== null || $this->entryDate !== '';
     }
 
     public function confirmDelete(int $visitorId): void
@@ -213,6 +230,15 @@ class Index extends Component
             })
             ->when($this->invitedFilter === 'without_pass', function ($query) {
                 $query->where('with_invitation_pass', false);
+            })
+            ->when($this->dateRange?->start(), function ($query) {
+                $query->whereDate('created_at', '>=', $this->dateRange->start());
+            })
+            ->when($this->dateRange?->end(), function ($query) {
+                $query->whereDate('created_at', '<=', $this->dateRange->end());
+            })
+            ->when($this->entryDate, function ($query) {
+                $query->whereDate('entered_at', $this->entryDate);
             })
             ->latest()
             ->paginate(20);
