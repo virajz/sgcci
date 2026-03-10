@@ -36,6 +36,10 @@
                     :loading="false">
                     Generate Credentials ({{ count($selectedBookings) }})
                 </flux:button>
+                <flux:button variant="filled" icon="arrow-path" iconVariant="outline"
+                    wire:click="openBulkRefreshConfirmModal" :loading="false">
+                    Refresh Credentials ({{ count($selectedBookings) }})
+                </flux:button>
                 <flux:button variant="filled" icon="chat-bubble-left-ellipsis" iconVariant="outline"
                     wire:click="openBulkSmsConfirmModal" :loading="false">
                     Send SMS ({{ count($selectedBookings) }})
@@ -227,6 +231,12 @@
                                     <flux:table.cell>
                                         <div class="flex items-center gap-1">
                                             @if ($booking->login_password)
+                                                <flux:tooltip content="Refresh credentials & send SMS">
+                                                    <flux:button size="sm" variant="ghost"
+                                                        icon="arrow-path" iconVariant="outline"
+                                                        wire:click="openRefreshCredentialsModal({{ $booking->id }}, '{{ addslashes($booking->brand_name) }}')"
+                                                        :loading="false" />
+                                                </flux:tooltip>
                                                 <flux:tooltip content="Send credentials SMS">
                                                     <flux:button size="sm" variant="ghost"
                                                         icon="chat-bubble-left-ellipsis" iconVariant="outline"
@@ -373,6 +383,53 @@
                 <flux:button wire:click="bulkSendCredentialsSms" variant="primary" icon="chat-bubble-left-ellipsis"
                     iconVariant="outline">
                     Send SMS
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    {{-- Single Refresh Credentials Modal --}}
+    <flux:modal wire:model="showRefreshCredentialsModal" class="min-w-[22rem]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Refresh Credentials?</flux:heading>
+                <flux:text class="mt-2">
+                    Generate a new password for <strong>{{ $confirmRefreshName }}</strong>?
+                    Their existing password will be replaced and the new credentials will be sent via SMS.
+                </flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
+                <flux:button wire:click="refreshCredentials" variant="primary" icon="arrow-path"
+                    iconVariant="outline">
+                    Refresh
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    {{-- Bulk Refresh Credentials Modal --}}
+    <flux:modal wire:model="showBulkRefreshConfirmModal" class="min-w-[22rem]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Refresh Credentials?</flux:heading>
+                <flux:text class="mt-2">
+                    Generate new passwords for <strong>{{ count($selectedBookings) }}</strong> selected exhibitor(s)?
+                    Existing passwords will be replaced and the new credentials will be sent via SMS to each.
+                    Only exhibitors with existing credentials will be updated.
+                </flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
+                <flux:button wire:click="bulkRefreshCredentials" variant="primary" icon="arrow-path"
+                    iconVariant="outline">
+                    Refresh All
                 </flux:button>
             </div>
         </div>

@@ -37,6 +37,14 @@ class Index extends Component
 
     public bool $showBulkSmsConfirmModal = false;
 
+    public bool $showRefreshCredentialsModal = false;
+
+    public ?int $confirmRefreshId = null;
+
+    public string $confirmRefreshName = '';
+
+    public bool $showBulkRefreshConfirmModal = false;
+
     public bool $showGenerateConfirmModal = false;
 
     public ?int $confirmGenerateId = null;
@@ -283,6 +291,74 @@ class Index extends Component
         );
     }
 
+    public function openRefreshCredentialsModal(int $bookingId, string $brandName): void
+    {
+        $this->confirmRefreshId = $bookingId;
+        $this->confirmRefreshName = $brandName;
+        $this->showRefreshCredentialsModal = true;
+    }
+
+    public function refreshCredentials(): void
+    {
+        if (! Auth::user()->isAdmin()) {
+            Flux::toast(heading: 'Unauthorized', variant: 'danger', text: 'Only admins can refresh credentials.');
+            $this->showRefreshCredentialsModal = false;
+
+            return;
+        }
+
+        $booking = Booking::with('exhibition')->findOrFail($this->confirmRefreshId);
+
+        $this->regenerateExhibitorPassword($booking);
+
+        $this->showRefreshCredentialsModal = false;
+        $this->confirmRefreshId = null;
+        $this->confirmRefreshName = '';
+
+        Flux::toast(heading: 'Credentials Refreshed!', variant: 'success', text: "New password generated and SMS sent to {$booking->brand_name}.");
+    }
+
+    public function openBulkRefreshConfirmModal(): void
+    {
+        if (empty($this->selectedBookings)) {
+            Flux::toast(heading: 'No Selection', variant: 'warning', text: 'Please select at least one exhibitor.');
+
+            return;
+        }
+
+        $this->showBulkRefreshConfirmModal = true;
+    }
+
+    public function bulkRefreshCredentials(): void
+    {
+        if (! Auth::user()->isAdmin()) {
+            Flux::toast(heading: 'Unauthorized', variant: 'danger', text: 'Only admins can refresh credentials.');
+            $this->showBulkRefreshConfirmModal = false;
+
+            return;
+        }
+
+        $bookings = Booking::whereIn('id', $this->selectedBookings)
+            ->whereNotNull('login_password')
+            ->with('exhibition')
+            ->get();
+
+        $count = 0;
+        foreach ($bookings as $booking) {
+            $this->regenerateExhibitorPassword($booking);
+            $count++;
+        }
+
+        $this->selectedBookings = [];
+        $this->showBulkRefreshConfirmModal = false;
+
+        Flux::toast(
+            heading: 'Credentials Refreshed!',
+            variant: 'success',
+            text: "New passwords generated and SMS sent to {$count} exhibitor(s)."
+        );
+    }
+
     public function confirmDeleteExhibitor(int $bookingId, string $brandName): void
     {
         $this->deleteExhibitorId = $bookingId;
@@ -425,6 +501,22 @@ class Index extends Component
         ]);
 
         $booking->refresh();
+        $this->dispatchCredentialsSms($booking);
+    }
+
+    protected function regenerateExhibitorPassword(Booking $booking): void
+    {
+        $plainPassword = 'SGCCI@'.strtoupper(Str::random(6));
+
+        if ($booking->exhibitorUser) {
+            $booking->exhibitorUser->update([
+                'password' => Hash::make($plainPassword),
+            ]);
+        }
+
+        $booking->update(['login_password' => $plainPassword]);
+        $booking->refresh();
+
         $this->dispatchCredentialsSms($booking);
     }
 
