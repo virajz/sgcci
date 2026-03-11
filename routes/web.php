@@ -35,6 +35,7 @@ use App\Livewire\Exhibitions\VisitorsRegistration;
 use App\Livewire\Exhibitions\VisitorThankYou;
 use App\Livewire\Exhibitor\Badges as ExhibitorBadges;
 use App\Livewire\Exhibitor\CompanyProfile as ExhibitorCompanyProfile;
+use App\Livewire\Exhibitor\InvitedGuests as ExhibitorInvitedGuests;
 use App\Livewire\Exhibitor\Leads as ExhibitorLeads;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
@@ -112,7 +113,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('exhibitor')->name('exhibitor.')->group(function () {
         Route::get('badges', ExhibitorBadges::class)->name('badges.index');
         Route::get('company-profile', ExhibitorCompanyProfile::class)->name('company-profile');
-        Route::get('invited-guests', fn () => redirect()->route('dashboard'))->name('invited-guests');
+        Route::get('invited-guests', ExhibitorInvitedGuests::class)->name('invited-guests');
         Route::get('leads', ExhibitorLeads::class)->name('leads');
         Route::get('badges/{booking}/{member}/image', [ExhibitorBadgeController::class, 'inline'])->name('badges.inline');
         Route::get('badges/{booking}/{member}/photo', [ExhibitorBadgeController::class, 'photo'])->name('badges.photo');

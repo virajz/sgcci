@@ -58,6 +58,10 @@ class InvitedGuests extends Component
         if (! $this->booking) {
             abort(404, 'No booking found for this exhibitor.');
         }
+
+        if ($this->booking->invited_guests_limit <= 0) {
+            $this->redirect(route('dashboard'), navigate: true);
+        }
     }
 
     public function updatedState(): void
