@@ -188,6 +188,11 @@ class Index extends Component
                 'role' => 'exhibitor',
                 'password' => Hash::make($plainPassword),
             ]);
+
+            // Detach any previously linked bookings so the new booking is the active one
+            Booking::where('exhibitor_user_id', $user->id)
+                ->where('id', '!=', $booking->id)
+                ->update(['exhibitor_user_id' => null, 'login_password' => null]);
         }
 
         $booking->update([

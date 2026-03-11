@@ -89,6 +89,12 @@ class User extends Authenticatable
 
     public function booking(): HasOne
     {
-        return $this->hasOne(Booking::class, 'exhibitor_user_id');
+        return $this->hasOne(Booking::class, 'exhibitor_user_id')
+            ->whereNotIn('status', [
+                \App\BookingStatus::Cancelled->value,
+                \App\BookingStatus::Rejected->value,
+                \App\BookingStatus::Expired->value,
+                \App\BookingStatus::Refunded->value,
+            ]);
     }
 }
