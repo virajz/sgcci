@@ -28,13 +28,14 @@ test('admin dashboard displays all stat cards', function () {
         ->assertSee('Visitors Registered');
 });
 
-test('exhibitor dashboard only shows visitors registered stat', function () {
+test('exhibitor dashboard shows leads and whatsapp inquiries stats', function () {
     $user = User::factory()->create(['role' => 'exhibitor']);
 
     $this->actingAs($user)
         ->get('/dashboard')
         ->assertSuccessful()
-        ->assertSee('Visitors Registered')
+        ->assertSee('Leads Captured')
+        ->assertSee('WhatsApp Inquiries')
         ->assertDontSee('Available Stalls')
         ->assertDontSee('Payments Due Soon')
         ->assertDontSee('Confirmed Bookings')

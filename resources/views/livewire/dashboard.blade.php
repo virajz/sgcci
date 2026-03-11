@@ -3,20 +3,40 @@
 
     {{-- Stats Grid --}}
     @if (auth()->user()->isExhibitor())
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {{-- Visitors Registered --}}
-            <flux:card class="h-full">
-                <div class="flex items-start justify-between">
-                    <div>
-                        <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Visitors Registered</flux:text>
-                        <flux:heading size="2xl" class="mt-2">{{ $visitorsTotal }}</flux:heading>
-                        <flux:text class="mt-1 text-xs text-zinc-500">{{ $visitorsToday }} today</flux:text>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {{-- Leads --}}
+            <a href="{{ route('exhibitor.leads', ['activeTab' => 'list']) }}" wire:navigate
+                class="block transition-transform hover:scale-105">
+                <flux:card class="h-full">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Leads Captured</flux:text>
+                            <flux:heading size="2xl" class="mt-2">{{ $leadsCount }}</flux:heading>
+                            <flux:text class="mt-1 text-xs text-zinc-500">From QR code scans</flux:text>
+                        </div>
+                        <div class="p-3 bg-blue-100 rounded-lg dark:bg-blue-900/20">
+                            <flux:icon.bookmark class="text-blue-600 size-6 dark:text-blue-400" variant="outline" />
+                        </div>
                     </div>
-                    <div class="p-3 bg-purple-100 rounded-lg dark:bg-purple-900/20">
-                        <flux:icon.users class="text-purple-600 size-6 dark:text-purple-400" variant="outline" />
+                </flux:card>
+            </a>
+
+            {{-- WhatsApp Inquiries --}}
+            <a href="{{ route('exhibitor.leads', ['activeTab' => 'whatsapp']) }}" wire:navigate
+                class="block transition-transform hover:scale-105">
+                <flux:card class="h-full">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">WhatsApp Inquiries</flux:text>
+                            <flux:heading size="2xl" class="mt-2">{{ $whatsAppInquiriesCount }}</flux:heading>
+                            <flux:text class="mt-1 text-xs text-zinc-500">From QR code scans</flux:text>
+                        </div>
+                        <div class="p-3 bg-green-100 rounded-lg dark:bg-green-900/20">
+                            <flux:icon.chat-bubble-left-ellipsis class="text-green-600 size-6 dark:text-green-400" variant="outline" />
+                        </div>
                     </div>
-                </div>
-            </flux:card>
+                </flux:card>
+            </a>
         </div>
     @else
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

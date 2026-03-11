@@ -5,6 +5,8 @@ namespace App\Livewire;
 use App\BookingStatus;
 use App\Models\Booking;
 use App\Models\ExhibitionVisitor;
+use App\Models\ExhibitorLead;
+use App\Models\WhatsAppInquiry;
 use App\VisitorRegistrationStatus;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -152,7 +154,19 @@ class Dashboard extends Component
 
     public function render()
     {
-        return view('livewire.dashboard', [
+        $extraData = [];
+
+        if (auth()->user()?->isExhibitor()) {
+            $booking = auth()->user()->booking;
+            $extraData['leadsCount'] = $booking
+                ? ExhibitorLead::where('booking_id', $booking->id)->count()
+                : 0;
+            $extraData['whatsAppInquiriesCount'] = $booking
+                ? WhatsAppInquiry::where('booking_id', $booking->id)->count()
+                : 0;
+        }
+
+        return view('livewire.dashboard', array_merge([
             'availableStalls' => $this->availableStalls,
             'paymentsDue' => $this->paymentsDue,
             'bookedStalls' => $this->bookedStalls,
@@ -162,6 +176,6 @@ class Dashboard extends Component
             'visitorPaymentToday' => $this->visitorPaymentToday,
             'visitorPaymentTotal' => $this->visitorPaymentTotal,
             'scanStats' => $this->scanStats,
-        ]);
+        ], $extraData));
     }
 }
