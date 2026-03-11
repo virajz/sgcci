@@ -9,6 +9,9 @@ class WhatsAppWebhookLog extends Model
 {
     /** @use HasFactory<\Database\Factories\WhatsAppWebhookLogFactory> */
     use HasFactory;
+
+    protected $table = 'whatsapp_webhook_logs';
+
     protected $fillable = [
         'method',
         'path',
