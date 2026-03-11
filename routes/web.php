@@ -8,6 +8,7 @@ use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\VisitorPassController;
 use App\Http\Controllers\VisitorPaymentController;
 use App\Http\Controllers\VisitorScanController;
+use App\Http\Controllers\WhatsAppWebhookController;
 use App\Livewire\Admin\DatabaseBackups;
 use App\Livewire\Admin\Exhibitions\Index as ExhibitionsIndex;
 use App\Livewire\Admin\Exhibitors\Badges as AdminExhibitorBadges;
@@ -23,6 +24,7 @@ use App\Livewire\Admin\SupportTickets\Show as SupportTicketsShow;
 use App\Livewire\Admin\Visitors\Index as VisitorsIndex;
 use App\Livewire\Admin\Visitors\Show as VisitorsShow;
 use App\Livewire\Admin\WalkInVisitors\Index as WalkInVisitorsIndex;
+use App\Livewire\Admin\WhatsAppWebhookLogs\Index as WhatsAppWebhookLogsIndex;
 use App\Livewire\Dashboard;
 use App\Livewire\Exhibitions\Booking;
 use App\Livewire\Exhibitions\Confirmation;
@@ -67,6 +69,9 @@ Route::get('support-tickets/create', CreateTicket::class)->name('support-tickets
 Route::get('support-tickets/thank-you/{ticketNumber}', TicketThankYou::class)->name('support-tickets.thank-you');
 Route::post('support-tickets/upload', [SupportTicketController::class, 'upload'])->name('support-tickets.upload');
 Route::get('support-tickets/download/{path}', [SupportTicketController::class, 'download'])->name('support-tickets.download')->where('path', '.*');
+
+// WhatsApp webhook — public, CSRF excluded in bootstrap/app.php
+Route::post('webhook/whatsapp', [WhatsAppWebhookController::class, 'receive'])->name('webhook.whatsapp');
 
 // Payment routes
 Route::prefix('payment')->name('payment.')->group(function () {
@@ -137,6 +142,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('support-tickets', SupportTicketsIndex::class)->name('support-tickets.index');
         Route::get('support-tickets/{ticket}', SupportTicketsShow::class)->name('support-tickets.show');
         Route::get('database-backups', DatabaseBackups::class)->name('database-backups');
+        Route::get('whatsapp-webhook-logs', WhatsAppWebhookLogsIndex::class)
+            ->name('whatsapp-webhook-logs')
+            ->can('viewWhatsAppWebhookLogs');
     });
 
     // Front desk routes

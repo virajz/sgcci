@@ -72,6 +72,9 @@
                         <flux:navlist.item icon="circle-stack" :href="route('admin.database-backups')"
                             :current="request()->routeIs('admin.database-backups')" wire:navigate>{{ __('Database Backups') }}
                         </flux:navlist.item>
+                        <flux:navlist.item icon="chat-bubble-left-ellipsis" :href="route('admin.whatsapp-webhook-logs')"
+                            :current="request()->routeIs('admin.whatsapp-webhook-logs')" wire:navigate>{{ __('WhatsApp Logs') }}
+                        </flux:navlist.item>
                     @endif
                 </flux:navlist.group>
             @endif

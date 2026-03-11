@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'payment/cancel',
             'visitor-payment/response',
             'visitor-payment/cancel',
+            'webhook/whatsapp',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
