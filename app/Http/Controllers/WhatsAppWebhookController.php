@@ -96,7 +96,7 @@ class WhatsAppWebhookController extends Controller
                 $type,
                 $booking->brand_name,
             ),
-            'video', 'audio', 'document' => $this->sendMedia(
+            'video', 'audio', 'document', 'pdf' => $this->sendMedia(
                 fn (string $url) => $whatsapp->sendDocument($phoneNumber, $url, $mediaOriginalName, $text),
                 $mediaPath,
                 $type,
