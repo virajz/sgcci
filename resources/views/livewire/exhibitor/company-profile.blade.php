@@ -7,6 +7,9 @@
                 This message will be shown to customers who scan your QR code. Choose the type of message you want to
                 display.
             </flux:text>
+            <flux:text class="text-zinc-500 dark:text-zinc-400">
+                Booking Code: <span class="font-semibold text-zinc-800 dark:text-zinc-200">{{ $booking->booking_code }}</span>
+            </flux:text>
         </div>
     </flux:card>
 
