@@ -1,35 +1,35 @@
 @php
     $logStyles = [
         'entered' => [
-            'card'    => 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800',
-            'bar'     => 'bg-green-400 dark:bg-green-600',
-            'heading' => 'text-green-900 dark:text-green-100',
-            'sub'     => 'text-green-700 dark:text-green-300',
-            'time'    => 'text-green-600 dark:text-green-400',
+            'card'    => 'bg-green-500 border-green-600',
+            'bar'     => 'bg-white/40',
+            'heading' => 'text-white',
+            'sub'     => 'text-white/90',
+            'time'    => 'text-white/75',
             'label'   => 'Entry allowed',
         ],
         're_entered' => [
-            'card'    => 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800',
-            'bar'     => 'bg-red-400 dark:bg-red-600',
-            'heading' => 'text-red-900 dark:text-red-100',
-            'sub'     => 'text-red-700 dark:text-red-300',
-            'time'    => 'text-red-600 dark:text-red-400',
+            'card'    => 'bg-red-500 border-red-600',
+            'bar'     => 'bg-white/40',
+            'heading' => 'text-white',
+            'sub'     => 'text-white/90',
+            'time'    => 'text-white/75',
             'label'   => 'Re-entry',
         ],
         'already_entered' => [
-            'card'    => 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800',
-            'bar'     => 'bg-red-400 dark:bg-red-600',
-            'heading' => 'text-red-900 dark:text-red-100',
-            'sub'     => 'text-red-700 dark:text-red-300',
-            'time'    => 'text-red-600 dark:text-red-400',
+            'card'    => 'bg-red-500 border-red-600',
+            'bar'     => 'bg-white/40',
+            'heading' => 'text-white',
+            'sub'     => 'text-white/90',
+            'time'    => 'text-white/75',
             'label'   => 'Already inside',
         ],
         'not_found' => [
-            'card'    => 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800',
-            'bar'     => 'bg-red-400 dark:bg-red-600',
-            'heading' => 'text-red-900 dark:text-red-100',
-            'sub'     => 'text-red-700 dark:text-red-300',
-            'time'    => 'text-red-600 dark:text-red-400',
+            'card'    => 'bg-red-500 border-red-600',
+            'bar'     => 'bg-white/40',
+            'heading' => 'text-white',
+            'sub'     => 'text-white/90',
+            'time'    => 'text-white/75',
             'label'   => 'Not found',
         ],
     ];
@@ -58,23 +58,23 @@
                 x-transition:leave="transition duration-500"
                 x-transition:leave-start="opacity-100 translate-y-0"
                 x-transition:leave-end="opacity-0 -translate-y-2"
-                class="relative flex items-start gap-3 rounded-xl border px-4 py-3 overflow-hidden {{ $s['card'] }}"
+                class="relative flex items-start gap-4 rounded-xl border px-5 py-4 overflow-hidden {{ $s['card'] }}"
             >
                 {{-- Progress bar --}}
                 <div
-                    class="absolute bottom-0 left-0 h-0.5 transition-all ease-linear {{ $s['bar'] }}"
+                    class="absolute bottom-0 left-0 h-1 transition-all ease-linear {{ $s['bar'] }}"
                     :style="`width: ${progress}%; transition-duration: 1s`"
                 ></div>
 
                 {{-- Icon --}}
-                <flux:icon name="{{ $logIcons[$entry['type']] ?? 'x-circle' }}" class="size-5 shrink-0 mt-0.5 {{ $s['sub'] }}" />
+                <flux:icon name="{{ $logIcons[$entry['type']] ?? 'x-circle' }}" class="size-8 shrink-0 mt-0.5 {{ $s['sub'] }}" />
 
                 {{-- Content --}}
                 <div class="flex-1 min-w-0">
-                    <p class="font-semibold text-sm truncate {{ $s['heading'] }}">{{ $s['label'] }}</p>
-                    <p class="text-xs truncate mt-0.5 {{ $s['sub'] }}">{{ $entry['name'] }}</p>
+                    <p class="font-bold text-xl truncate {{ $s['heading'] }}">{{ $s['label'] }}</p>
+                    <p class="text-base truncate mt-1 {{ $s['sub'] }}">{{ $entry['name'] }}</p>
                     @if(!empty($entry['entered_at']))
-                        <p class="text-xs font-mono truncate mt-0.5 {{ $s['sub'] }} opacity-75">Entered {{ $entry['entered_at'] }}</p>
+                        <p class="text-sm font-mono truncate mt-1 {{ $s['sub'] }} opacity-75">Entered {{ $entry['entered_at'] }}</p>
                     @endif
                 </div>
 
@@ -82,12 +82,12 @@
                 <div class="shrink-0 flex flex-col items-end gap-2">
                     <button
                         @click="dismiss()"
-                        class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+                        class="text-white/60 hover:text-white transition-colors"
                         aria-label="Dismiss"
                     >
-                        <flux:icon name="x-mark" class="size-3.5" />
+                        <flux:icon name="x-mark" class="size-5" />
                     </button>
-                    <span class="text-xs font-mono {{ $s['time'] }}">{{ $entry['time'] }}</span>
+                    <span class="text-sm font-mono {{ $s['time'] }}">{{ $entry['time'] }}</span>
                 </div>
             </div>
         @endforeach

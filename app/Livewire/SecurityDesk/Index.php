@@ -347,7 +347,7 @@ class Index extends Component
 
     private function addScanLog(string $type, string $name, string $code, int $duration, ?string $enteredAt = null): void
     {
-        array_unshift($this->scanLog, [
+        $entry = [
             'id' => uniqid(),
             'type' => $type,
             'name' => $name,
@@ -355,7 +355,11 @@ class Index extends Component
             'time' => now()->format('h:i:s A'),
             'entered_at' => $enteredAt,
             'duration' => $duration,
-        ]);
+        ];
+
+        array_unshift($this->scanLog, $entry);
+
+        $this->dispatch('scan-result', entry: $entry);
 
         $this->scanLog = array_slice($this->scanLog, 0, 20);
     }

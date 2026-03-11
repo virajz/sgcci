@@ -35,6 +35,12 @@ return [
         ],
     ],
 
+    'whatsapp_direct' => [
+        'project_id' => env('WHATSAPP_DIRECT_PROJECT_ID'),
+        'api_key' => env('WHATSAPP_DIRECT_API_KEY'),
+        'test_number' => env('WHATSAPP_DIRECT_TEST_NUMBER', '917874949091'),
+    ],
+
     'whatsapp' => [
         'enabled' => env('WHATSAPP_ENABLED', false),
         'api_key' => env('WHATSAPP_API_KEY'),
