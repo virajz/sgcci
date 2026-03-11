@@ -52,7 +52,7 @@ class WhatsAppWebhookController extends Controller
         $userName = (string) data_get($message, 'userName', '');
 
         // Match: "I want to know more about {Brand Name} - {XXXXXX}"
-        if (! preg_match('/- ([A-Z0-9]{6})\s*$/i', $text, $matches)) {
+        if (! preg_match('/^I want to know more about .+ - ([A-Z0-9]{6})\s*$/i', $text, $matches)) {
             return;
         }
 
@@ -86,8 +86,10 @@ class WhatsAppWebhookController extends Controller
         $mediaPath = $booking->profile_message_media;
         $mediaOriginalName = $booking->profile_message_media_original_name ?? 'file';
 
+        $fallback = "Thank you for taking interest in {$booking->brand_name}, a representative will soon get in touch with you to know more about you.";
+
         match ($type) {
-            'text' => $whatsapp->sendText($phoneNumber, $text ?: $booking->brand_name),
+            'text' => $whatsapp->sendText($phoneNumber, $text ?: $fallback),
             'image' => $this->sendMedia(
                 fn (string $url) => $whatsapp->sendImage($phoneNumber, $url, $text),
                 $mediaPath,
@@ -100,7 +102,7 @@ class WhatsAppWebhookController extends Controller
                 $type,
                 $booking->brand_name,
             ),
-            default => $whatsapp->sendText($phoneNumber, $booking->brand_name),
+            default => $whatsapp->sendText($phoneNumber, $fallback),
         };
     }
 
