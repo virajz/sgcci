@@ -50,7 +50,13 @@
                             <flux:button
                                 size="sm"
                                 variant="ghost"
-                                x-on:click="selected = {{ json_encode(['id' => $log->id, 'payload' => json_encode($log->payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 'headers' => json_encode($log->headers, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 'received_at' => $log->created_at->format('d M Y, h:i:s A'), 'ip' => $log->ip, 'method' => $log->method]) }}"
+                                x-on:click="selected = {{ json_encode([
+                                    'payload' => json_encode($log->payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+                                    'headers' => json_encode($log->headers, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+                                    'received_at' => $log->created_at->format('d M Y, h:i:s A'),
+                                    'ip' => $log->ip,
+                                    'method' => $log->method,
+                                ]) }}; $flux.modal('payload-detail').show()"
                             >
                                 View payload
                                 <flux:icon name="arrow-top-right-on-square" class="size-3" />
@@ -72,14 +78,14 @@
 
     {{ $logs->links() }}
 
-    {{-- Payload detail modal --}}
-    <flux:modal x-bind:open="selected !== null" x-on:close="selected = null" variant="flyout" position="right" class="w-full max-w-2xl">
+    {{-- Payload detail flyout --}}
+    <flux:modal name="payload-detail" flyout position="right" class="md:w-2xl" x-on:close="selected = null">
         <template x-if="selected">
-            <div class="space-y-6 h-full flex flex-col">
+            <div class="space-y-6">
                 <div>
                     <flux:heading size="lg">Webhook Payload</flux:heading>
-                    <flux:text class="text-zinc-500 dark:text-zinc-400">
-                        <span class="font-mono" x-text="selected.method"></span>
+                    <flux:text class="mt-1 text-zinc-500 dark:text-zinc-400">
+                        <span class="font-mono font-semibold" x-text="selected.method"></span>
                         &middot;
                         <span x-text="selected.received_at"></span>
                         &middot;
@@ -87,20 +93,14 @@
                     </flux:text>
                 </div>
 
-                <div class="space-y-4 flex-1 overflow-auto">
-                    <div>
-                        <flux:heading size="sm" class="mb-2">Payload</flux:heading>
-                        <pre class="bg-zinc-900 text-green-400 text-xs rounded-lg p-4 overflow-auto max-h-64 whitespace-pre-wrap break-all" x-text="selected.payload"></pre>
-                    </div>
-
-                    <div>
-                        <flux:heading size="sm" class="mb-2">Headers</flux:heading>
-                        <pre class="bg-zinc-900 text-zinc-400 text-xs rounded-lg p-4 overflow-auto max-h-64 whitespace-pre-wrap break-all" x-text="selected.headers"></pre>
-                    </div>
+                <div>
+                    <flux:heading size="sm" class="mb-2">Payload</flux:heading>
+                    <pre class="bg-zinc-900 text-green-400 text-xs rounded-lg p-4 overflow-auto max-h-80 whitespace-pre-wrap break-all" x-text="selected.payload"></pre>
                 </div>
 
                 <div>
-                    <flux:button variant="ghost" x-on:click="selected = null">Close</flux:button>
+                    <flux:heading size="sm" class="mb-2">Headers</flux:heading>
+                    <pre class="bg-zinc-900 text-zinc-400 text-xs rounded-lg p-4 overflow-auto max-h-80 whitespace-pre-wrap break-all" x-text="selected.headers"></pre>
                 </div>
             </div>
         </template>
