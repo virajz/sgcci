@@ -592,4 +592,9 @@ class Booking extends Model
     {
         return $this->hasMany(ExhibitorLead::class);
     }
+
+    public function whatsAppInquiries(): HasMany
+    {
+        return $this->hasMany(WhatsAppInquiry::class);
+    }
 }

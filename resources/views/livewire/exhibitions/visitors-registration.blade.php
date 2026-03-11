@@ -3,23 +3,20 @@
         class="w-full max-w-2xl p-4 mx-auto space-y-6 sm:p-6 lg:p-8 lg:flex lg:flex-col lg:h-full lg:overflow-hidden">
 
         {{-- Header --}}
-        <section class="space-y-2 lg:flex-shrink-0">
-            <div class="flex items-center justify-between">
-                <img src="{{ asset('brand/sgcci-logo-fixed.svg') }}" alt="SGCCI Logo" class="w-full h-auto max-w-16">
-                <flux:heading size="xl" class="font-bold tracking-tight">Visitor Registration</flux:heading>
-                <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="w-full h-auto max-w-32">
+        <section class="space-y-3 lg:flex-shrink-0">
+            <div class="flex items-center justify-between gap-2">
+                <img src="{{ asset('brand/sgcci-logo-fixed.svg') }}" alt="SGCCI Logo" class="h-auto w-12 shrink-0 sm:w-16">
+                <flux:heading size="xl" class="font-bold tracking-tight text-center text-base sm:text-xl">Visitor Registration</flux:heading>
+                <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="h-auto w-24 shrink-0 sm:w-32">
             </div>
 
             <div class="space-y-1 text-center">
                 <flux:subheading>{{ $exhibition->title }}</flux:subheading>
                 @if ($exhibition->start_date && $exhibition->end_date)
-                    {{-- <flux:text size="sm" class="text-zinc-400">
-                        {{ $exhibition->start_date->format('M d') }} — {{ $exhibition->end_date->format('M d, Y') }}
-                    </flux:text> --}}
-                    <flux:text size="sm">
-                        {{ $exhibition->start_date->format('M d') }}: 1:00 PM onwards &nbsp;|&nbsp;
-                        {{ $exhibition->start_date->addDay()->format('M d') }} –
-                        {{ $exhibition->end_date->format('M d') }}: 10:00 AM onwards
+                    <flux:text size="sm" class="leading-snug">
+                        <span class="inline-block">{{ $exhibition->start_date->format('M d') }}: 1:00 PM onwards</span>
+                        <span class="inline-block text-zinc-400">&nbsp;|&nbsp;</span>
+                        <span class="inline-block">{{ $exhibition->start_date->addDay()->format('M d') }} – {{ $exhibition->end_date->format('M d') }}: 10:00 AM onwards</span>
                     </flux:text>
                 @endif
             </div>
@@ -27,9 +24,9 @@
 
         {{-- Step Indicator --}}
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
             {{-- Step 1 --}}
-            <div class="flex items-center flex-1 gap-2">
+            <div class="flex items-center gap-2">
                 <div @class([
                     'flex items-center justify-center size-8 rounded-full text-sm font-semibold shrink-0 transition-colors',
                     'bg-blue-600 text-white' => $currentStep === 1,
@@ -43,31 +40,29 @@
                     @endif
                 </div>
                 <div>
-                    <flux:text size="sm" class="font-medium text-zinc-900 dark:text-white">Your Details
-                    </flux:text>
-                    <flux:text size="xs" class="hidden text-zinc-400 sm:block">Personal & business info
-                    </flux:text>
+                    <flux:text size="sm" class="font-medium text-zinc-900 dark:text-white">Your Details</flux:text>
+                    <flux:text size="xs" class="hidden text-zinc-400 sm:block">Personal & business info</flux:text>
                 </div>
             </div>
 
-            <div class="flex-1 h-px bg-zinc-200 dark:bg-zinc-700 max-w-16"></div>
+            <div class="flex-1 h-px bg-zinc-200 dark:bg-zinc-700"></div>
 
             {{-- Step 2 --}}
-            <div class="flex items-center justify-end flex-1 gap-2">
-                <div class="text-right">
-                    <flux:text size="sm" @class([
-                        'font-medium',
-                        'text-zinc-900 dark:text-white' => $currentStep === 2,
-                        'text-zinc-400' => $currentStep !== 2,
-                    ])>Additional Persons</flux:text>
-                    <flux:text size="xs" class="hidden text-zinc-400 sm:block">Optional</flux:text>
-                </div>
+            <div class="flex items-center gap-2">
                 <div @class([
                     'flex items-center justify-center size-8 rounded-full text-sm font-semibold shrink-0 transition-colors',
                     'bg-blue-600 text-white' => $currentStep === 2,
                     'bg-zinc-100 dark:bg-zinc-800 text-zinc-400' => $currentStep < 2,
                 ])>
                     2
+                </div>
+                <div>
+                    <flux:text size="sm" @class([
+                        'font-medium',
+                        'text-zinc-900 dark:text-white' => $currentStep === 2,
+                        'text-zinc-400' => $currentStep !== 2,
+                    ])>Additional Persons</flux:text>
+                    <flux:text size="xs" class="hidden text-zinc-400 sm:block">Optional</flux:text>
                 </div>
             </div>
         </div>
@@ -81,7 +76,7 @@
             'hidden' => $currentStep !== 1,
         ])>
             <form wire:submit="nextStep">
-                <div class="px-6 py-6 space-y-5">
+                <div class="py-4 space-y-5 sm:px-6 sm:py-6">
 
                     {{-- Phone + Name --}}
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -161,13 +156,17 @@
                 </div>
 
                 {{-- Step 1 Footer --}}
-                <div class="px-6 pb-6">
-                    <flux:button type="submit" variant="primary" class="w-full" wire:loading.attr="disabled"
-                        wire:target="nextStep">
-                        <span wire:loading.remove wire:target="nextStep" class="flex items-center gap-2">
-                            Continue
-                            <flux:icon name="arrow-right" class="size-4" />
-                        </span>
+                <div class="pb-4 sm:px-6 sm:pb-6">
+                    <flux:button
+                        type="submit"
+                        variant="primary"
+                        class="w-full"
+                        wire:loading.attr="disabled"
+                        wire:target="nextStep"
+                        icon-trailing="arrow-right"
+                        iconVariant="outline"
+                    >
+                        <span wire:loading.remove wire:target="nextStep">Continue</span>
                         <span wire:loading wire:target="nextStep">Validating...</span>
                     </flux:button>
                 </div>
@@ -180,7 +179,7 @@
             'hidden' => $currentStep !== 2,
         ])>
             <form wire:submit="register">
-                <div class="p-6 space-y-3">
+                <div class="py-4 space-y-3 sm:p-6">
 
                     {{-- Primary Visitor (read-only summary) --}}
                     <div
@@ -240,7 +239,7 @@
                 </div>
 
                 {{-- Pricing Summary + Actions --}}
-                <div class="px-6 pb-6 space-y-3">
+                <div class="pb-4 space-y-3 sm:px-6 sm:pb-6">
                     @if ($exhibition->isPaidEntry())
                         <div
                             class="text-sm border divide-y rounded-xl border-zinc-200 dark:border-zinc-700 divide-zinc-100 dark:divide-zinc-800">
@@ -268,14 +267,19 @@
                             </div>
                         </div>
                     @endif
-                    <flux:button type="submit" variant="primary" class="w-full" wire:loading.attr="disabled"
-                        wire:target="register">
-                        <span wire:loading.remove wire:target="register" class="flex items-center gap-2">
+                    <flux:button
+                        type="submit"
+                        variant="primary"
+                        class="w-full"
+                        wire:loading.attr="disabled"
+                        wire:target="register"
+                        icon="{{ $exhibition->isPaidEntry() ? 'credit-card' : 'check' }}"
+                        iconVariant="outline"
+                    >
+                        <span wire:loading.remove wire:target="register">
                             @if ($exhibition->isPaidEntry())
-                                <flux:icon name="credit-card" class="size-4" />
                                 Register & Pay {{ Number::currency((float) $this->totalAmount, 'INR') }}
                             @else
-                                <flux:icon name="check" class="size-4" />
                                 Complete Registration
                             @endif
                         </span>

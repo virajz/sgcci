@@ -9,7 +9,7 @@
     <flux:tabs wire:model.live="activeTab">
         <flux:tab name="capture" icon="qr-code">Capture</flux:tab>
         <flux:tab name="list" icon="list-bullet">List</flux:tab>
-        <flux:tab name="whatsapp" icon="chat-bubble-left-ellipsis" disabled>WhatsApp Inquiries</flux:tab>
+        <flux:tab name="whatsapp" icon="chat-bubble-left-ellipsis">WhatsApp Inquiries</flux:tab>
     </flux:tabs>
 
     {{-- ── CAPTURE TAB ────────────────────────────────────────────────────────── --}}
@@ -303,6 +303,46 @@
             }));
         </script>
         @endscript
+    @endif
+
+    {{-- ── WHATSAPP TAB ─────────────────────────────────────────────────────────── --}}
+    @if ($activeTab === 'whatsapp')
+        <flux:card class="space-y-4">
+            @if ($whatsAppInquiries->isEmpty())
+                <div class="py-12 text-center">
+                    <flux:icon name="chat-bubble-left-ellipsis" class="w-10 h-10 mx-auto mb-3 text-zinc-300 dark:text-zinc-600" />
+                    <flux:heading size="lg" class="mb-1">No WhatsApp inquiries yet</flux:heading>
+                    <flux:text class="text-zinc-500 dark:text-zinc-400">
+                        When visitors scan your QR code and message you, they'll appear here.
+                    </flux:text>
+                </div>
+            @else
+                <flux:table>
+                    <flux:table.columns>
+                        <flux:table.column>Name</flux:table.column>
+                        <flux:table.column>Phone</flux:table.column>
+                        <flux:table.column>Received</flux:table.column>
+                    </flux:table.columns>
+                    <flux:table.rows>
+                        @foreach ($whatsAppInquiries as $inquiry)
+                            <flux:table.row wire:key="inquiry-{{ $inquiry->id }}">
+                                <flux:table.cell>
+                                    <flux:text class="font-medium">{{ $inquiry->name ?? '—' }}</flux:text>
+                                </flux:table.cell>
+                                <flux:table.cell>
+                                    <flux:text class="text-sm font-mono">{{ $inquiry->phone_number }}</flux:text>
+                                </flux:table.cell>
+                                <flux:table.cell>
+                                    <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">
+                                        {{ $inquiry->received_at->format('d M Y, h:i A') }}
+                                    </flux:text>
+                                </flux:table.cell>
+                            </flux:table.row>
+                        @endforeach
+                    </flux:table.rows>
+                </flux:table>
+            @endif
+        </flux:card>
     @endif
 
     {{-- ── LIST TAB ────────────────────────────────────────────────────────────── --}}

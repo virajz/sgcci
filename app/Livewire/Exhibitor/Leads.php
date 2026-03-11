@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\Exhibition;
 use App\Models\ExhibitionVisitor;
 use App\Models\ExhibitorLead;
+use App\Models\WhatsAppInquiry;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -252,8 +253,13 @@ class Leads extends Component
             ->orderByDesc('captured_at')
             ->get();
 
+        $whatsAppInquiries = WhatsAppInquiry::where('booking_id', $this->booking->id)
+            ->orderByDesc('received_at')
+            ->get();
+
         return view('livewire.exhibitor.leads', [
             'leads' => $leads,
+            'whatsAppInquiries' => $whatsAppInquiries,
         ]);
     }
 }
