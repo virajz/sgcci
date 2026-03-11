@@ -119,6 +119,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('badges/{booking}/{member}/download', [ExhibitorBadgeController::class, 'download'])->name('badges.download');
         Route::get('badges/{booking}/download-all', [ExhibitorBadgeController::class, 'downloadAll'])->name('badges.download-all');
         Route::get('{booking}/profile-media', [ExhibitorBadgeController::class, 'profileMedia'])->name('profile-media');
+        Route::get('{booking}/profile-media-2', [ExhibitorBadgeController::class, 'profileMedia2'])->name('profile-media-2');
     });
 
     // Admin routes

@@ -76,17 +76,52 @@ class WhatsAppWebhookController extends Controller
     }
 
     /**
-     * Send the exhibitor's profile message to the inquiry sender.
+     * Send the exhibitor's profile messages to the inquiry sender.
      */
     private function sendProfileMessage(Booking $booking, string $phoneNumber): void
     {
         $whatsapp = WhatsAppDirectService::fromConfig();
-        $type = $booking->profile_message_type ?? 'text';
-        $text = $booking->profile_message_text ?? '';
-        $mediaPath = $booking->profile_message_media;
-        $mediaOriginalName = $booking->profile_message_media_original_name ?? 'file';
-
         $fallback = "Thank you for taking interest in {$booking->brand_name}, a representative will soon get in touch with you to know more about you.";
+
+        $this->dispatchMessage(
+            $whatsapp,
+            $phoneNumber,
+            $booking->profile_message_type ?? 'text',
+            $booking->profile_message_text ?? '',
+            $booking->profile_message_media,
+            $booking->profile_message_media_original_name ?? 'file',
+            $booking->brand_name,
+            $fallback,
+        );
+
+        $this->dispatchMessage(
+            $whatsapp,
+            $phoneNumber,
+            $booking->profile_message_2_type ?? 'text',
+            $booking->profile_message_2_text ?? '',
+            $booking->profile_message_2_media,
+            $booking->profile_message_2_media_original_name ?? 'file',
+            $booking->brand_name,
+            null,
+        );
+    }
+
+    /**
+     * Dispatch a single profile message (text, image, video, or PDF).
+     */
+    private function dispatchMessage(
+        WhatsAppDirectService $whatsapp,
+        string $phoneNumber,
+        string $type,
+        string $text,
+        ?string $mediaPath,
+        string $mediaOriginalName,
+        string $brandName,
+        ?string $fallback,
+    ): void {
+        if ($fallback === null && ! $text && ! $mediaPath) {
+            return;
+        }
 
         match ($type) {
             'text' => $whatsapp->sendText($phoneNumber, $text ?: $fallback),
@@ -94,15 +129,15 @@ class WhatsAppWebhookController extends Controller
                 fn (string $url) => $whatsapp->sendImage($phoneNumber, $url, $text),
                 $mediaPath,
                 $type,
-                $booking->brand_name,
+                $brandName,
             ),
             'video', 'audio', 'document', 'pdf' => $this->sendMedia(
                 fn (string $url) => $whatsapp->sendDocument($phoneNumber, $url, $mediaOriginalName, $text),
                 $mediaPath,
                 $type,
-                $booking->brand_name,
+                $brandName,
             ),
-            default => $whatsapp->sendText($phoneNumber, $fallback),
+            default => $fallback ? $whatsapp->sendText($phoneNumber, $fallback) : null,
         };
     }
 

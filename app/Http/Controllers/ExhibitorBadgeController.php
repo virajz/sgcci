@@ -101,6 +101,18 @@ class ExhibitorBadgeController extends Controller
         return response($contents)->header('Content-Type', $mime);
     }
 
+    public function profileMedia2(Booking $booking): Response
+    {
+        $this->authorizeBookingAccess($booking);
+
+        abort_unless($booking->profile_message_2_media && Storage::exists($booking->profile_message_2_media), 404);
+
+        $contents = Storage::get($booking->profile_message_2_media);
+        $mime = Storage::mimeType($booking->profile_message_2_media) ?: 'application/octet-stream';
+
+        return response($contents)->header('Content-Type', $mime);
+    }
+
     public function photo(Booking $booking, ExhibitorBadgeMember $member): Response
     {
         $this->authorizeAccess($booking, $member);
