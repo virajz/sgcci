@@ -15,6 +15,9 @@ Schedule::command('bookings:send-partial-payment-reminders --force --no-interact
     ->cron('0 9 */2 * *')
     ->when(fn () => now()->lte(Carbon::create(2026, 2, 28)));
 
+// Send event reminder WhatsApp notifications to confirmed visitors daily at 9:30am.
+Schedule::command('visitors:send-event-reminders --no-interaction')->dailyAt('09:30');
+
 // Mark all inside visitors as exited at end of day.
 Schedule::command('visitors:mark-all-exited')->dailyAt('23:55');
 
