@@ -22,6 +22,8 @@ class Index extends Component
 
     public string $search = '';
 
+    public string $stallSearch = '';
+
     public string $sortBy = 'updated_at';
 
     public string $sortDirection = 'desc';
@@ -105,6 +107,12 @@ class Index extends Component
     }
 
     public function updatingSearch(): void
+    {
+        $this->resetPage();
+        $this->selectedBookings = [];
+    }
+
+    public function updatingStallSearch(): void
     {
         $this->resetPage();
         $this->selectedBookings = [];
@@ -587,6 +595,7 @@ class Index extends Component
     {
         $search = strtolower($this->search);
         $phoneSearch = str_replace(' ', '', $this->search);
+        $stallTerms = array_values(array_filter(array_map('trim', explode(',', $this->stallSearch))));
 
         $bookings = Booking::query()
             ->where(function ($q) {
@@ -606,6 +615,13 @@ class Index extends Component
                         ->orWhereRaw('LOWER(contact_person) LIKE ?', ["%{$search}%"])
                         ->orWhereRaw('LOWER(email) LIKE ?', ["%{$search}%"])
                         ->orWhereRaw("REPLACE(phone_number, ' ', '') LIKE ?", ["%{$phoneSearch}%"]);
+                });
+            })
+            ->when($stallTerms, function ($query) use ($stallTerms) {
+                $query->where(function ($q) use ($stallTerms) {
+                    foreach ($stallTerms as $stall) {
+                        $q->orWhereRaw('LOWER(selected_stalls::text) LIKE ?', ['%"'.strtolower($stall).'"%']);
+                    }
                 });
             })
             ->orderBy($this->sortBy, $this->sortDirection)

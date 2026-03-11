@@ -76,6 +76,9 @@
         <flux:input wire:model.live.debounce.300ms="search"
             placeholder="Search by code, brand, contact, phone, or email..." icon="magnifying-glass"
             iconVariant="outline" class="max-w-md" />
+        <flux:input wire:model.live.debounce.300ms="stallSearch"
+            placeholder="Filter by stalls (e.g. A1, B2, C3)..." icon="map-pin"
+            iconVariant="outline" class="max-w-xs" />
     </div>
 
     <flux:card class="overflow-hidden">
