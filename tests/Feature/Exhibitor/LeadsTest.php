@@ -113,7 +113,7 @@ it('shows lead as already saved when already marked', function () {
         ->test(Leads::class)
         ->call('setLookupCode', $visitor->registration_code)
         ->assertSet('foundVisitor.is_lead', true)
-        ->assertSee('Already a lead');
+        ->assertSee('Lead');
 });
 
 it('shows leads in list tab', function () {

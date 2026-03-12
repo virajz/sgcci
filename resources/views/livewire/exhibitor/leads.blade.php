@@ -9,6 +9,7 @@
     <flux:tabs wire:model.live="activeTab">
         <flux:tab name="capture" icon="qr-code">Capture</flux:tab>
         <flux:tab name="list" icon="list-bullet">List</flux:tab>
+        <flux:tab name="members" icon="identification">Members</flux:tab>
         <flux:tab name="whatsapp" icon="chat-bubble-left-ellipsis">WhatsApp Inquiries</flux:tab>
     </flux:tabs>
 
@@ -76,7 +77,62 @@
             {{-- Right: Results --}}
             <div class="flex-1 space-y-3">
                 @if ($lookupPerformed)
-                    @if ($foundVisitor)
+                    @if ($foundMember)
+
+                        {{-- Member card --}}
+                        <div class="rounded-xl border overflow-hidden border-indigo-300 dark:border-indigo-700">
+                            <div class="p-4 bg-zinc-50 dark:bg-zinc-900/50 flex items-center gap-3">
+                                <div class="flex items-center justify-center size-12 rounded-full shrink-0 font-bold text-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300">
+                                    {{ mb_strtoupper(mb_substr($foundMember['name'], 0, 1)) }}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-semibold text-base truncate">{{ $foundMember['name'] }}</p>
+                                    @if ($foundMember['phone'])
+                                        <p class="text-sm text-zinc-500 font-mono">{{ $foundMember['phone'] }}</p>
+                                    @endif
+                                </div>
+                                <div class="shrink-0 flex flex-col items-end gap-1">
+                                    @if ($foundMember['is_lead'])
+                                        <flux:badge color="lime" size="sm" icon="check">Lead</flux:badge>
+                                    @endif
+                                    <flux:badge color="indigo" size="sm">
+                                        {{ $foundMember['member_type'] === 'committee' ? 'Organizer' : 'SGCCI Member' }}
+                                    </flux:badge>
+                                </div>
+                            </div>
+
+                            @if ($foundMember['post'])
+                                <div class="px-4 py-2 border-t border-zinc-100 dark:border-zinc-700/50 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                                    <flux:icon name="briefcase" class="size-4 shrink-0" />
+                                    <span class="truncate">{{ $foundMember['post'] }}</span>
+                                </div>
+                            @endif
+
+                            <div class="px-4 py-2 border-t border-zinc-100 dark:border-zinc-700/50 flex items-center justify-end text-sm">
+                                <span class="font-mono text-xs text-zinc-400">{{ $foundMember['membership_number'] }}</span>
+                            </div>
+                        </div>
+
+                        <flux:button
+                            wire:click="markAsMemberLead"
+                            wire:loading.attr="disabled"
+                            wire:target="markAsMemberLead"
+                            variant="primary"
+                            icon="bookmark"
+                            class="w-full !py-4 !text-base"
+                            :disabled="$foundMember['is_lead']"
+                        >
+                            <span wire:loading.remove wire:target="markAsMemberLead">
+                                {{ $foundMember['is_lead'] ? 'Already Saved' : 'Save as Lead' }}
+                            </span>
+                            <span wire:loading wire:target="markAsMemberLead">Saving…</span>
+                        </flux:button>
+
+                        <flux:button variant="ghost" icon="arrow-left" wire:click="resetLookup" class="w-full">
+                            Search Again
+                        </flux:button>
+
+                    @elseif ($foundVisitor)
 
                         {{-- Visitor card --}}
                         <div class="rounded-xl border overflow-hidden
@@ -303,6 +359,61 @@
             }));
         </script>
         @endscript
+    @endif
+
+    {{-- ── MEMBERS TAB ─────────────────────────────────────────────────────────── --}}
+    @if ($activeTab === 'members')
+        <flux:card class="space-y-4">
+            @if ($memberLeads->isEmpty())
+                <div class="py-12 text-center">
+                    <flux:icon name="identification" class="w-10 h-10 mx-auto mb-3 text-zinc-300 dark:text-zinc-600" />
+                    <flux:heading size="lg" class="mb-1">No member leads yet</flux:heading>
+                    <flux:text class="text-zinc-500 dark:text-zinc-400 mb-4">
+                        Scan an organizer or SGCCI member badge QR code to save them as a lead.
+                    </flux:text>
+                    <flux:button variant="primary" icon="qr-code" wire:click="$set('activeTab', 'capture')">
+                        Scan a Badge
+                    </flux:button>
+                </div>
+            @else
+                <flux:table>
+                    <flux:table.columns>
+                        <flux:table.column>Name</flux:table.column>
+                        <flux:table.column>Phone</flux:table.column>
+                        <flux:table.column>Type</flux:table.column>
+                        <flux:table.column>Membership No.</flux:table.column>
+                        <flux:table.column>Captured</flux:table.column>
+                    </flux:table.columns>
+                    <flux:table.rows>
+                        @foreach ($memberLeads as $lead)
+                            <flux:table.row wire:key="member-lead-{{ $lead->id }}">
+                                <flux:table.cell>
+                                    <flux:text class="font-medium">{{ $lead->member_name }}</flux:text>
+                                </flux:table.cell>
+                                <flux:table.cell>
+                                    <flux:text class="text-sm font-mono">{{ $lead->member_phone ?? '—' }}</flux:text>
+                                </flux:table.cell>
+                                <flux:table.cell>
+                                    <flux:badge color="{{ $lead->member_type === 'committee' ? 'indigo' : 'blue' }}" size="sm">
+                                        {{ $lead->member_type === 'committee' ? 'Organizer' : 'SGCCI Member' }}
+                                    </flux:badge>
+                                </flux:table.cell>
+                                <flux:table.cell>
+                                    <flux:badge size="sm" color="zinc" class="font-mono">
+                                        {{ $lead->membership_number }}
+                                    </flux:badge>
+                                </flux:table.cell>
+                                <flux:table.cell>
+                                    <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">
+                                        {{ $lead->captured_at->format('d M Y, h:i A') }}
+                                    </flux:text>
+                                </flux:table.cell>
+                            </flux:table.row>
+                        @endforeach
+                    </flux:table.rows>
+                </flux:table>
+            @endif
+        </flux:card>
     @endif
 
     {{-- ── WHATSAPP TAB ─────────────────────────────────────────────────────────── --}}

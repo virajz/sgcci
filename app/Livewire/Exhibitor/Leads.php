@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Livewire\Exhibitor;
 
 use App\Models\Booking;
+use App\Models\CommitteeMember;
 use App\Models\Exhibition;
 use App\Models\ExhibitionVisitor;
 use App\Models\ExhibitorLead;
+use App\Models\ExhibitorMemberLead;
+use App\Models\Member;
 use App\Models\WhatsAppInquiry;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
@@ -30,6 +33,9 @@ class Leads extends Component
 
     /** @var array<int, array{registration_code: string, name: string, phone_number: string, company_name: string|null, city: string, state: string, status_label: string, status_color: string}> */
     public array $matchedVisitors = [];
+
+    /** @var array{membership_number: string, member_type: string, name: string, phone: string|null, post: string|null, is_lead: bool}|null */
+    public ?array $foundMember = null;
 
     public function mount(): void
     {
@@ -57,6 +63,14 @@ class Leads extends Component
         $personIndex = null;
 
         if (filter_var($trimmed, FILTER_VALIDATE_URL)) {
+            // Member scan URL: members/{membershipNumber}/scan
+            if (preg_match('#/members/([^/?\s]+)/scan#i', $trimmed, $m)) {
+                $this->lookupCode = strtoupper($m[1]);
+                $this->lookupMemberByCode(strtoupper($m[1]));
+
+                return;
+            }
+
             $parsed = parse_url($trimmed);
             if (isset($parsed['query'])) {
                 parse_str($parsed['query'], $queryParams);
@@ -118,8 +132,13 @@ class Leads extends Component
         } else {
             $this->foundVisitor = null;
             $this->matchedVisitors = [];
+            // Fall through to member search if no visitors matched
+            $this->lookupMemberByCode($code);
+
+            return;
         }
 
+        $this->foundMember = null;
         $this->lookupPerformed = true;
     }
 
@@ -204,11 +223,83 @@ class Leads extends Component
         );
     }
 
+    private function lookupMemberByCode(string $code): void
+    {
+        $this->foundVisitor = null;
+        $this->matchedVisitors = [];
+        $this->foundMember = null;
+
+        $committee = CommitteeMember::where('membership_number', $code)->first();
+        if ($committee) {
+            $this->foundMember = [
+                'membership_number' => $committee->membership_number,
+                'member_type' => 'committee',
+                'name' => $committee->name,
+                'phone' => $committee->mobile,
+                'post' => $committee->post_for_badge ?? $committee->post,
+                'is_lead' => ExhibitorMemberLead::where('booking_id', $this->booking->id)
+                    ->where('membership_number', $committee->membership_number)
+                    ->exists(),
+            ];
+            $this->lookupPerformed = true;
+
+            return;
+        }
+
+        $member = Member::where('membership_number', $code)->first();
+        if ($member) {
+            $this->foundMember = [
+                'membership_number' => $member->membership_number,
+                'member_type' => 'sgcci',
+                'name' => $member->name,
+                'phone' => $member->office_phone ?? $member->home_phone,
+                'post' => null,
+                'is_lead' => ExhibitorMemberLead::where('booking_id', $this->booking->id)
+                    ->where('membership_number', $member->membership_number)
+                    ->exists(),
+            ];
+            $this->lookupPerformed = true;
+
+            return;
+        }
+
+        $this->lookupPerformed = true;
+    }
+
+    public function markAsMemberLead(): void
+    {
+        if (! $this->foundMember) {
+            return;
+        }
+
+        ExhibitorMemberLead::firstOrCreate(
+            [
+                'booking_id' => $this->booking->id,
+                'membership_number' => $this->foundMember['membership_number'],
+            ],
+            [
+                'member_type' => $this->foundMember['member_type'],
+                'member_name' => $this->foundMember['name'],
+                'member_phone' => $this->foundMember['phone'],
+                'captured_at' => now(),
+            ]
+        );
+
+        $this->foundMember['is_lead'] = true;
+
+        Flux::toast(
+            heading: 'Lead Saved',
+            text: "{$this->foundMember['name']} has been marked as a lead.",
+            variant: 'success',
+        );
+    }
+
     public function resetLookup(): void
     {
         $this->lookupCode = '';
         $this->foundVisitor = null;
         $this->matchedVisitors = [];
+        $this->foundMember = null;
         $this->lookupPerformed = false;
     }
 
@@ -253,12 +344,17 @@ class Leads extends Component
             ->orderByDesc('captured_at')
             ->get();
 
+        $memberLeads = ExhibitorMemberLead::where('booking_id', $this->booking->id)
+            ->orderByDesc('captured_at')
+            ->get();
+
         $whatsAppInquiries = WhatsAppInquiry::where('booking_id', $this->booking->id)
             ->orderByDesc('received_at')
             ->get();
 
         return view('livewire.exhibitor.leads', [
             'leads' => $leads,
+            'memberLeads' => $memberLeads,
             'whatsAppInquiries' => $whatsAppInquiries,
         ]);
     }
