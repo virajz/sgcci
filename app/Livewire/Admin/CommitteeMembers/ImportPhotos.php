@@ -4,6 +4,7 @@ namespace App\Livewire\Admin\CommitteeMembers;
 
 use App\Models\CommitteeMember;
 use Flux\Flux;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -17,6 +18,8 @@ class ImportPhotos extends Component
     #[Validate('required|file|mimes:zip|max:102400')]
     public $zipFile = null;
 
+    public ?string $storedPath = null;
+
     public bool $processed = false;
 
     public int $matched = 0;
@@ -26,11 +29,20 @@ class ImportPhotos extends Component
     /** @var array<int, string> */
     public array $unmatchedFiles = [];
 
+    public function updatedZipFile(): void
+    {
+        $this->validate(['zipFile' => 'required|file|mimes:zip|max:102400']);
+
+        $this->storedPath = $this->zipFile->store('imports/committee-photos', 'local');
+    }
+
     public function startImport(): void
     {
-        $this->validate();
+        if (! $this->storedPath) {
+            return;
+        }
 
-        $zipPath = $this->zipFile->getRealPath();
+        $zipPath = Storage::disk('local')->path($this->storedPath);
         $zip = new \ZipArchive;
 
         if ($zip->open($zipPath) !== true) {
@@ -67,15 +79,15 @@ class ImportPhotos extends Component
             }
 
             // Delete old photo if exists
-            if ($member->photo && \Illuminate\Support\Facades\Storage::disk('public')->exists($member->photo)) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($member->photo);
+            if ($member->photo && Storage::disk('public')->exists($member->photo)) {
+                Storage::disk('public')->delete($member->photo);
             }
 
             // Extract and store the image
             $imageData = $zip->getFromIndex($i);
             $storagePath = 'committee-members/photos/'.$membershipNumber.'.jpg';
 
-            \Illuminate\Support\Facades\Storage::disk('public')->put($storagePath, $imageData);
+            Storage::disk('public')->put($storagePath, $imageData);
 
             $member->update(['photo' => $storagePath]);
 
@@ -84,10 +96,13 @@ class ImportPhotos extends Component
 
         $zip->close();
 
+        Storage::disk('local')->delete($this->storedPath);
+
         $this->matched = $matched;
         $this->unmatched = $unmatched;
         $this->unmatchedFiles = array_slice($unmatchedFiles, 0, 20); // show max 20
         $this->processed = true;
+        $this->storedPath = null;
         $this->zipFile = null;
     }
 

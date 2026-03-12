@@ -66,7 +66,7 @@
                 Uploading...
             </div>
 
-            @if ($zipFile && !$errors->has('zipFile'))
+            @if ($storedPath && !$errors->has('zipFile'))
                 <div class="flex gap-2">
                     <flux:button variant="primary" wire:click="startImport" wire:loading.attr="disabled">
                         <span wire:loading.remove wire:target="startImport">Import Photos</span>

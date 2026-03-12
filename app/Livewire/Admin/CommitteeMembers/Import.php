@@ -4,6 +4,7 @@ namespace App\Livewire\Admin\CommitteeMembers;
 
 use App\Jobs\ImportCommitteeMembersJob;
 use App\Models\MemberImport;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -16,6 +17,9 @@ class Import extends Component
 
     #[Validate('required|file|mimes:csv,txt|max:10240')]
     public $csvFile = null;
+
+    // Path on local disk once uploaded — persists across Livewire requests
+    public ?string $storedPath = null;
 
     public bool $showPreview = false;
 
@@ -31,15 +35,22 @@ class Import extends Component
     public function updatedCsvFile(): void
     {
         $this->validate(['csvFile' => 'required|file|mimes:csv,txt|max:10240']);
+
+        // Store immediately to local disk — safe on S3 production environments
+        $this->storedPath = $this->csvFile->store('imports/committee-members', 'local');
+
         $this->loadPreview();
     }
 
     private function loadPreview(): void
     {
-        $path = $this->csvFile->getRealPath();
-        $handle = fopen($path, 'r');
+        if (! $this->storedPath) {
+            return;
+        }
 
-        if ($handle === false) {
+        $handle = Storage::disk('local')->readStream($this->storedPath);
+
+        if (! $handle) {
             return;
         }
 
@@ -71,13 +82,13 @@ class Import extends Component
 
     public function startImport(): void
     {
-        $this->validate();
-
-        $storedPath = $this->csvFile->store('imports/committee-members', 'local');
+        if (! $this->storedPath) {
+            return;
+        }
 
         $import = MemberImport::create([
             'type' => 'committee_members',
-            'file_path' => $storedPath,
+            'file_path' => $this->storedPath,
             'import_mode' => $this->importMode,
             'status' => 'pending',
             'total_rows' => $this->totalRows,
@@ -86,6 +97,7 @@ class Import extends Component
         ImportCommitteeMembersJob::dispatch($import);
 
         $this->importId = $import->id;
+        $this->storedPath = null;
         $this->showPreview = false;
         $this->csvFile = null;
     }
