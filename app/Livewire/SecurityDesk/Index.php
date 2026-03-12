@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Livewire\SecurityDesk;
 
+use App\Models\CommitteeMember;
 use App\Models\Exhibition;
 use App\Models\ExhibitionVisitor;
+use App\Models\Member;
+use App\Models\MemberScan;
 use App\VisitorRegistrationStatus;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
@@ -49,6 +52,13 @@ class Index extends Component
         $trimmed = trim($code);
 
         if (filter_var($trimmed, FILTER_VALIDATE_URL)) {
+            // Member scan URL: /members/{membershipNumber}/scan
+            if (preg_match('#/members/([^/?]+)/scan#', $trimmed, $memberMatches)) {
+                $this->scanAndEnterMember($memberMatches[1]);
+
+                return;
+            }
+
             if ($personIndex === null) {
                 $parsed = parse_url($trimmed);
                 if (isset($parsed['query'])) {
@@ -101,6 +111,62 @@ class Index extends Component
         }
 
         $this->attemptEntry($visitor, $personIndex);
+        $this->resetForNextScan();
+    }
+
+    /**
+     * Called when a member QR code is scanned — marks entry in member_scans and logs result.
+     */
+    private function scanAndEnterMember(string $membershipNumber): void
+    {
+        $committeeMember = CommitteeMember::where('membership_number', $membershipNumber)->first();
+        $sgcciMember = $committeeMember === null
+            ? Member::where('membership_number', $membershipNumber)->first()
+            : null;
+
+        if (! $committeeMember && ! $sgcciMember) {
+            $this->addScanLog('not_found', $membershipNumber, $membershipNumber, 5);
+            $this->resetForNextScan();
+
+            return;
+        }
+
+        if ($committeeMember) {
+            $memberName = $committeeMember->name;
+            $memberType = 'committee';
+            $memberSub = ($committeeMember->post_for_badge ?? $committeeMember->post ?? 'Organizer').' · '.$membershipNumber;
+        } else {
+            $memberName = $sgcciMember->contact_name;
+            $memberType = 'sgcci';
+            $memberSub = 'SGCCI Member · '.$membershipNumber;
+        }
+
+        /** @var MemberScan|null $scan */
+        $scan = MemberScan::where('membership_number', $membershipNumber)
+            ->whereDate('entered_at', today())
+            ->first();
+
+        if ($scan && $scan->entered_at && ! $scan->exited_at) {
+            $this->addScanLog('already_entered', $memberName, $membershipNumber, 30, $scan->entered_at->format('d M Y, h:i A'), $memberSub, true);
+            $this->resetForNextScan();
+
+            return;
+        }
+
+        $isReEntry = $scan && $scan->entered_at && $scan->exited_at;
+
+        if ($scan) {
+            $scan->update(['entered_at' => now(), 'exited_at' => null]);
+        } else {
+            MemberScan::create([
+                'membership_number' => $membershipNumber,
+                'member_type' => $memberType,
+                'member_name' => $memberName,
+                'entered_at' => now(),
+            ]);
+        }
+
+        $this->addScanLog($isReEntry ? 're_entered' : 'entered', $memberName, $membershipNumber, 5, null, $memberSub, true);
         $this->resetForNextScan();
     }
 
@@ -221,8 +287,11 @@ class Index extends Component
                 'status_color' => $v->status->color(),
             ])->values()->all();
         } else {
-            $this->foundVisitor = null;
-            $this->matchedVisitors = [];
+            // No visitor found — try members (marks entry and logs result)
+            $this->lookupCode = $code;
+            $this->scanAndEnterMember($code);
+
+            return;
         }
 
         $this->lookupCode = '';
@@ -345,13 +414,15 @@ class Index extends Component
         $this->dispatch('refocus-search');
     }
 
-    private function addScanLog(string $type, string $name, string $code, int $duration, ?string $enteredAt = null): void
+    private function addScanLog(string $type, string $name, string $code, int $duration, ?string $enteredAt = null, ?string $sub = null, bool $isMember = false): void
     {
         $entry = [
             'id' => uniqid(),
             'type' => $type,
             'name' => $name,
             'code' => $code,
+            'sub' => $sub,
+            'is_member' => $isMember,
             'time' => now()->format('h:i:s A'),
             'entered_at' => $enteredAt,
             'duration' => $duration,

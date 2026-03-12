@@ -77,7 +77,35 @@
             </form>
 
             @if ($lookupPerformed)
-                @if ($foundVisitor)
+                @if ($foundMember)
+                    {{-- Member card --}}
+                    <div class="overflow-hidden border rounded-xl border-zinc-200 dark:border-zinc-700">
+                        <div class="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-950/30">
+                            <div
+                                class="flex items-center justify-center text-xs font-bold text-amber-700 bg-amber-100 rounded-full size-9 dark:bg-amber-900/50 dark:text-amber-300 shrink-0">
+                                {{ mb_strtoupper(mb_substr($foundMember['name'], 0, 1)) }}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold truncate">{{ $foundMember['name'] }}</p>
+                                <p class="font-mono text-xs text-zinc-500">{{ $foundMember['membership_number'] }}</p>
+                            </div>
+                            <flux:badge color="{{ $foundMember['type'] === 'committee' ? 'amber' : 'blue' }}" size="sm" class="shrink-0">
+                                {{ $foundMember['type'] === 'committee' ? 'Organizer' : 'SGCCI Member' }}
+                            </flux:badge>
+                        </div>
+                    </div>
+
+                    <flux:button variant="primary" size="sm" icon="printer" class="w-full"
+                        href="{{ $foundMember['badge_url'] }}"
+                        target="_blank">
+                        Print Badge
+                    </flux:button>
+
+                    <flux:button variant="ghost" size="sm" wire:click="resetLookup" icon="arrow-left"
+                        class="w-full">
+                        Search Again
+                    </flux:button>
+                @elseif ($foundVisitor)
                     {{-- Primary visitor --}}
                     <div class="overflow-hidden border rounded-xl border-zinc-200 dark:border-zinc-700">
                         <div class="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-900/50">

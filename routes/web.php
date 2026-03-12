@@ -4,6 +4,8 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CommitteeMemberPhotoController;
 use App\Http\Controllers\ExhibitorBadgeController;
 use App\Http\Controllers\ExhibitorScanController;
+use App\Http\Controllers\MemberBadgeController;
+use App\Http\Controllers\MemberScanController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\VisitorPassController;
@@ -171,6 +173,17 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 
+    // Member badge routes — accessible to admin and front desk
+    Route::prefix('admin/committee-members')->name('admin.committee-members.')->group(function () {
+        Route::get('{committeeMember}/badge', [MemberBadgeController::class, 'committeeInline'])->name('badge.inline');
+        Route::get('{committeeMember}/badge/print', [MemberBadgeController::class, 'committeePrint'])->name('badge.print');
+    });
+
+    Route::prefix('admin/members')->name('admin.members.')->group(function () {
+        Route::get('{member}/badge', [MemberBadgeController::class, 'memberInline'])->name('badge.inline');
+        Route::get('{member}/badge/print', [MemberBadgeController::class, 'memberPrint'])->name('badge.print');
+    });
+
     // Front desk routes
     Route::prefix('front-desk')->name('front-desk.')->middleware('front_desk')->group(function () {
         Route::get('/', \App\Livewire\FrontDesk\Index::class)->name('index');
@@ -200,6 +213,9 @@ Route::get('{exhibition:slug}/visitors/{registrationCode}', VisitorScanControlle
 
 // Exhibitor QR scan URL — redirects: admin→admin badges, exhibitor→own badges, public→WhatsApp
 Route::get('exhibitor/{bookingCode}', ExhibitorScanController::class)->name('exhibitor.scan');
+
+// Member QR scan URL — redirects based on role to admin/front-desk/security-desk
+Route::middleware(['auth'])->get('members/{membershipNumber}/scan', MemberScanController::class)->name('member.scan');
 
 // Route::get('temp', function () {
 //     User::factory()->create([

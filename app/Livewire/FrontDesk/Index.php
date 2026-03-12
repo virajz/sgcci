@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Livewire\FrontDesk;
 
 use App\Livewire\Exhibitions\VisitorsRegistration;
+use App\Models\CommitteeMember;
 use App\Models\Exhibition;
 use App\Models\ExhibitionVisitor;
+use App\Models\Member;
 use App\VisitorRegistrationStatus;
 use Flux\Flux;
 use Illuminate\Validation\Rule;
@@ -29,6 +31,9 @@ class Index extends Component
 
     /** @var array<int, array{registration_code: string, name: string, phone_number: string, company_name: string|null, city: string, state: string, status_label: string, status_color: string}> */
     public array $matchedVisitors = [];
+
+    /** @var array{membership_number: string, name: string, type: string, badge_url: string}|null */
+    public ?array $foundMember = null;
 
     // ── Add Visitor ───────────────────────────────────────────────────────────
     public string $phoneNumber = '';
@@ -87,6 +92,13 @@ class Index extends Component
         $trimmed = trim($code);
 
         if (filter_var($trimmed, FILTER_VALIDATE_URL)) {
+            // Member scan URL: /members/{membershipNumber}/scan
+            if (preg_match('#/members/([^/?]+)/scan#', $trimmed, $memberMatches)) {
+                $this->lookupMember($memberMatches[1]);
+
+                return;
+            }
+
             preg_match('/\b((?:IN)?VIS-[A-Z0-9]+)\b/i', $trimmed, $matches);
             $trimmed = $matches[1] ?? $trimmed;
         }
@@ -112,6 +124,13 @@ class Index extends Component
         $term = trim($this->lookupCode);
 
         if (filter_var($term, FILTER_VALIDATE_URL)) {
+            // Member scan URL: /members/{membershipNumber}/scan
+            if (preg_match('#/members/([^/?]+)/scan#', $term, $memberMatches)) {
+                $this->lookupMember($memberMatches[1]);
+
+                return;
+            }
+
             preg_match('/\b((?:IN)?VIS-[A-Z0-9]+)\b/i', $term, $matches);
             $term = $matches[1] ?? $term;
             $this->lookupCode = strtoupper($term);
@@ -131,9 +150,11 @@ class Index extends Component
             ->get();
 
         if ($visitors->count() === 1) {
+            $this->foundMember = null;
             $this->setFoundVisitor($visitors->first());
             $this->matchedVisitors = [];
         } elseif ($visitors->count() > 1) {
+            $this->foundMember = null;
             $this->foundVisitor = null;
             $this->matchedVisitors = $visitors->map(fn (ExhibitionVisitor $v) => [
                 'registration_code' => $v->registration_code,
@@ -146,8 +167,10 @@ class Index extends Component
                 'status_color' => $v->status->color(),
             ])->values()->all();
         } else {
-            $this->foundVisitor = null;
-            $this->matchedVisitors = [];
+            // No visitor found — try members
+            $this->lookupMember($code);
+
+            return;
         }
 
         $this->lookupPerformed = true;
@@ -185,8 +208,49 @@ class Index extends Component
     {
         $this->lookupCode = '';
         $this->foundVisitor = null;
+        $this->foundMember = null;
         $this->matchedVisitors = [];
         $this->lookupPerformed = false;
+    }
+
+    private function lookupMember(string $membershipNumber): void
+    {
+        $committeeMember = CommitteeMember::where('membership_number', $membershipNumber)->first();
+
+        if ($committeeMember) {
+            $this->foundMember = [
+                'membership_number' => $committeeMember->membership_number,
+                'name' => $committeeMember->name,
+                'type' => 'committee',
+                'badge_url' => route('admin.committee-members.badge.print', $committeeMember),
+            ];
+            $this->foundVisitor = null;
+            $this->matchedVisitors = [];
+            $this->lookupPerformed = true;
+
+            return;
+        }
+
+        $sgcciMember = Member::where('membership_number', $membershipNumber)->first();
+
+        if ($sgcciMember) {
+            $this->foundMember = [
+                'membership_number' => $sgcciMember->membership_number,
+                'name' => $sgcciMember->contact_name,
+                'type' => 'sgcci',
+                'badge_url' => route('admin.members.badge.print', $sgcciMember),
+            ];
+            $this->foundVisitor = null;
+            $this->matchedVisitors = [];
+            $this->lookupPerformed = true;
+
+            return;
+        }
+
+        $this->foundMember = null;
+        $this->foundVisitor = null;
+        $this->matchedVisitors = [];
+        $this->lookupPerformed = true;
     }
 
     // ── Add Visitor ───────────────────────────────────────────────────────────

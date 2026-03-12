@@ -24,6 +24,14 @@
             'time'    => 'text-white/75',
             'label'   => 'Already inside',
         ],
+        'already_entered_member' => [
+            'card'    => 'bg-green-500 border-green-600',
+            'bar'     => 'bg-white/40',
+            'heading' => 'text-white',
+            'sub'     => 'text-white/90',
+            'time'    => 'text-white/75',
+            'label'   => 'Entry allowed',
+        ],
         'not_found' => [
             'card'    => 'bg-red-500 border-red-600',
             'bar'     => 'bg-white/40',
@@ -49,7 +57,12 @@
         </p>
 
         @foreach ($scanLog as $entry)
-            @php $s = $logStyles[$entry['type']] ?? $logStyles['not_found']; @endphp
+            @php
+                $styleKey = (!empty($entry['is_member']) && in_array($entry['type'], ['already_entered', 're_entered']))
+                    ? 'already_entered_member'
+                    : $entry['type'];
+                $s = $logStyles[$styleKey] ?? $logStyles['not_found'];
+            @endphp
             <div
                 wire:key="log-{{ $entry['id'] }}"
                 x-data="scanLogEntry('{{ $entry['id'] }}', {{ $entry['duration'] }})"
@@ -73,6 +86,9 @@
                 <div class="flex-1 min-w-0">
                     <p class="font-bold text-xl truncate {{ $s['heading'] }}">{{ $s['label'] }}</p>
                     <p class="text-base truncate mt-1 {{ $s['sub'] }}">{{ $entry['name'] }}</p>
+                    @if(!empty($entry['sub']))
+                        <p class="text-sm truncate mt-0.5 {{ $s['sub'] }} opacity-90">{{ $entry['sub'] }}</p>
+                    @endif
                     @if(!empty($entry['entered_at']))
                         <p class="text-sm font-mono truncate mt-1 {{ $s['sub'] }} opacity-75">Entered {{ $entry['entered_at'] }}</p>
                     @endif

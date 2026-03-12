@@ -58,8 +58,12 @@
                                 </flux:table.cell>
 
                                 <flux:table.cell>
-                                    <flux:button size="sm" variant="ghost" icon="pencil"
-                                        :href="route('admin.members.show', $member)" wire:navigate>Edit</flux:button>
+                                    <div class="flex gap-2">
+                                        <flux:button size="sm" variant="ghost" icon="printer"
+                                            :href="route('admin.members.badge.print', $member)" target="_blank">Print Badge</flux:button>
+                                        <flux:button size="sm" variant="ghost" icon="pencil"
+                                            :href="route('admin.members.show', $member)" wire:navigate>Edit</flux:button>
+                                    </div>
                                 </flux:table.cell>
                             </flux:table.row>
                         @endforeach

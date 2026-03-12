@@ -49,6 +49,7 @@
             <div x-html="iconHtml" class="flex justify-center mb-4"></div>
             <p class="text-4xl font-black tracking-tight mb-2" x-text="label"></p>
             <p class="text-xl font-medium opacity-90" x-text="name"></p>
+            <p class="text-base opacity-80 mt-1" x-show="sub" x-text="sub"></p>
             <p class="text-sm font-mono opacity-70 mt-1" x-show="enteredAt" x-text="'Entered ' + enteredAt"></p>
             {{-- Progress bar --}}
             <div class="mt-8 w-full h-1.5 rounded-full bg-white/30">
@@ -84,6 +85,7 @@
                 visible: false,
                 label: '',
                 name: '',
+                sub: '',
                 enteredAt: '',
                 bgClass: '',
                 iconHtml: '',
@@ -99,11 +101,14 @@
 
                 show(entry) {
                     clearInterval(this.timer);
-                    this.label = scanResultLabels[entry.type] ?? entry.type;
+                    const isMember = !!entry.is_member;
+                    const bgKey = (isMember && ['already_entered', 're_entered'].includes(entry.type)) ? 'entered' : entry.type;
+                    this.label = isMember && ['already_entered', 're_entered'].includes(entry.type) ? 'Entry allowed' : (scanResultLabels[entry.type] ?? entry.type);
                     this.name = entry.name;
-                    this.enteredAt = entry.entered_at ?? '';
-                    this.bgClass = scanResultBg[entry.type] ?? 'bg-red-500';
-                    this.iconHtml = scanResultIcons[entry.type] ?? scanResultIcons.not_found;
+                    this.sub = entry.sub ?? '';
+                    this.enteredAt = (!isMember && entry.entered_at) ? entry.entered_at : '';
+                    this.bgClass = scanResultBg[bgKey] ?? 'bg-red-500';
+                    this.iconHtml = scanResultIcons[bgKey] ?? scanResultIcons.not_found;
                     this.progress = 100;
                     this.visible = true;
 

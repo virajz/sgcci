@@ -332,6 +332,60 @@ class QrCodeService
     }
 
     /**
+     * Generate a badge for a committee member using badge.jpg.
+     * Shows photo (or initials), name, post, "ORGANIZER" label, QR code, and membership number.
+     *
+     * @param  string  $memberName  Full name
+     * @param  string|null  $membershipNumber  Membership number shown below QR
+     * @param  string|null  $post  Post for badge (e.g. "President")
+     * @param  string|null  $photoPath  Absolute path to the member's photo (optional)
+     */
+    public function generateCommitteeBadgeImage(
+        string $memberName,
+        ?string $membershipNumber = null,
+        ?string $post = null,
+        ?string $photoPath = null,
+    ): string {
+        /** @var Imagick $badge */
+        $badge = new Imagick(public_path('badge.jpg'));
+
+        $this->drawPhotoOrInitials($badge, $memberName, $photoPath);
+        $this->drawBadgeText($badge, $memberName, $post ?: '', 'ORGANIZER');
+        $this->drawQrAndMembershipCode($badge, $membershipNumber ?? '');
+
+        $badge->setImageFormat('jpeg');
+        $badge->setImageCompressionQuality(92);
+
+        return $badge->getImageBlob();
+    }
+
+    /**
+     * Generate a badge for an SGCCI member using badge.jpg.
+     * Shows initials, name, company, "SGCCI MEMBER" label, QR code, and membership number.
+     *
+     * @param  string  $memberName  Full name
+     * @param  string|null  $membershipNumber  Membership number shown below QR
+     * @param  string|null  $companyName  Company name
+     */
+    public function generateSgcciMemberBadgeImage(
+        string $memberName,
+        ?string $membershipNumber = null,
+        ?string $companyName = null,
+    ): string {
+        /** @var Imagick $badge */
+        $badge = new Imagick(public_path('badge.jpg'));
+
+        $this->drawPhotoOrInitials($badge, $memberName);
+        $this->drawBadgeText($badge, $memberName, $companyName ?: '', 'SGCCI MEMBER');
+        $this->drawQrAndMembershipCode($badge, $membershipNumber ?? '');
+
+        $badge->setImageFormat('jpeg');
+        $badge->setImageCompressionQuality(92);
+
+        return $badge->getImageBlob();
+    }
+
+    /**
      * Generate a walk-in visitor badge using the exhibitor badge template,
      * but without a photo (initials placeholder only).
      *
@@ -428,6 +482,132 @@ class QrCodeService
         $badge->setImageCompressionQuality(92);
 
         return $badge->getImageBlob();
+    }
+
+    /**
+     * Draw a QR code encoding the membership number plus the membership number text below it.
+     * QR sits at the standard badge QR position; membership code text goes at Y=900.
+     */
+    private function drawQrAndMembershipCode(Imagick $badge, string $membershipNumber): void
+    {
+        $qrData = $membershipNumber ? route('member.scan', $membershipNumber) : ' ';
+
+        $qrPng = (new Writer(
+            new ImageRenderer(
+                new RendererStyle(self::BADGE_QR_SIZE, 0, null, null, Fill::uniformColor(
+                    new Rgb(...self::BADGE_QR_BG),
+                    new Rgb(...self::BADGE_QR_FG),
+                )),
+                new ImagickImageBackEnd
+            )
+        ))->writeString($qrData);
+
+        /** @var Imagick $qrImage */
+        $qrImage = new Imagick;
+        $qrImage->readImageBlob($qrPng);
+        $badge->compositeImage($qrImage, Imagick::COMPOSITE_OVER, self::BADGE_QR_X, self::BADGE_QR_Y);
+
+        if ($membershipNumber !== '') {
+            /** @var ImagickDraw $codeDraw */
+            $codeDraw = new ImagickDraw;
+            $codeDraw->setFont(self::fontPath());
+            $codeDraw->setFontSize(self::BADGE_STALL_FONT);
+            $codeDraw->setFillColor(new ImagickPixel('#6b7280'));
+            $codeDraw->setTextAlignment(Imagick::ALIGN_CENTER);
+            $codeDraw->setTextAntialias(true);
+            // QR bottom: BADGE_QR_Y + BADGE_QR_SIZE = 625 + 230 = 855; +45 baseline gap = 900
+            $badge->annotateImage($codeDraw, self::BADGE_PANEL_CENTER_X, 900, 0, $membershipNumber);
+        }
+    }
+
+    /**
+     * Draw a circular photo (or initials placeholder) onto a badge image.
+     */
+    private function drawPhotoOrInitials(Imagick $badge, string $memberName, ?string $photoPath = null): void
+    {
+        if ($photoPath && file_exists($photoPath)) {
+            /** @var Imagick $photo */
+            $photo = new Imagick($photoPath);
+            $photo->cropThumbnailImage(self::BADGE_PHOTO_DIAMETER, self::BADGE_PHOTO_DIAMETER);
+            $photo->setImageFormat('png');
+
+            /** @var Imagick $mask */
+            $mask = new Imagick;
+            $mask->newImage(self::BADGE_PHOTO_DIAMETER, self::BADGE_PHOTO_DIAMETER, new ImagickPixel('black'));
+            $mask->setImageFormat('png');
+            /** @var ImagickDraw $circle */
+            $circle = new ImagickDraw;
+            $circle->setFillColor(new ImagickPixel('white'));
+            $r = self::BADGE_PHOTO_DIAMETER / 2;
+            $circle->circle($r, $r, $r * 2, $r);
+            $mask->drawImage($circle);
+
+            $photo->setImageAlphaChannel(Imagick::ALPHACHANNEL_ACTIVATE);
+            $photo->compositeImage($mask, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
+            $badge->compositeImage($photo, Imagick::COMPOSITE_OVER, self::BADGE_PHOTO_X, self::BADGE_PHOTO_Y);
+        } else {
+            /** @var ImagickDraw $circleDraw */
+            $circleDraw = new ImagickDraw;
+            $circleDraw->setFillColor(new ImagickPixel('#d1d5db'));
+            $cx = self::BADGE_PHOTO_X + self::BADGE_PHOTO_DIAMETER / 2;
+            $cy = self::BADGE_PHOTO_Y + self::BADGE_PHOTO_DIAMETER / 2;
+            $r = self::BADGE_PHOTO_DIAMETER / 2;
+            $circleDraw->circle($cx, $cy, $cx + $r, $cy);
+            $badge->drawImage($circleDraw);
+
+            $initials = collect(explode(' ', $memberName))
+                ->take(2)
+                ->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))
+                ->implode('');
+
+            /** @var ImagickDraw $initDraw */
+            $initDraw = new ImagickDraw;
+            $initDraw->setFont(self::fontPath());
+            $initDraw->setFontSize(80);
+            $initDraw->setFillColor(new ImagickPixel('#6b7280'));
+            $initDraw->setTextAlignment(Imagick::ALIGN_CENTER);
+            $badge->annotateImage($initDraw, (int) $cx, (int) ($cy + 30), 0, $initials);
+        }
+    }
+
+    /**
+     * Draw name, company, and a label (in place of stall number) onto a badge image.
+     */
+    private function drawBadgeText(Imagick $badge, string $memberName, string $companyName, string $label): void
+    {
+        $nameText = mb_strtoupper($memberName);
+        $nameFontSize = $this->fitTextToWidth($badge, $nameText, self::BADGE_NAME_FONT_MAX, self::BADGE_NAME_FONT_MIN, self::BADGE_TEXT_MAX_WIDTH);
+
+        /** @var ImagickDraw $nameDraw */
+        $nameDraw = new ImagickDraw;
+        $nameDraw->setFont(self::fontPath());
+        $nameDraw->setFontSize($nameFontSize);
+        $nameDraw->setFillColor(new ImagickPixel(self::BADGE_TEXT_DARK));
+        $nameDraw->setTextAlignment(Imagick::ALIGN_CENTER);
+        $nameDraw->setTextAntialias(true);
+        $badge->annotateImage($nameDraw, self::BADGE_PANEL_CENTER_X, self::BADGE_NAME_Y, 0, $nameText);
+
+        if ($companyName !== '') {
+            $companyFontSize = $this->fitTextToWidth($badge, $companyName, self::BADGE_COMPANY_FONT_MAX, self::BADGE_COMPANY_FONT_MIN, self::BADGE_TEXT_MAX_WIDTH);
+
+            /** @var ImagickDraw $companyDraw */
+            $companyDraw = new ImagickDraw;
+            $companyDraw->setFont(self::fontPath());
+            $companyDraw->setFontSize($companyFontSize);
+            $companyDraw->setFillColor(new ImagickPixel(self::BADGE_TEXT_DARK));
+            $companyDraw->setTextAlignment(Imagick::ALIGN_CENTER);
+            $companyDraw->setTextAntialias(true);
+            $badge->annotateImage($companyDraw, self::BADGE_PANEL_CENTER_X, self::BADGE_COMPANY_Y, 0, $companyName);
+        }
+
+        /** @var ImagickDraw $labelDraw */
+        $labelDraw = new ImagickDraw;
+        $labelDraw->setFont(self::fontPath());
+        $labelDraw->setFontSize(self::BADGE_STALL_FONT);
+        $labelDraw->setFillColor(new ImagickPixel('#6b7280'));
+        $labelDraw->setTextAlignment(Imagick::ALIGN_CENTER);
+        $labelDraw->setTextAntialias(true);
+        $badge->annotateImage($labelDraw, self::BADGE_PANEL_CENTER_X, self::BADGE_STALL_Y, 0, $label);
     }
 
     /**

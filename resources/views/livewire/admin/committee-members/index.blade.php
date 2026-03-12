@@ -73,6 +73,8 @@
 
                                 <flux:table.cell>
                                     <div class="flex gap-2">
+                                        <flux:button size="sm" variant="ghost" icon="printer"
+                                            :href="route('admin.committee-members.badge.print', $member)" target="_blank">Print Badge</flux:button>
                                         <flux:button size="sm" variant="ghost" icon="pencil"
                                             wire:click="openEditModal({{ $member->id }})">Edit</flux:button>
                                         <flux:button size="sm" variant="ghost" icon="trash" color="red"
