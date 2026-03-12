@@ -17,16 +17,25 @@ class MemberBadgeController extends Controller
 
     public function committeeInline(CommitteeMember $committeeMember): Response
     {
-        $photoPath = $committeeMember->photo && Storage::exists($committeeMember->photo)
-            ? Storage::path($committeeMember->photo)
-            : null;
+        // Download to a temp file so Imagick can read it regardless of storage driver (e.g. S3)
+        $tmpPhotoPath = null;
+        if ($committeeMember->photo && Storage::exists($committeeMember->photo)) {
+            $tmpPhotoPath = tempnam(sys_get_temp_dir(), 'badge_photo_');
+            file_put_contents($tmpPhotoPath, Storage::get($committeeMember->photo));
+        }
 
-        $imageData = $this->qrCodeService->generateCommitteeBadgeImage(
-            memberName: $committeeMember->name,
-            membershipNumber: $committeeMember->membership_number,
-            post: $committeeMember->post_for_badge ?? $committeeMember->post,
-            photoPath: $photoPath,
-        );
+        try {
+            $imageData = $this->qrCodeService->generateCommitteeBadgeImage(
+                memberName: $committeeMember->name,
+                membershipNumber: $committeeMember->membership_number,
+                post: $committeeMember->post_for_badge ?? $committeeMember->post,
+                photoPath: $tmpPhotoPath,
+            );
+        } finally {
+            if ($tmpPhotoPath && file_exists($tmpPhotoPath)) {
+                unlink($tmpPhotoPath);
+            }
+        }
 
         return response($imageData)
             ->header('Content-Type', 'image/jpeg')
