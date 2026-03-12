@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\CommitteeMemberPhotoController;
 use App\Http\Controllers\ExhibitorBadgeController;
 use App\Http\Controllers\ExhibitorScanController;
 use App\Http\Controllers\PaymentController;
@@ -159,6 +160,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', CommitteeMembersIndex::class)->name('index');
             Route::get('import', CommitteeMembersImport::class)->name('import');
             Route::get('import-photos', CommitteeMembersImportPhotos::class)->name('import-photos');
+            Route::get('{committeeMember}/photo', [CommitteeMemberPhotoController::class, 'show'])->name('photo');
         });
 
         Route::prefix('members')->name('members.')->group(function () {

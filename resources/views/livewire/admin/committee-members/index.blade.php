@@ -37,7 +37,7 @@
 
                                 <flux:table.cell>
                                     @if ($member->photo)
-                                        <img src="{{ asset('storage/' . $member->photo) }}"
+                                        <img src="{{ route('admin.committee-members.photo', $member) }}"
                                             alt="{{ $member->name }}"
                                             class="w-10 h-10 rounded-full object-cover ring-2 ring-zinc-200 dark:ring-zinc-700" />
                                     @else

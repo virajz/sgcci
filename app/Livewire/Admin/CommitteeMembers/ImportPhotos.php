@@ -79,15 +79,15 @@ class ImportPhotos extends Component
             }
 
             // Delete old photo if exists
-            if ($member->photo && Storage::disk('public')->exists($member->photo)) {
-                Storage::disk('public')->delete($member->photo);
+            if ($member->photo && Storage::exists($member->photo)) {
+                Storage::delete($member->photo);
             }
 
             // Extract and store the image
             $imageData = $zip->getFromIndex($i);
             $storagePath = 'committee-members/photos/'.$membershipNumber.'.jpg';
 
-            Storage::disk('public')->put($storagePath, $imageData);
+            Storage::put($storagePath, $imageData);
 
             $member->update(['photo' => $storagePath]);
 
