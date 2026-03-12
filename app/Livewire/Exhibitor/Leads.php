@@ -78,7 +78,7 @@ class Leads extends Component
                     $personIndex = (int) $queryParams['person'] - 1;
                 }
             }
-            preg_match('/\b((?:IN)?VIS-[A-Z0-9]+)\b/i', $trimmed, $matches);
+            preg_match('/\b((?:IN)?VIS-[A-Z0-9]+|PRESS-[A-Z0-9]+|VIP-[A-Z0-9]+|VENDOR-[A-Z0-9]+)\b/i', $trimmed, $matches);
             $trimmed = $matches[1] ?? $trimmed;
         }
 
@@ -93,7 +93,7 @@ class Leads extends Component
         $term = trim($this->lookupCode);
 
         if (filter_var($term, FILTER_VALIDATE_URL)) {
-            preg_match('/\b((?:IN)?VIS-[A-Z0-9]+)\b/i', $term, $matches);
+            preg_match('/\b((?:IN)?VIS-[A-Z0-9]+|PRESS-[A-Z0-9]+|VIP-[A-Z0-9]+|VENDOR-[A-Z0-9]+)\b/i', $term, $matches);
             $term = $matches[1] ?? $term;
             $this->lookupCode = strtoupper($term);
         }
