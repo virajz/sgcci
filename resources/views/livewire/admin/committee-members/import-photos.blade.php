@@ -1,45 +1,61 @@
-<div class="space-y-6">
+<div class="space-y-6"
+    @if($activeImport && !$activeImport->isFinished())
+        wire:poll.2s="pollStatus"
+    @endif
+>
     <div class="flex items-center gap-4 mb-6">
         <flux:button variant="ghost" icon="arrow-left" :href="route('admin.committee-members.index')" wire:navigate>Back</flux:button>
         <flux:heading size="xl">Import Committee Photos</flux:heading>
     </div>
 
-    @if ($processed)
+    {{-- Progress Panel --}}
+    @if ($activeImport)
         <flux:card class="max-w-2xl space-y-4">
-            <div class="flex items-center gap-3">
-                <flux:icon icon="check-circle" class="text-green-500" />
-                <flux:heading size="lg">Photos Imported</flux:heading>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 text-center">
-                <div class="p-4 rounded-lg bg-green-50 dark:bg-green-900/20">
-                    <div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ $matched }}</div>
-                    <flux:text class="text-zinc-500 text-sm">Photos Matched</flux:text>
+            @if ($activeImport->status === 'pending' || $activeImport->status === 'processing')
+                <div class="flex items-center gap-3">
+                    <flux:icon icon="arrow-path" class="animate-spin text-blue-500" />
+                    <flux:heading size="lg">Importing Photos...</flux:heading>
                 </div>
-                <div class="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-800">
-                    <div class="text-2xl font-bold text-zinc-500">{{ $unmatched }}</div>
-                    <flux:text class="text-zinc-500 text-sm">Not Matched</flux:text>
+                <flux:text class="text-zinc-500">
+                    Processed {{ number_format($activeImport->processed_rows) }} photos so far
+                </flux:text>
+                <div class="flex gap-4 text-sm">
+                    <span class="text-green-600 dark:text-green-400 font-medium">{{ number_format($activeImport->imported_rows) }} matched</span>
+                    <span class="text-zinc-500">{{ number_format($activeImport->skipped_rows) }} unmatched</span>
                 </div>
-            </div>
 
-            @if (count($unmatchedFiles) > 0)
-                <div>
-                    <flux:heading size="sm" class="mb-2">Unmatched files (no member found)</flux:heading>
-                    <div class="rounded border border-zinc-200 dark:border-zinc-700 divide-y divide-zinc-100 dark:divide-zinc-800 max-h-48 overflow-y-auto">
-                        @foreach ($unmatchedFiles as $file)
-                            <div class="px-3 py-2 text-sm text-zinc-500 font-mono">{{ $file }}</div>
-                        @endforeach
+            @elseif ($activeImport->status === 'completed')
+                <div class="flex items-center gap-3">
+                    <flux:icon icon="check-circle" class="text-green-500" />
+                    <flux:heading size="lg">Photos Imported</flux:heading>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="p-4 rounded-lg bg-green-50 dark:bg-green-900/20">
+                        <div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ number_format($activeImport->imported_rows) }}</div>
+                        <flux:text class="text-zinc-500 text-sm">Photos Matched</flux:text>
                     </div>
-                    @if ($unmatched > 20)
-                        <flux:text class="text-xs text-zinc-400 mt-1">Showing 20 of {{ $unmatched }} unmatched files.</flux:text>
-                    @endif
+                    <div class="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-800">
+                        <div class="text-2xl font-bold text-zinc-500">{{ number_format($activeImport->skipped_rows) }}</div>
+                        <flux:text class="text-zinc-500 text-sm">Not Matched</flux:text>
+                    </div>
                 </div>
-            @endif
+                <div class="flex gap-2">
+                    <flux:button variant="primary" :href="route('admin.committee-members.index')" wire:navigate>View Committee</flux:button>
+                    <flux:button variant="ghost" wire:click="$set('importId', null)">Import More</flux:button>
+                </div>
 
-            <div class="flex gap-2">
-                <flux:button variant="primary" :href="route('admin.committee-members.index')" wire:navigate>View Committee</flux:button>
-                <flux:button variant="ghost" wire:click="$set('processed', false)">Import More</flux:button>
-            </div>
+            @elseif ($activeImport->status === 'failed')
+                <div class="flex items-center gap-3">
+                    <flux:icon icon="x-circle" class="text-red-500" />
+                    <flux:heading size="lg">Import Failed</flux:heading>
+                </div>
+                @if ($activeImport->error_message)
+                    <flux:callout variant="danger" icon="exclamation-triangle">
+                        {{ $activeImport->error_message }}
+                    </flux:callout>
+                @endif
+                <flux:button variant="ghost" wire:click="$set('importId', null)">Try Again</flux:button>
+            @endif
         </flux:card>
 
     @else
@@ -69,8 +85,8 @@
             @if ($storedPath && !$errors->has('zipFile'))
                 <div class="flex gap-2">
                     <flux:button variant="primary" wire:click="startImport" wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="startImport">Import Photos</span>
-                        <span wire:loading wire:target="startImport">Processing...</span>
+                        <span wire:loading.remove wire:target="startImport">Queue Import</span>
+                        <span wire:loading wire:target="startImport">Queuing...</span>
                     </flux:button>
                     <flux:button variant="ghost" :href="route('admin.committee-members.index')" wire:navigate>Cancel</flux:button>
                 </div>
