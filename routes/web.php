@@ -9,6 +9,9 @@ use App\Http\Controllers\VisitorPassController;
 use App\Http\Controllers\VisitorPaymentController;
 use App\Http\Controllers\VisitorScanController;
 use App\Http\Controllers\WhatsAppWebhookController;
+use App\Livewire\Admin\CommitteeMembers\Import as CommitteeMembersImport;
+use App\Livewire\Admin\CommitteeMembers\ImportPhotos as CommitteeMembersImportPhotos;
+use App\Livewire\Admin\CommitteeMembers\Index as CommitteeMembersIndex;
 use App\Livewire\Admin\DatabaseBackups;
 use App\Livewire\Admin\Exhibitions\Index as ExhibitionsIndex;
 use App\Livewire\Admin\Exhibitors\Badges as AdminExhibitorBadges;
@@ -17,6 +20,10 @@ use App\Livewire\Admin\Exhibitors\InvitedGuests as AdminExhibitorInvitedGuests;
 use App\Livewire\Admin\Inquiries\EditBooking as AdminEditBooking;
 use App\Livewire\Admin\Inquiries\Index as InquiriesIndex;
 use App\Livewire\Admin\Inquiries\Show as InquiriesShow;
+use App\Livewire\Admin\Members\Create as MembersCreate;
+use App\Livewire\Admin\Members\Import as MembersImport;
+use App\Livewire\Admin\Members\Index as MembersIndex;
+use App\Livewire\Admin\Members\Show as MembersShow;
 use App\Livewire\Admin\Scans\Index as ScansIndex;
 use App\Livewire\Admin\StaffMembers\Index as StaffMembersIndex;
 use App\Livewire\Admin\SupportTickets\Index as SupportTicketsIndex;
@@ -146,6 +153,20 @@ Route::middleware(['auth'])->group(function () {
         Route::get('whatsapp-webhook-logs', WhatsAppWebhookLogsIndex::class)
             ->name('whatsapp-webhook-logs')
             ->can('viewWhatsAppWebhookLogs');
+
+        // Members section
+        Route::prefix('committee-members')->name('committee-members.')->group(function () {
+            Route::get('/', CommitteeMembersIndex::class)->name('index');
+            Route::get('import', CommitteeMembersImport::class)->name('import');
+            Route::get('import-photos', CommitteeMembersImportPhotos::class)->name('import-photos');
+        });
+
+        Route::prefix('members')->name('members.')->group(function () {
+            Route::get('/', MembersIndex::class)->name('index');
+            Route::get('create', MembersCreate::class)->name('create');
+            Route::get('import', MembersImport::class)->name('import');
+            Route::get('{member}', MembersShow::class)->name('show');
+        });
     });
 
     // Front desk routes

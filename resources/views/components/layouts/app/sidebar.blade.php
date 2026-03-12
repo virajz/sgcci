@@ -63,6 +63,15 @@
                     </flux:navlist.item>
                 </flux:navlist.group>
 
+                <flux:navlist.group :heading="__('Members')" class="grid">
+                    <flux:navlist.item icon="user-group" :href="route('admin.committee-members.index')"
+                        :current="request()->routeIs('admin.committee-members.*')" wire:navigate>{{ __('Managing Committee') }}
+                    </flux:navlist.item>
+                    <flux:navlist.item icon="identification" :href="route('admin.members.index')"
+                        :current="request()->routeIs('admin.members.*')" wire:navigate>{{ __('SGCCI Members') }}
+                    </flux:navlist.item>
+                </flux:navlist.group>
+
                 <flux:navlist.group :heading="__('Team')" class="grid">
                     <flux:navlist.item icon="users" :href="route('admin.staff-members.index')"
                         :current="request()->routeIs('admin.staff-members.*')" wire:navigate>{{ __('Staff Members') }}
