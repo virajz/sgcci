@@ -349,7 +349,7 @@ class QrCodeService
         /** @var Imagick $badge */
         $badge = new Imagick(public_path('badge.jpg'));
 
-        $this->drawPhotoOrInitials($badge, $memberName, $photoPath);
+        $this->drawPhotoOrInitials($badge, $memberName, $photoPath, rectangular: true);
         $this->drawBadgeText($badge, $memberName, $post ?: '', 'ORGANIZER');
         $this->drawQrAndMembershipCode($badge, $membershipNumber ?? '');
 
@@ -521,30 +521,39 @@ class QrCodeService
     }
 
     /**
-     * Draw a circular photo (or initials placeholder) onto a badge image.
+     * Draw a photo (or initials placeholder) onto a badge image.
+     * When $rectangular is true, the photo is fitted to the photo area as-is (no circular crop).
      */
-    private function drawPhotoOrInitials(Imagick $badge, string $memberName, ?string $photoPath = null): void
+    private function drawPhotoOrInitials(Imagick $badge, string $memberName, ?string $photoPath = null, bool $rectangular = false): void
     {
         if ($photoPath && file_exists($photoPath)) {
             /** @var Imagick $photo */
             $photo = new Imagick($photoPath);
-            $photo->cropThumbnailImage(self::BADGE_PHOTO_DIAMETER, self::BADGE_PHOTO_DIAMETER);
-            $photo->setImageFormat('png');
 
-            /** @var Imagick $mask */
-            $mask = new Imagick;
-            $mask->newImage(self::BADGE_PHOTO_DIAMETER, self::BADGE_PHOTO_DIAMETER, new ImagickPixel('black'));
-            $mask->setImageFormat('png');
-            /** @var ImagickDraw $circle */
-            $circle = new ImagickDraw;
-            $circle->setFillColor(new ImagickPixel('white'));
-            $r = self::BADGE_PHOTO_DIAMETER / 2;
-            $circle->circle($r, $r, $r * 2, $r);
-            $mask->drawImage($circle);
+            if ($rectangular) {
+                // Fit the full image into the photo area, preserving aspect ratio
+                $photo->thumbnailImage(self::BADGE_PHOTO_DIAMETER, self::BADGE_PHOTO_DIAMETER, bestfit: true);
+                $photo->setImageFormat('jpeg');
+                $badge->compositeImage($photo, Imagick::COMPOSITE_OVER, self::BADGE_PHOTO_X, self::BADGE_PHOTO_Y);
+            } else {
+                $photo->cropThumbnailImage(self::BADGE_PHOTO_DIAMETER, self::BADGE_PHOTO_DIAMETER);
+                $photo->setImageFormat('png');
 
-            $photo->setImageAlphaChannel(Imagick::ALPHACHANNEL_ACTIVATE);
-            $photo->compositeImage($mask, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
-            $badge->compositeImage($photo, Imagick::COMPOSITE_OVER, self::BADGE_PHOTO_X, self::BADGE_PHOTO_Y);
+                /** @var Imagick $mask */
+                $mask = new Imagick;
+                $mask->newImage(self::BADGE_PHOTO_DIAMETER, self::BADGE_PHOTO_DIAMETER, new ImagickPixel('black'));
+                $mask->setImageFormat('png');
+                /** @var ImagickDraw $circle */
+                $circle = new ImagickDraw;
+                $circle->setFillColor(new ImagickPixel('white'));
+                $r = self::BADGE_PHOTO_DIAMETER / 2;
+                $circle->circle($r, $r, $r * 2, $r);
+                $mask->drawImage($circle);
+
+                $photo->setImageAlphaChannel(Imagick::ALPHACHANNEL_ACTIVATE);
+                $photo->compositeImage($mask, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
+                $badge->compositeImage($photo, Imagick::COMPOSITE_OVER, self::BADGE_PHOTO_X, self::BADGE_PHOTO_Y);
+            }
         } else {
             /** @var ImagickDraw $circleDraw */
             $circleDraw = new ImagickDraw;
