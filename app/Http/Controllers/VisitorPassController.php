@@ -103,6 +103,7 @@ class VisitorPassController extends Controller
             visitorName: $visitorName,
             companyName: $visitor->company_name ?? '',
             registrationCode: $registrationCode,
+            badgeLabel: $visitor->visitor_type?->badgeLabel(),
         );
 
         return response($imageData)
@@ -129,6 +130,7 @@ class VisitorPassController extends Controller
             visitorName: $visitor->name,
             companyName: $visitor->company_name ?? '',
             registrationCode: $registrationCode,
+            badgeLabel: $visitor->visitor_type?->badgeLabel(),
         );
 
         $filename = 'badge-'.str($visitor->name)->slug().'.jpg';

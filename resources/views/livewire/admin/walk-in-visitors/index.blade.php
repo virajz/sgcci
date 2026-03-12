@@ -80,26 +80,25 @@
                                 </flux:table.cell>
 
                                 <flux:table.cell>
-                                    <flux:dropdown position="bottom end">
-                                        <flux:button size="sm" variant="ghost" icon="ellipsis-horizontal" icon-variant="mini" inset="top bottom"></flux:button>
+                                    <div class="flex items-center gap-1">
+                                        <flux:tooltip content="Print Badge" position="top">
+                                            <flux:button size="sm" variant="ghost" icon="printer" icon-variant="mini"
+                                                inset="top bottom"
+                                                href="{{ route('front-desk.visitor.badge.print', $visitor->registration_code) }}"
+                                                target="_blank" />
+                                        </flux:tooltip>
 
-                                        <flux:menu>
-                                            <flux:menu.item
-                                                icon="printer"
-                                                :href="route('front-desk.visitor.badge.download', $visitor->registration_code)"
-                                                target="_blank"
-                                            >
-                                                Print Badge
-                                            </flux:menu.item>
+                                        <flux:dropdown position="bottom end">
+                                            <flux:button size="sm" variant="ghost" icon="ellipsis-horizontal" icon-variant="mini" inset="top bottom"></flux:button>
 
-                                            <flux:menu.separator />
-
-                                            <flux:menu.item icon="trash" variant="danger"
-                                                wire:click="confirmDelete({{ $visitor->id }})">
-                                                Delete
-                                            </flux:menu.item>
-                                        </flux:menu>
-                                    </flux:dropdown>
+                                            <flux:menu>
+                                                <flux:menu.item icon="trash" variant="danger"
+                                                    wire:click="confirmDelete({{ $visitor->id }})">
+                                                    Delete
+                                                </flux:menu.item>
+                                            </flux:menu>
+                                        </flux:dropdown>
+                                    </div>
                                 </flux:table.cell>
                             </flux:table.row>
                         @endforeach

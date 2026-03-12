@@ -399,6 +399,7 @@ class QrCodeService
         string $visitorName,
         string $companyName,
         string $registrationCode,
+        ?string $badgeLabel = null,
     ): string {
         /** @var Imagick $badge */
         $badge = new Imagick(public_path('badge.jpg'));
@@ -455,8 +456,8 @@ class QrCodeService
         $nameDraw->setTextAntialias(true);
         $badge->annotateImage($nameDraw, self::BADGE_PANEL_CENTER_X, self::BADGE_NAME_Y, 0, $nameText);
 
-        // --- Text: Company ---
-        $companyText = $companyName ?: 'Visitor';
+        // --- Text: Company (or visitor type label if no company) ---
+        $companyText = $companyName ?: ($badgeLabel ?? 'Visitor');
         $companyFontSize = $this->fitTextToWidth($badge, $companyText, self::BADGE_COMPANY_FONT_MAX, self::BADGE_COMPANY_FONT_MIN, self::BADGE_TEXT_MAX_WIDTH);
 
         /** @var ImagickDraw $companyDraw */
@@ -468,7 +469,7 @@ class QrCodeService
         $companyDraw->setTextAntialias(true);
         $badge->annotateImage($companyDraw, self::BADGE_PANEL_CENTER_X, self::BADGE_COMPANY_Y, 0, $companyText);
 
-        // --- Text: Registration Code ---
+        // --- Text: Registration code ---
         /** @var ImagickDraw $codeDraw */
         $codeDraw = new ImagickDraw;
         $codeDraw->setFont(self::fontPath());

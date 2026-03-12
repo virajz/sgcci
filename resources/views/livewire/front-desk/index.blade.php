@@ -334,6 +334,17 @@
                         </flux:field>
                     </div>
 
+                    <flux:field>
+                        <flux:label class="text-xs">Visitor Type</flux:label>
+                        <flux:radio.group wire:model="visitorType" class="flex flex-wrap gap-x-4 gap-y-1">
+                            <flux:radio value="" label="Standard" />
+                            <flux:radio value="press" label="Press & Media" />
+                            <flux:radio value="vip" label="VIP" />
+                            <flux:radio value="vendor" label="Vendor" />
+                        </flux:radio.group>
+                        <flux:error name="visitorType" />
+                    </flux:field>
+
                     <div class="flex items-center justify-end">
                         <flux:field variant="inline">
                             <flux:label class="text-xs">With Invitation Pass</flux:label>

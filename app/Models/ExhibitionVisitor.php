@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\VisitorRegistrationStatus;
+use App\VisitorType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,6 +29,7 @@ class ExhibitionVisitor extends Model
         'sub_business_segment',
         'additional_persons',
         'source',
+        'visitor_type',
         'with_invitation_pass',
         'status',
         'payment_amount',
@@ -60,6 +62,7 @@ class ExhibitionVisitor extends Model
             'entered_at' => 'datetime',
             'exited_at' => 'datetime',
             'status' => VisitorRegistrationStatus::class,
+            'visitor_type' => VisitorType::class,
         ];
     }
 
@@ -67,9 +70,31 @@ class ExhibitionVisitor extends Model
     {
         static::creating(function (ExhibitionVisitor $visitor) {
             if (empty($visitor->registration_code)) {
-                $visitor->registration_code = static::generateUniqueRegistrationCode();
+                $rawType = $visitor->getRawOriginal('visitor_type') ?? $visitor->getAttributes()['visitor_type'] ?? null;
+                $visitorType = $rawType ? VisitorType::tryFrom((string) $rawType) : null;
+                $visitor->registration_code = static::generateUniqueCodeForType($visitorType);
             }
         });
+    }
+
+    /**
+     * Generate a unique registration code for the given visitor type.
+     * Special types get a prefixed code (PRESS-, VIP-, VENDOR-), standard visitors get VIS-.
+     */
+    public static function generateUniqueCodeForType(?VisitorType $type): string
+    {
+        $prefix = match ($type) {
+            VisitorType::Press => 'PRESS-',
+            VisitorType::Vip => 'VIP-',
+            VisitorType::Vendor => 'VENDOR-',
+            default => 'VIS-',
+        };
+
+        do {
+            $code = $prefix.strtoupper(substr(str_shuffle('ABCDEFGHJKLMNPQRSTUVWXYZ23456789'), 0, 6));
+        } while (static::where('registration_code', $code)->exists());
+
+        return $code;
     }
 
     /**
@@ -77,11 +102,7 @@ class ExhibitionVisitor extends Model
      */
     public static function generateUniqueRegistrationCode(): string
     {
-        do {
-            $code = 'VIS-'.strtoupper(substr(str_shuffle('ABCDEFGHJKLMNPQRSTUVWXYZ23456789'), 0, 6));
-        } while (static::where('registration_code', $code)->exists());
-
-        return $code;
+        return static::generateUniqueCodeForType(null);
     }
 
     /**

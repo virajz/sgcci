@@ -10,6 +10,7 @@ use App\Models\Exhibition;
 use App\Models\ExhibitionVisitor;
 use App\Models\Member;
 use App\VisitorRegistrationStatus;
+use App\VisitorType;
 use Flux\Flux;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -51,6 +52,8 @@ class Index extends Component
     public string $email = '';
 
     public string $segment = '';
+
+    public string $visitorType = '';
 
     public bool $withInvitationPass = false;
 
@@ -99,7 +102,7 @@ class Index extends Component
                 return;
             }
 
-            preg_match('/\b((?:IN)?VIS-[A-Z0-9]+)\b/i', $trimmed, $matches);
+            preg_match('/\b((?:IN)?VIS-[A-Z0-9]+|PRESS-[A-Z0-9]+|VIP-[A-Z0-9]+|VENDOR-[A-Z0-9]+)\b/i', $trimmed, $matches);
             $trimmed = $matches[1] ?? $trimmed;
         }
 
@@ -131,7 +134,7 @@ class Index extends Component
                 return;
             }
 
-            preg_match('/\b((?:IN)?VIS-[A-Z0-9]+)\b/i', $term, $matches);
+            preg_match('/\b((?:IN)?VIS-[A-Z0-9]+|PRESS-[A-Z0-9]+|VIP-[A-Z0-9]+|VENDOR-[A-Z0-9]+)\b/i', $term, $matches);
             $term = $matches[1] ?? $term;
             $this->lookupCode = strtoupper($term);
         }
@@ -291,6 +294,7 @@ class Index extends Component
             'business_segment' => $this->segment ?: null,
             'additional_persons' => ! empty($additionalPersonsData) ? $additionalPersonsData : null,
             'source' => 'front_desk',
+            'visitor_type' => $this->visitorType ?: null,
             'with_invitation_pass' => $this->withInvitationPass,
             'status' => VisitorRegistrationStatus::Confirmed,
         ]);
@@ -322,6 +326,7 @@ class Index extends Component
         $this->city = '';
         $this->email = '';
         $this->segment = '';
+        $this->visitorType = '';
         $this->withInvitationPass = false;
         $this->additionalPersons = [];
 
@@ -354,6 +359,7 @@ class Index extends Component
             'city' => ['required', 'string'],
             'email' => ['nullable', 'email', 'max:255'],
             'segment' => ['nullable', 'string', 'in:Business,Job (Working Professional),Student,Housewife,Other'],
+            'visitorType' => ['nullable', 'string', 'in:'.implode(',', array_column(VisitorType::cases(), 'value'))],
             'additionalPersons.*.name' => ['required', 'string', 'max:255'],
             'additionalPersons.*.phone_number' => [
                 'required', 'string', 'max:20',

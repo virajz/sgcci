@@ -69,7 +69,7 @@ class Index extends Component
                 }
             }
 
-            preg_match('/\b((?:IN)?VIS-[A-Z0-9]+)\b/i', $trimmed, $matches);
+            preg_match('/\b((?:IN)?VIS-[A-Z0-9]+|PRESS-[A-Z0-9]+|VIP-[A-Z0-9]+|VENDOR-[A-Z0-9]+)\b/i', $trimmed, $matches);
             $trimmed = $matches[1] ?? $trimmed;
         }
 
@@ -100,7 +100,7 @@ class Index extends Component
         }
 
         $isPaidVisitor = $visitor->status === VisitorRegistrationStatus::Confirmed
-            && str_starts_with($visitor->registration_code, 'VIS-')
+            && preg_match('/^(VIS|PRESS|VIP|VENDOR)-/', $visitor->registration_code)
             && $visitor->invited_by_booking_id === null;
 
         if (! $isPaidVisitor) {
@@ -176,7 +176,7 @@ class Index extends Component
     private function maybeEnterOnLookup(ExhibitionVisitor &$visitor): void
     {
         $isPaidVisitor = $visitor->status === VisitorRegistrationStatus::Confirmed
-            && str_starts_with($visitor->registration_code, 'VIS-')
+            && preg_match('/^(VIS|PRESS|VIP|VENDOR)-/', $visitor->registration_code)
             && $visitor->invited_by_booking_id === null;
 
         if (! $isPaidVisitor) {
@@ -314,7 +314,7 @@ class Index extends Component
     private function setFoundVisitor(ExhibitionVisitor $visitor): void
     {
         $isPaidVisitor = $visitor->status === VisitorRegistrationStatus::Confirmed
-            && str_starts_with($visitor->registration_code, 'VIS-')
+            && preg_match('/^(VIS|PRESS|VIP|VENDOR)-/', $visitor->registration_code)
             && $visitor->invited_by_booking_id === null;
 
         $persons = is_array($visitor->additional_persons) ? $visitor->additional_persons : [];
