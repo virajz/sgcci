@@ -16,15 +16,22 @@
         }
         .badge-page img { width: 100%; max-width: 700px; height: auto; display: block; }
         @media print {
-            body { margin: 0; }
+            @page { margin: 0; size: auto; }
+            html, body { margin: 0; padding: 0; height: auto; overflow: visible; }
             .badge-page {
+                display: block;
                 width: 100%;
-                min-height: unset;
-                height: 100vh;
-                page-break-after: always;
-                page-break-inside: avoid;
             }
-            .badge-page:last-child { page-break-after: auto; }
+            .badge-page img {
+                display: block;
+                max-width: 100%;
+                max-height: 100vh;
+                width: auto;
+                height: auto;
+            }
+            .badge-page + .badge-page {
+                break-before: page;
+            }
         }
     </style>
 </head>
