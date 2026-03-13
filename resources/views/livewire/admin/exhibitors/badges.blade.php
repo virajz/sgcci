@@ -94,6 +94,9 @@
                                         <flux:text class="text-xs truncate text-zinc-500 dark:text-zinc-400">
                                             {{ $member->phone_number }}</flux:text>
                                     @endif
+                                    <flux:text class="text-xs truncate text-zinc-400 dark:text-zinc-500">
+                                        {{ $member->created_at->format('M d, Y H:i') }}
+                                    </flux:text>
                                 </div>
                             </button>
                             <div class="flex items-center gap-0.5 shrink-0">

@@ -12,6 +12,8 @@ use Livewire\Component;
 #[Layout('components.layouts.app')]
 class ExhibitorLeads extends Component
 {
+    public string $search = '';
+
     public string $sortBy = 'leads';
 
     public string $sortDirection = 'desc';
@@ -28,6 +30,8 @@ class ExhibitorLeads extends Component
 
     public function render(): mixed
     {
+        $search = strtolower(trim($this->search));
+
         $bookings = Booking::query()
             ->where(function ($q) {
                 $q->where('status', BookingStatus::PaymentCompleted)
@@ -37,11 +41,13 @@ class ExhibitorLeads extends Component
                     });
             })
             ->where('is_manual_block', false)
+            ->when($search, fn ($q) => $q->whereRaw('LOWER(brand_name) LIKE ?', ["%{$search}%"]))
             ->withCount(['leads', 'memberLeads', 'whatsAppInquiries'])
             ->get()
             ->map(fn (Booking $booking) => [
                 'id' => $booking->id,
                 'brand_name' => $booking->brand_name,
+                'selected_stalls' => $booking->selected_stalls,
                 'leads_count' => $booking->leads_count + $booking->member_leads_count,
                 'whatsapp_count' => $booking->whats_app_inquiries_count,
             ]);
