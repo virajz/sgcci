@@ -25,7 +25,7 @@
                         class="relative w-full overflow-hidden bg-zinc-900 transition-all duration-300"
                         :class="cameraActive ? 'aspect-square' : 'h-0'"
                     >
-                        <video id="leads-qr-video" class="w-full h-full object-cover" playsinline></video>
+                        <video id="leads-qr-video" class="w-full h-full object-cover" autoplay muted playsinline></video>
                         <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <div class="w-48 h-48 relative">
                                 <span class="absolute -top-px -left-px w-8 h-8 border-t-4 border-l-4 border-white/80 rounded-tl-lg"></span>
@@ -271,6 +271,10 @@
             </div>
         </div>
 
+        @assets
+        <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+        @endassets
+
         @script
         <script>
             Alpine.data('leadsQrScanner', () => ({
@@ -291,10 +295,14 @@
                 async startCamera() {
                     try {
                         this.stream = await navigator.mediaDevices.getUserMedia({
-                            video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+                            video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
                         });
                         const video = document.getElementById('leads-qr-video');
                         video.srcObject = this.stream;
+                        await new Promise(resolve => {
+                            if (video.readyState >= 1) { resolve(); return; }
+                            video.addEventListener('loadedmetadata', resolve, { once: true });
+                        });
                         await video.play();
                         this.cameraActive = true;
                         if ('BarcodeDetector' in window) {

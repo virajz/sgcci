@@ -9,7 +9,7 @@
                 class="relative w-full overflow-hidden bg-zinc-900 transition-all duration-300"
                 :class="cameraActive ? 'aspect-square md:aspect-auto md:h-72' : 'h-0'"
             >
-                <video id="qr-video" class="w-full h-full object-cover" playsinline></video>
+                <video id="qr-video" class="w-full h-full object-cover" autoplay muted playsinline></video>
                 {{-- Scanning frame overlay --}}
                 <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div class="w-44 h-44 md:w-52 md:h-52 relative">
@@ -108,10 +108,14 @@
         async startCamera() {
             try {
                 this.stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+                    video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
                 });
                 const video = document.getElementById('qr-video');
                 video.srcObject = this.stream;
+                await new Promise(resolve => {
+                    if (video.readyState >= 1) { resolve(); return; }
+                    video.addEventListener('loadedmetadata', resolve, { once: true });
+                });
                 await video.play();
                 this.cameraActive = true;
                 if ('BarcodeDetector' in window) {

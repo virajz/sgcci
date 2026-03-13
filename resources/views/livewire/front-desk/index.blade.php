@@ -10,7 +10,7 @@
         <div class="relative flex flex-col items-center justify-center flex-1 gap-4 p-4">
             {{-- Camera preview --}}
             <div class="relative w-full max-w-xs overflow-hidden aspect-square rounded-xl bg-zinc-900">
-                <video id="qr-video" class="object-cover w-full h-full" playsinline></video>
+                <video id="qr-video" class="object-cover w-full h-full" autoplay muted playsinline></video>
                 {{-- Scanning frame overlay --}}
                 <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div class="relative w-48 h-48 border-2 border-white/60 rounded-xl">
@@ -425,7 +425,7 @@
                 try {
                     this.stream = await navigator.mediaDevices.getUserMedia({
                         video: {
-                            facingMode: 'environment',
+                            facingMode: { ideal: 'environment' },
                             width: {
                                 ideal: 1280
                             },
@@ -436,6 +436,10 @@
                     });
                     const video = document.getElementById('qr-video');
                     video.srcObject = this.stream;
+                    await new Promise(resolve => {
+                        if (video.readyState >= 1) { resolve(); return; }
+                        video.addEventListener('loadedmetadata', resolve, { once: true });
+                    });
                     await video.play();
                     this.cameraActive = true;
                     console.log('[QR] Camera started, video size:', video.videoWidth, 'x', video
