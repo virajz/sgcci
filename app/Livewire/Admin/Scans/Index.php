@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Admin\Scans;
 
 use App\Models\ExhibitionVisitor;
+use App\Models\MemberScan;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -82,19 +83,43 @@ class Index extends Component
         return $result;
     }
 
-    /** @return array{total_entered: int, today: int, total_exited: int, out_of_city: int} */
+    /** @return array{total_entered: int, today: int, out_of_city: int, sgcci_members: int, committee_members: int} */
     public function getScanStatsProperty(): array
     {
         return [
             'total_entered' => ExhibitionVisitor::whereNotNull('entered_at')->count(),
             'today' => ExhibitionVisitor::whereNotNull('entered_at')->whereDate('entered_at', today())->count(),
-            'total_exited' => ExhibitionVisitor::whereNotNull('exited_at')->count(),
             'out_of_city' => ExhibitionVisitor::whereNotNull('entered_at')->whereRaw('LOWER(city) != ?', ['surat'])->count(),
+            'sgcci_members' => MemberScan::where('member_type', 'sgcci')->count(),
+            'committee_members' => MemberScan::where('member_type', 'committee')->count(),
         ];
     }
 
     public function render(): \Illuminate\View\View
     {
+        if (in_array($this->entryFilter, ['sgcci', 'committee'], true)) {
+            $memberScans = MemberScan::query()
+                ->where('member_type', $this->entryFilter)
+                ->when($this->search, function ($q) {
+                    $search = strtolower($this->search);
+                    $q->where(function ($q2) use ($search) {
+                        $q2->whereRaw('LOWER(member_name) LIKE ?', ["%{$search}%"])
+                            ->orWhereRaw('LOWER(membership_number) LIKE ?', ["%{$search}%"]);
+                    });
+                })
+                ->when($this->dateFrom, fn ($q) => $q->whereDate('entered_at', '>=', $this->dateFrom))
+                ->when($this->dateTo, fn ($q) => $q->whereDate('entered_at', '<=', $this->dateTo))
+                ->orderByDesc('entered_at')
+                ->paginate(20);
+
+            return view('livewire.admin.scans.index', [
+                'scans' => null,
+                'memberScans' => $memberScans,
+                'dailyScans' => $this->dailyScans,
+                'scanStats' => $this->scanStats,
+            ]);
+        }
+
         $query = ExhibitionVisitor::query()
             ->whereNotNull('entered_at')
             ->with('exhibition')
@@ -117,6 +142,7 @@ class Index extends Component
 
         return view('livewire.admin.scans.index', [
             'scans' => $query,
+            'memberScans' => null,
             'dailyScans' => $this->dailyScans,
             'scanStats' => $this->scanStats,
         ]);

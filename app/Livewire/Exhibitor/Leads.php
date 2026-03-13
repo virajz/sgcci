@@ -251,8 +251,8 @@ class Leads extends Component
             $this->foundMember = [
                 'membership_number' => $member->membership_number,
                 'member_type' => 'sgcci',
-                'name' => $member->name,
-                'phone' => $member->office_phone ?? $member->home_phone,
+                'name' => $member->contact_name,
+                'phone' => $member->cell_no ?? $member->office_phone ?? $member->home_phone,
                 'post' => null,
                 'is_lead' => ExhibitorMemberLead::where('booking_id', $this->booking->id)
                     ->where('membership_number', $member->membership_number)
