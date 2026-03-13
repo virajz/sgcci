@@ -200,15 +200,14 @@ class Index extends Component
             // ── Primary visitor ────────────────────────────────────────────────
             $displayName = $visitor->name;
 
-            if ($visitor->entered_at && ! $visitor->exited_at) {
+            if ($visitor->entered_at) {
                 $this->addScanLog('already_entered', $displayName, $visitor->registration_code, 30, $visitor->entered_at->format('d M Y, h:i A'));
 
                 return;
             }
 
-            $isReEntry = $visitor->entered_at && $visitor->exited_at;
             $visitor->update(['entered_at' => now(), 'exited_at' => null]);
-            $this->addScanLog($isReEntry ? 're_entered' : 'entered', $displayName, $visitor->registration_code, 5);
+            $this->addScanLog('entered', $displayName, $visitor->registration_code, 5);
 
         } else {
             // ── Additional person (1-based index) ──────────────────────────────
@@ -224,21 +223,18 @@ class Index extends Component
             $displayName = $person['name'];
 
             $personEnteredAt = isset($person['entered_at']) ? Carbon::parse($person['entered_at']) : null;
-            $personExitedAt = isset($person['exited_at']) ? Carbon::parse($person['exited_at']) : null;
 
-            if ($personEnteredAt && ! $personExitedAt) {
+            if ($personEnteredAt) {
                 $this->addScanLog('already_entered', $displayName, $visitor->registration_code, 30, $personEnteredAt->format('d M Y, h:i A'));
 
                 return;
             }
 
-            $isReEntry = $personEnteredAt && $personExitedAt;
-
             $persons[$arrayIndex]['entered_at'] = now()->toIso8601String();
             $persons[$arrayIndex]['exited_at'] = null;
             $visitor->update(['additional_persons' => $persons]);
 
-            $this->addScanLog($isReEntry ? 're_entered' : 'entered', $displayName, $visitor->registration_code, 5);
+            $this->addScanLog('entered', $displayName, $visitor->registration_code, 5);
         }
     }
 

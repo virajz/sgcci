@@ -9,7 +9,6 @@ use App\Jobs\SendWhatsAppCampaign;
 use App\Models\Exhibition;
 use App\Models\ExhibitionVisitor;
 use App\VisitorRegistrationStatus;
-use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -194,6 +193,7 @@ class VisitorsRegistration extends Component
                 VisitorRegistrationStatus::PaymentPending->value,
                 VisitorRegistrationStatus::PaymentFailed->value,
             ])
+            ->whereNull('entered_at')
             ->first();
 
         if ($existingIncomplete) {
@@ -289,11 +289,18 @@ class VisitorsRegistration extends Component
                 'required',
                 'string',
                 'max:20',
-                Rule::unique('exhibition_visitors', 'phone_number')
-                    ->where('exhibition_id', $this->exhibitionId)
-                    ->whereIn('status', [
-                        VisitorRegistrationStatus::Confirmed->value,
-                    ]),
+                function (string $_attribute, mixed $value, \Closure $fail): void {
+                    $alreadyRegistered = ExhibitionVisitor::query()
+                        ->where('exhibition_id', $this->exhibitionId)
+                        ->where('phone_number', trim((string) $value))
+                        ->where('status', VisitorRegistrationStatus::Confirmed->value)
+                        ->whereNull('entered_at')
+                        ->exists();
+
+                    if ($alreadyRegistered) {
+                        $fail('This phone number is already registered for this exhibition.');
+                    }
+                },
             ],
             'name' => ['required', 'string', 'max:255'],
             'companyName' => ['nullable', 'string', 'max:255'],
@@ -341,10 +348,11 @@ class VisitorsRegistration extends Component
                         return;
                     }
 
-                    // Must not already be registered for this exhibition
+                    // Must not already be registered for this exhibition without having entered yet
                     $alreadyRegistered = ExhibitionVisitor::query()
                         ->where('exhibition_id', $this->exhibitionId)
-                        ->whereIn('status', [VisitorRegistrationStatus::Confirmed->value])
+                        ->where('status', VisitorRegistrationStatus::Confirmed->value)
+                        ->whereNull('entered_at')
                         ->where(function (\Illuminate\Database\Eloquent\Builder $query) use ($phone): void {
                             $query->where('phone_number', $phone)
                                 ->orWhereRaw(
