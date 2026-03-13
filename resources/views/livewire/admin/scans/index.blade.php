@@ -7,7 +7,7 @@
     </div>
 
     {{-- Stats --}}
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <flux:card>
             <div class="flex items-start justify-between">
                 <div>
@@ -43,6 +43,19 @@
                 </div>
                 <div class="p-3 bg-zinc-100 rounded-lg dark:bg-zinc-800">
                     <flux:icon.arrow-left-circle class="size-6 text-zinc-500 dark:text-zinc-400" variant="outline" />
+                </div>
+            </div>
+        </flux:card>
+
+        <flux:card wire:click="toggleOutOfCity" class="cursor-pointer ring-2 {{ $outOfCityFilter === '1' ? 'ring-orange-400' : 'ring-transparent' }} hover:ring-orange-300 transition">
+            <div class="flex items-start justify-between">
+                <div>
+                    <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">Out of City</flux:text>
+                    <flux:heading size="2xl" class="mt-2">{{ number_format($scanStats['out_of_city']) }}</flux:heading>
+                    <flux:text class="mt-1 text-xs text-zinc-500">Not from Surat</flux:text>
+                </div>
+                <div class="p-3 bg-orange-100 rounded-lg dark:bg-orange-900/20">
+                    <flux:icon.map-pin class="size-6 text-orange-600 dark:text-orange-400" variant="outline" />
                 </div>
             </div>
         </flux:card>
@@ -94,6 +107,13 @@
                 <flux:select.option value="">All visitors</flux:select.option>
                 <flux:select.option value="inside">Currently inside</flux:select.option>
                 <flux:select.option value="exited">Exited</flux:select.option>
+            </flux:select>
+        </flux:field>
+
+        <flux:field>
+            <flux:select wire:model.live="outOfCityFilter" variant="listbox" placeholder="All cities">
+                <flux:select.option value="">All cities</flux:select.option>
+                <flux:select.option value="1">Out of City</flux:select.option>
             </flux:select>
         </flux:field>
     </div>

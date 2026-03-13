@@ -22,6 +22,8 @@ class Index extends Component
 
     public string $entryFilter = '';
 
+    public string $outOfCityFilter = '';
+
     public function mount(): void
     {
         $this->dateFrom = now()->startOfMonth()->format('Y-m-d');
@@ -48,6 +50,17 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function updatingOutOfCityFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function toggleOutOfCity(): void
+    {
+        $this->outOfCityFilter = $this->outOfCityFilter === '1' ? '' : '1';
+        $this->resetPage();
+    }
+
     /** @return array<int, array{date: string, entries: int}> */
     public function getDailyScansProperty(): array
     {
@@ -69,13 +82,14 @@ class Index extends Component
         return $result;
     }
 
-    /** @return array{total_entered: int, today: int, total_exited: int} */
+    /** @return array{total_entered: int, today: int, total_exited: int, out_of_city: int} */
     public function getScanStatsProperty(): array
     {
         return [
             'total_entered' => ExhibitionVisitor::whereNotNull('entered_at')->count(),
             'today' => ExhibitionVisitor::whereNotNull('entered_at')->whereDate('entered_at', today())->count(),
             'total_exited' => ExhibitionVisitor::whereNotNull('exited_at')->count(),
+            'out_of_city' => ExhibitionVisitor::whereNotNull('entered_at')->whereRaw('LOWER(city) != ?', ['surat'])->count(),
         ];
     }
 
@@ -97,6 +111,7 @@ class Index extends Component
             ->when($this->dateTo, fn ($q) => $q->whereDate('entered_at', '<=', $this->dateTo))
             ->when($this->entryFilter === 'inside', fn ($q) => $q->whereNull('exited_at'))
             ->when($this->entryFilter === 'exited', fn ($q) => $q->whereNotNull('exited_at'))
+            ->when($this->outOfCityFilter === '1', fn ($q) => $q->whereRaw('LOWER(city) != ?', ['surat']))
             ->orderByDesc('entered_at')
             ->paginate(20);
 
