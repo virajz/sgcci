@@ -607,7 +607,7 @@ class Index extends Component
                     });
             })
             ->where('is_manual_block', false)
-            ->with(['exhibition', 'exhibitorUser', 'badgeMembers', 'invitedGuests'])
+            ->with(['exhibition', 'exhibitorUser', 'badgeMembers', 'invitedGuests', 'leads', 'memberLeads', 'whatsAppInquiries'])
             ->when($this->search, function ($query) use ($search, $phoneSearch) {
                 $query->where(function ($q) use ($search, $phoneSearch) {
                     $q->whereRaw('LOWER(booking_code) LIKE ?', ["%{$search}%"])

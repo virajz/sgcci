@@ -269,6 +269,16 @@
                                                     iconVariant="outline"
                                                     x-on:click="window.location.href = '{{ route('admin.exhibitors.invited-guests', $booking) }}'" />
                                             </flux:tooltip>
+                                            <flux:tooltip>
+                                                <flux:button size="sm" variant="ghost" icon="chart-bar"
+                                                    iconVariant="outline" :loading="false" />
+                                                <flux:tooltip.content>
+                                                    <div class="text-sm space-y-1">
+                                                        <div>Leads: {{ $booking->leads->count() + $booking->memberLeads->count() }}</div>
+                                                        <div>WhatsApp: {{ $booking->whatsAppInquiries->count() }}</div>
+                                                    </div>
+                                                </flux:tooltip.content>
+                                            </flux:tooltip>
                                             <flux:tooltip content="Download QR SVG">
                                                 <flux:button size="sm" variant="ghost" icon="qr-code"
                                                     iconVariant="outline"
