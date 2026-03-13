@@ -303,6 +303,31 @@ class Leads extends Component
         $this->lookupPerformed = false;
     }
 
+    public function exportWhatsAppInquiries(): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $inquiries = WhatsAppInquiry::where('booking_id', $this->booking->id)
+            ->orderByDesc('received_at')
+            ->get();
+
+        $filename = 'whatsapp-inquiries-'.now()->format('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($inquiries): void {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, ['Name', 'Phone', 'Received At']);
+
+            foreach ($inquiries as $inquiry) {
+                fputcsv($handle, [
+                    $inquiry->name ?? '',
+                    $inquiry->phone_number,
+                    $inquiry->received_at->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv']);
+    }
+
     public function exportLeads(): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         $leads = ExhibitorLead::where('booking_id', $this->booking->id)

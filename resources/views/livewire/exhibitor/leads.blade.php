@@ -418,6 +418,21 @@
 
     {{-- ── WHATSAPP TAB ─────────────────────────────────────────────────────────── --}}
     @if ($activeTab === 'whatsapp')
+        @if (!$whatsAppInquiries->isEmpty())
+            <div class="flex items-center justify-between">
+                <flux:text class="text-zinc-500 dark:text-zinc-400">{{ $whatsAppInquiries->count() }} {{ $whatsAppInquiries->count() === 1 ? 'inquiry' : 'inquiries' }} received</flux:text>
+                <flux:button
+                    wire:click="exportWhatsAppInquiries"
+                    wire:loading.attr="disabled"
+                    wire:target="exportWhatsAppInquiries"
+                    variant="ghost"
+                    icon="arrow-down-tray"
+                    size="sm"
+                >
+                    Export CSV
+                </flux:button>
+            </div>
+        @endif
         <flux:card class="space-y-4">
             @if ($whatsAppInquiries->isEmpty())
                 <div class="py-12 text-center">

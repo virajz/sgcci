@@ -8,6 +8,7 @@ use App\Models\Exhibition;
 use App\Models\ExhibitionVisitor;
 use App\Models\ExhibitorLead;
 use App\Models\User;
+use App\Models\WhatsAppInquiry;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -196,6 +197,39 @@ it('shows not found message for unknown code', function () {
         ->assertSet('lookupPerformed', true)
         ->assertSet('foundVisitor', null)
         ->assertSee('Not found');
+});
+
+it('exports whatsapp inquiries as csv', function () {
+    WhatsAppInquiry::create([
+        'booking_id' => $this->booking->id,
+        'phone_number' => '+919876543210',
+        'name' => 'Alice',
+        'received_at' => now(),
+    ]);
+
+    WhatsAppInquiry::create([
+        'booking_id' => $this->booking->id,
+        'phone_number' => '+919876543211',
+        'name' => null,
+        'received_at' => now(),
+    ]);
+
+    $response = Livewire::actingAs($this->exhibitorUser)
+        ->test(Leads::class)
+        ->call('exportWhatsAppInquiries');
+
+    $httpResponse = $response->instance()->exportWhatsAppInquiries();
+
+    expect($httpResponse->headers->get('Content-Disposition'))->toContain('whatsapp-inquiries-')
+        ->and($httpResponse->headers->get('Content-Type'))->toContain('text/csv');
+
+    ob_start();
+    $httpResponse->sendContent();
+    $content = ob_get_clean();
+
+    expect($content)->toContain('Alice')
+        ->toContain('+919876543210')
+        ->toContain('+919876543211');
 });
 
 it('can reset lookup', function () {
