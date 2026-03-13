@@ -88,6 +88,15 @@
                         </flux:navlist.item>
                     @endif
                 </flux:navlist.group>
+
+                @if(auth()->user()->email === 'viraj@sgcci.in')
+                <flux:navlist.group :heading="__('Analytics')" class="grid">
+                    <flux:navlist.item icon="chart-bar" :href="route('admin.analytics.exhibitor-leads')"
+                        :current="request()->routeIs('admin.analytics.exhibitor-leads')" wire:navigate>{{ __('Exhibitor Leads') }}
+                    </flux:navlist.item>
+                </flux:navlist.group>
+                @endif
+
             @endif
 
             @if(auth()->user()->isFrontDesk())

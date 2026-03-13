@@ -12,6 +12,7 @@ use App\Http\Controllers\VisitorPassController;
 use App\Http\Controllers\VisitorPaymentController;
 use App\Http\Controllers\VisitorScanController;
 use App\Http\Controllers\WhatsAppWebhookController;
+use App\Livewire\Admin\Analytics\ExhibitorLeads as AnalyticsExhibitorLeads;
 use App\Livewire\Admin\CommitteeMembers\Import as CommitteeMembersImport;
 use App\Livewire\Admin\CommitteeMembers\ImportPhotos as CommitteeMembersImportPhotos;
 use App\Livewire\Admin\CommitteeMembers\Index as CommitteeMembersIndex;
@@ -152,6 +153,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('staff-members', StaffMembersIndex::class)->name('staff-members.index');
         Route::get('support-tickets', SupportTicketsIndex::class)->name('support-tickets.index');
         Route::get('support-tickets/{ticket}', SupportTicketsShow::class)->name('support-tickets.show');
+        Route::get('analytics/exhibitor-leads', AnalyticsExhibitorLeads::class)->name('analytics.exhibitor-leads');
         Route::get('database-backups', DatabaseBackups::class)->name('database-backups');
         Route::get('whatsapp-webhook-logs', WhatsAppWebhookLogsIndex::class)
             ->name('whatsapp-webhook-logs')
