@@ -146,7 +146,7 @@ class Index extends Component
         $visitors = ExhibitionVisitor::where('exhibition_id', $exhibition->id)
             ->where(function ($q) use ($term, $code): void {
                 $q->where('registration_code', $code)
-                    ->orWhere('phone_number', 'like', "%{$term}%")
+                    ->orWhereRaw('REPLACE(phone_number, \' \', \'\') LIKE ?', ['%'.str_replace(' ', '', $term).'%'])
                     ->orWhereRaw('lower(name) like ?', ['%'.strtolower($term).'%']);
             })
             ->orderBy('name')

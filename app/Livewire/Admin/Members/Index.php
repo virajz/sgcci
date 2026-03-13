@@ -29,7 +29,7 @@ class Index extends Component
                         ->orWhereRaw('LOWER(membership_number) LIKE ?', ["%{$search}%"])
                         ->orWhereRaw('LOWER(company) LIKE ?', ["%{$search}%"])
                         ->orWhereRaw('LOWER(email) LIKE ?', ["%{$search}%"])
-                        ->orWhereRaw('LOWER(cell_no) LIKE ?', ["%{$search}%"]);
+                        ->orWhereRaw('REPLACE(LOWER(cell_no), \' \', \'\') LIKE ?', ['%'.str_replace(' ', '', $search).'%']);
                 });
             })
             ->orderBy('membership_number')

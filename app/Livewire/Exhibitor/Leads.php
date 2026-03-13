@@ -108,7 +108,7 @@ class Leads extends Component
         $visitors = ExhibitionVisitor::where('exhibition_id', $exhibition->id)
             ->where(function ($q) use ($code): void {
                 $q->where('registration_code', $code)
-                    ->orWhere('phone_number', 'like', "%{$code}%")
+                    ->orWhereRaw('REPLACE(phone_number, \' \', \'\') LIKE ?', ['%'.str_replace(' ', '', $code).'%'])
                     ->orWhereRaw('lower(name) like ?', ['%'.strtolower($code).'%']);
             })
             ->orderBy('name')

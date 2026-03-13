@@ -215,7 +215,7 @@ class Index extends Component
                     $q->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
                         ->orWhereRaw('LOWER(company_name) LIKE ?', ["%{$search}%"])
                         ->orWhereRaw('LOWER(email) LIKE ?', ["%{$search}%"])
-                        ->orWhere('phone_number', 'like', "%{$search}%")
+                        ->orWhereRaw('REPLACE(phone_number, \' \', \'\') LIKE ?', ['%'.str_replace(' ', '', $search).'%'])
                         ->orWhereRaw('LOWER(registration_code) LIKE ?', ["%{$search}%"]);
                 });
             })
