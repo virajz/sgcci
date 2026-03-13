@@ -336,7 +336,7 @@
 
                     <flux:field>
                         <flux:label class="text-xs">Visitor Type</flux:label>
-                        <flux:radio.group wire:model="visitorType" class="flex flex-wrap gap-x-4 gap-y-1">
+                        <flux:radio.group wire:model="visitorType" variant="segmented">
                             <flux:radio value="" label="Standard" />
                             <flux:radio value="press" label="Press & Media" />
                             <flux:radio value="vip" label="VIP" />
