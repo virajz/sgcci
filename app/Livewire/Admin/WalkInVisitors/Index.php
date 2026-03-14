@@ -18,6 +18,8 @@ class Index extends Component
 
     public string $search = '';
 
+    public string $visitorTypeFilter = '';
+
     public bool $showDeleteModal = false;
 
     public ?int $visitorToDelete = null;
@@ -30,6 +32,11 @@ class Index extends Component
     public array $selectedPersons = [];
 
     public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingVisitorTypeFilter(): void
     {
         $this->resetPage();
     }
@@ -72,10 +79,19 @@ class Index extends Component
     {
         $exhibition = Exhibition::latest()->first();
 
-        $visitors = ExhibitionVisitor::query()
-            ->with('exhibition')
+        $baseQuery = ExhibitionVisitor::query()
             ->where('source', 'front_desk')
-            ->when($exhibition, fn ($q) => $q->where('exhibition_id', $exhibition->id))
+            ->when($exhibition, fn ($q) => $q->where('exhibition_id', $exhibition->id));
+
+        $typeCounts = (clone $baseQuery)
+            ->selectRaw("COALESCE(visitor_type, 'standard') as type, COUNT(*) as count")
+            ->groupBy('type')
+            ->pluck('count', 'type');
+
+        $visitors = (clone $baseQuery)
+            ->with('exhibition')
+            ->when($this->visitorTypeFilter === 'standard', fn ($q) => $q->whereNull('visitor_type'))
+            ->when($this->visitorTypeFilter && $this->visitorTypeFilter !== 'standard', fn ($q) => $q->where('visitor_type', $this->visitorTypeFilter))
             ->when($this->search, function ($query) {
                 $search = strtolower($this->search);
 
@@ -93,6 +109,8 @@ class Index extends Component
         return view('livewire.admin.walk-in-visitors.index', [
             'visitors' => $visitors,
             'exhibition' => $exhibition,
+            'typeCounts' => $typeCounts,
+            'totalCount' => $typeCounts->sum(),
         ]);
     }
 }

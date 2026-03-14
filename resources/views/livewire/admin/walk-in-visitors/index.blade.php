@@ -8,9 +8,19 @@
         </div>
     </div>
 
-    <flux:input wire:model.live.debounce.300ms="search"
-        placeholder="Search by name, company, email, phone, or code..." icon="magnifying-glass" iconVariant="outline"
-        clearable class="md:max-w-md" />
+    <div class="flex flex-wrap items-center gap-3">
+        <flux:input wire:model.live.debounce.300ms="search"
+            placeholder="Search by name, company, email, phone, or code..." icon="magnifying-glass" iconVariant="outline"
+            clearable class="md:max-w-md" />
+
+        <div class="flex items-center gap-1">
+            <flux:button size="sm" :variant="$visitorTypeFilter === '' ? 'filled' : 'ghost'" wire:click="$set('visitorTypeFilter', '')">All <flux:badge size="sm" class="ml-1">{{ $totalCount }}</flux:badge></flux:button>
+            <flux:button size="sm" :variant="$visitorTypeFilter === 'standard' ? 'filled' : 'ghost'" wire:click="$set('visitorTypeFilter', 'standard')">Standard <flux:badge size="sm" class="ml-1">{{ $typeCounts->get('standard', 0) }}</flux:badge></flux:button>
+            <flux:button size="sm" :variant="$visitorTypeFilter === 'vip' ? 'filled' : 'ghost'" wire:click="$set('visitorTypeFilter', 'vip')">VIP <flux:badge size="sm" class="ml-1">{{ $typeCounts->get('vip', 0) }}</flux:badge></flux:button>
+            <flux:button size="sm" :variant="$visitorTypeFilter === 'press' ? 'filled' : 'ghost'" wire:click="$set('visitorTypeFilter', 'press')">Press <flux:badge size="sm" class="ml-1">{{ $typeCounts->get('press', 0) }}</flux:badge></flux:button>
+            <flux:button size="sm" :variant="$visitorTypeFilter === 'vendor' ? 'filled' : 'ghost'" wire:click="$set('visitorTypeFilter', 'vendor')">Vendor <flux:badge size="sm" class="ml-1">{{ $typeCounts->get('vendor', 0) }}</flux:badge></flux:button>
+        </div>
+    </div>
 
     <flux:card class="overflow-hidden">
         @if ($visitors->count() > 0)
@@ -113,15 +123,15 @@
             <div class="py-12 text-center">
                 <flux:icon icon="user-group" size="xl" class="mx-auto mb-4 text-zinc-400" />
                 <flux:heading size="lg" class="mb-2">
-                    @if ($search)
+                    @if ($search || $visitorTypeFilter)
                         No walk-in visitors found
                     @else
                         No walk-in visitors yet
                     @endif
                 </flux:heading>
                 <flux:text>
-                    @if ($search)
-                        Try adjusting your search criteria.
+                    @if ($search || $visitorTypeFilter)
+                        Try adjusting your search or filter criteria.
                     @else
                         Walk-in visitors added by front desk staff will appear here.
                     @endif
