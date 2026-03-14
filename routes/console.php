@@ -18,6 +18,9 @@ Schedule::command('bookings:send-partial-payment-reminders --force --no-interact
 // Send event reminder WhatsApp notifications to confirmed visitors daily at 9:30am.
 Schedule::command('visitors:send-event-reminders --no-interaction')->dailyAt('09:30');
 
+// Purge WhatsApp webhook logs, keeping only the latest 500 entries.
+Schedule::command('app:purge-whatsapp-webhook-logs')->daily();
+
 // Mark all inside visitors as exited at end of day.
 Schedule::command('visitors:mark-all-exited')->dailyAt('23:55');
 
