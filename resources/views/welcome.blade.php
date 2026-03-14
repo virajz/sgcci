@@ -10,16 +10,12 @@
     <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="w-full h-auto mb-8 max-w-64">
     <div class="flex flex-col w-full max-w-xs gap-4">
         @isset($exhibition)
-            <flux:button href="{{ route('exhibitions.product-profile.select', $exhibition) }}" variant="primary"
-                class="w-full">
-                Book a Stall
+            <flux:button href="{{ route('visitors-registration', $exhibition) }}" variant="primary" class="w-full">
+                Register as Visitor
             </flux:button>
-            <flux:button href="{{ route('exhibitions.booking.edit') }}" variant="filled" class="w-full">
-                Modify Booking
-            </flux:button>
-            <flux:button href="{{ route('support-tickets.create') }}" variant="outline" class="w-full">
+            {{-- <flux:button href="{{ route('support-tickets.create') }}" variant="outline" class="w-full">
                 Create Support Ticket
-            </flux:button>
+            </flux:button> --}}
         @endisset
     </div>
     @fluxScripts
