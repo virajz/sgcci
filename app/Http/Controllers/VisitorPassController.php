@@ -94,6 +94,7 @@ class VisitorPassController extends Controller
 
         if ($personIndex !== null && is_array($visitor->additional_persons) && isset($visitor->additional_persons[(int) $personIndex])) {
             $visitorName = $visitor->additional_persons[(int) $personIndex]['name'];
+            $scanUrl .= '?person='.((int) $personIndex + 1);
         } else {
             $visitorName = $visitor->name;
         }

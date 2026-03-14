@@ -26,9 +26,13 @@ class VisitorScanController extends Controller
         }
 
         if ($user?->isFrontDesk()) {
-            return redirect()->route('front-desk.index', [
-                'lookup' => $registrationCode,
-            ]);
+            $params = ['lookup' => $registrationCode];
+
+            if (request()->filled('person')) {
+                $params['person'] = request()->query('person');
+            }
+
+            return redirect()->route('front-desk.index', $params);
         }
 
         if ($user?->isSecurityDesk()) {

@@ -146,11 +146,14 @@
                                 Persons</flux:text>
 
                             @foreach ($foundVisitor['additional_persons'] as $index => $person)
-                                <div class="overflow-hidden border rounded-xl border-zinc-200 dark:border-zinc-700"
+                                @php
+                                    $isScanned = isset($foundVisitor['scanned_person_index']) && $foundVisitor['scanned_person_index'] === ($index + 1);
+                                @endphp
+                                <div class="overflow-hidden border rounded-xl {{ $isScanned ? 'border-blue-400 dark:border-blue-500 ring-2 ring-blue-400/30' : 'border-zinc-200 dark:border-zinc-700' }}"
                                     wire:key="person-result-{{ $index }}">
-                                    <div class="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-900/50">
+                                    <div class="flex items-center gap-3 p-3 {{ $isScanned ? 'bg-blue-50 dark:bg-blue-950/30' : 'bg-zinc-50 dark:bg-zinc-900/50' }}">
                                         <div
-                                            class="flex items-center justify-center text-xs font-bold text-purple-700 bg-purple-100 rounded-full size-9 dark:bg-purple-900/50 dark:text-purple-300 shrink-0">
+                                            class="flex items-center justify-center text-xs font-bold rounded-full size-9 shrink-0 {{ $isScanned ? 'text-blue-700 bg-blue-100 dark:bg-blue-900/50 dark:text-blue-300' : 'text-purple-700 bg-purple-100 dark:bg-purple-900/50 dark:text-purple-300' }}">
                                             {{ mb_strtoupper(mb_substr($person['name'], 0, 1)) }}
                                         </div>
                                         <div class="flex-1 min-w-0">
@@ -160,17 +163,33 @@
                                                     {{ $person['phone_number'] }}</p>
                                             @endif
                                         </div>
+                                        @if ($isScanned)
+                                            <flux:badge color="blue" size="sm" class="shrink-0">Scanned</flux:badge>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     @endif
 
-                    <flux:button variant="primary" size="sm" icon="printer" class="w-full"
-                        href="{{ route('front-desk.visitor.badge.print', $foundVisitor['registration_code']) }}"
-                        target="_blank">
-                        Print All Badges
-                    </flux:button>
+                    @if (isset($foundVisitor['scanned_person_index']) && $foundVisitor['scanned_person_index'] !== null)
+                        <flux:button variant="primary" size="sm" icon="printer" class="w-full"
+                            href="{{ route('front-desk.visitor.badge.print', $foundVisitor['registration_code']) }}?personIndex={{ $foundVisitor['scanned_person_index'] - 1 }}"
+                            target="_blank">
+                            Print Badge
+                        </flux:button>
+                        <flux:button variant="ghost" size="sm" icon="printer" class="w-full"
+                            href="{{ route('front-desk.visitor.badge.print', $foundVisitor['registration_code']) }}"
+                            target="_blank">
+                            Print All Badges
+                        </flux:button>
+                    @else
+                        <flux:button variant="primary" size="sm" icon="printer" class="w-full"
+                            href="{{ route('front-desk.visitor.badge.print', $foundVisitor['registration_code']) }}"
+                            target="_blank">
+                            Print All Badges
+                        </flux:button>
+                    @endif
 
                     <flux:button variant="ghost" size="sm" wire:click="resetLookup" icon="arrow-left"
                         class="w-full">

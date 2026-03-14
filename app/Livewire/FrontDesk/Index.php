@@ -27,7 +27,7 @@ class Index extends Component
 
     public bool $lookupPerformed = false;
 
-    /** @var array{registration_code: string, name: string, phone_number: string, company_name: string|null, designation: string|null, city: string, state: string, status_label: string, status_color: string, additional_persons: array<int, array{name: string, phone_number: string}>}|null */
+    /** @var array{registration_code: string, name: string, phone_number: string, company_name: string|null, designation: string|null, city: string, state: string, status_label: string, status_color: string, additional_persons: array<int, array{name: string, phone_number: string}>, scanned_person_index: int|null}|null */
     public ?array $foundVisitor = null;
 
     /** @var array<int, array{registration_code: string, name: string, phone_number: string, company_name: string|null, city: string, state: string, status_label: string, status_color: string}> */
@@ -69,7 +69,8 @@ class Index extends Component
     public function mount(\Illuminate\Http\Request $request): void
     {
         if ($request->query('lookup')) {
-            $this->setLookupCode((string) $request->query('lookup'));
+            $personIndex = $request->filled('person') ? (int) $request->query('person') : null;
+            $this->setLookupCode((string) $request->query('lookup'), $personIndex);
         }
     }
 
@@ -90,7 +91,7 @@ class Index extends Component
         }
     }
 
-    public function setLookupCode(string $code): void
+    public function setLookupCode(string $code, ?int $personIndex = null): void
     {
         $trimmed = trim($code);
 
@@ -102,12 +103,22 @@ class Index extends Component
                 return;
             }
 
+            if ($personIndex === null) {
+                $parsed = parse_url($trimmed);
+                if (isset($parsed['query'])) {
+                    parse_str($parsed['query'], $queryParams);
+                    if (isset($queryParams['person'])) {
+                        $personIndex = (int) $queryParams['person'];
+                    }
+                }
+            }
+
             preg_match('/\b((?:IN)?VIS-[A-Z0-9]+|PRESS-[A-Z0-9]+|VIP-[A-Z0-9]+|VENDOR-[A-Z0-9]+)\b/i', $trimmed, $matches);
             $trimmed = $matches[1] ?? $trimmed;
         }
 
         $this->lookupCode = strtoupper($trimmed);
-        $this->lookup();
+        $this->lookup($personIndex);
     }
 
     /** @return array<string> */
@@ -120,7 +131,7 @@ class Index extends Component
 
     // ── Lookup ────────────────────────────────────────────────────────────────
 
-    public function lookup(): void
+    public function lookup(?int $personIndex = null): void
     {
         $this->validate(['lookupCode' => ['required', 'string']]);
 
@@ -154,7 +165,7 @@ class Index extends Component
 
         if ($visitors->count() === 1) {
             $this->foundMember = null;
-            $this->setFoundVisitor($visitors->first());
+            $this->setFoundVisitor($visitors->first(), $personIndex);
             $this->matchedVisitors = [];
         } elseif ($visitors->count() > 1) {
             $this->foundMember = null;
@@ -191,7 +202,7 @@ class Index extends Component
         $this->matchedVisitors = [];
     }
 
-    private function setFoundVisitor(ExhibitionVisitor $visitor): void
+    private function setFoundVisitor(ExhibitionVisitor $visitor, ?int $personIndex = null): void
     {
         $this->foundVisitor = [
             'registration_code' => $visitor->registration_code,
@@ -204,6 +215,7 @@ class Index extends Component
             'status_label' => $visitor->status->label(),
             'status_color' => $visitor->status->color(),
             'additional_persons' => is_array($visitor->additional_persons) ? $visitor->additional_persons : [],
+            'scanned_person_index' => $personIndex,
         ];
     }
 
