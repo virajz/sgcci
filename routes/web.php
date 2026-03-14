@@ -67,11 +67,11 @@ Route::get('/', function () {
 
 Route::redirect('/home', '/')->name('home');
 
-Route::get('exhibitions/{exhibition}/product-profile', ProductProfileSelection::class)->name('exhibitions.product-profile.select');
-Route::get('exhibitions/{exhibition}/booking', Booking::class)->name('exhibitions.booking.show');
-Route::get('exhibitions/{exhibition}/booking/confirmation', Confirmation::class)->name('exhibitions.booking.confirmation');
-Route::get('exhibitions/{exhibition}/booking/thank-you/{bookingCode}', ThankYou::class)->name('exhibitions.booking.thank-you');
-Route::get('edit-booking', EditBooking::class)->name('exhibitions.booking.edit');
+Route::get('exhibitions/{exhibition}/product-profile', fn () => redirect()->route('welcome'))->name('exhibitions.product-profile.select');
+Route::get('exhibitions/{exhibition}/booking', fn () => redirect()->route('welcome'))->name('exhibitions.booking.show');
+Route::get('exhibitions/{exhibition}/booking/confirmation', fn () => redirect()->route('welcome'))->name('exhibitions.booking.confirmation');
+Route::get('exhibitions/{exhibition}/booking/thank-you/{bookingCode}', fn () => redirect()->route('welcome'))->name('exhibitions.booking.thank-you');
+Route::get('edit-booking', fn () => redirect()->route('welcome'))->name('exhibitions.booking.edit');
 Route::post('booking/upload-logo', [BookingController::class, 'uploadLogo'])->name('booking.upload-logo');
 Route::get('booking/download-logo/{path}', [BookingController::class, 'downloadLogo'])->name('booking.download-logo')->where('path', '.*');
 
