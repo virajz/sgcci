@@ -258,6 +258,12 @@
                                                         icon="chat-bubble-left-ellipsis" iconVariant="outline"
                                                         x-on:click="smsBookingId = {{ $booking->id }}; smsBookingName = '{{ addslashes($booking->brand_name) }}'; $flux.modal('send-sms-confirm').show()" />
                                                 </flux:tooltip>
+                                                <flux:tooltip content="Change login email">
+                                                    <flux:button size="sm" variant="ghost"
+                                                        icon="at-symbol" iconVariant="outline"
+                                                        wire:click="openChangeEmailModal({{ $booking->id }}, '{{ addslashes($booking->brand_name) }}')"
+                                                        :loading="false" />
+                                                </flux:tooltip>
                                             @endif
                                             <flux:tooltip content="View badges">
                                                 <flux:button size="sm" variant="ghost" icon="identification"
@@ -478,6 +484,36 @@
                 </flux:modal.close>
                 <flux:button wire:click="deleteExhibitor" variant="danger" icon="trash" iconVariant="outline">
                     Delete
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    {{-- Change Email Modal --}}
+    <flux:modal wire:model="showChangeEmailModal" class="w-full max-w-md">
+        <div class="space-y-5">
+            <div>
+                <flux:heading size="lg">Change Login Email</flux:heading>
+                <flux:text class="mt-2">
+                    Change the login email for <strong>{{ $changeEmailBookingName }}</strong>.
+                    A new password will be generated and sent via SMS with the updated credentials.
+                </flux:text>
+            </div>
+
+            <flux:field>
+                <flux:label>New Email Address</flux:label>
+                <flux:input type="email" wire:model="changeEmailNewEmail" placeholder="new@example.com" autofocus />
+                <flux:error name="changeEmailNewEmail" />
+            </flux:field>
+
+            <div class="flex justify-end gap-2 pt-2">
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
+                <flux:button variant="primary" icon="at-symbol" wire:click="changeExhibitorEmail"
+                    wire:loading.attr="disabled">
+                    <span wire:loading.remove wire:target="changeExhibitorEmail">Update Email & Send SMS</span>
+                    <span wire:loading wire:target="changeExhibitorEmail">Updating...</span>
                 </flux:button>
             </div>
         </div>

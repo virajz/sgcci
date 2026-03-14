@@ -65,6 +65,14 @@ class Index extends Component
 
     public bool $showAddExhibitorModal = false;
 
+    public bool $showChangeEmailModal = false;
+
+    public ?int $changeEmailBookingId = null;
+
+    public string $changeEmailBookingName = '';
+
+    public string $changeEmailNewEmail = '';
+
     /** @var array<string, bool> */
     public array $defaultColumns = [
         'booking_code' => true,
@@ -414,6 +422,57 @@ class Index extends Component
         $this->deleteExhibitorName = '';
 
         Flux::toast(heading: 'Deleted', variant: 'success', text: 'Exhibitor has been deleted.');
+    }
+
+    public function openChangeEmailModal(int $bookingId, string $brandName): void
+    {
+        $this->changeEmailBookingId = $bookingId;
+        $this->changeEmailBookingName = $brandName;
+        $this->changeEmailNewEmail = '';
+        $this->showChangeEmailModal = true;
+    }
+
+    public function changeExhibitorEmail(): void
+    {
+        if (! Auth::user()->isAdmin()) {
+            Flux::toast(heading: 'Unauthorized', variant: 'danger', text: 'Only admins can change exhibitor emails.');
+            $this->showChangeEmailModal = false;
+
+            return;
+        }
+
+        $this->validate([
+            'changeEmailNewEmail' => ['required', 'email', 'max:255'],
+        ]);
+
+        $booking = Booking::with('exhibition', 'exhibitorUser')->findOrFail($this->changeEmailBookingId);
+
+        $newEmail = $this->changeEmailNewEmail;
+        $plainPassword = 'SGCCI@'.strtoupper(Str::random(6));
+
+        // Update the booking email
+        $booking->update([
+            'email' => $newEmail,
+            'login_password' => $plainPassword,
+        ]);
+
+        // Update or create the user account with the new email and a fresh password
+        if ($booking->exhibitorUser) {
+            $booking->exhibitorUser->update([
+                'email' => $newEmail,
+                'password' => Hash::make($plainPassword),
+            ]);
+        }
+
+        $booking->refresh();
+        $this->dispatchCredentialsSms($booking);
+
+        $this->showChangeEmailModal = false;
+        $this->changeEmailBookingId = null;
+        $this->changeEmailBookingName = '';
+        $this->changeEmailNewEmail = '';
+
+        Flux::toast(heading: 'Email Updated!', variant: 'success', text: "Email changed and new credentials sent via SMS to {$booking->brand_name}.");
     }
 
     public function openAddExhibitorModal(): void
