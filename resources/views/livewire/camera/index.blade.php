@@ -47,10 +47,21 @@
                     video.addEventListener('loadedmetadata', resolve, { once: true });
                 });
                 await video.play();
+                // Always use canvas-based loop so we can apply contrast+grayscale
+                // which helps with coloured QR borders (e.g. dark blue)
                 'BarcodeDetector' in window ? this.scanLoopNative(video) : this.scanLoopJsQR(video);
             } catch (err) {
                 console.error('[Camera] Error:', err);
             }
+        },
+
+        // Draw video to canvas with contrast+grayscale filter to normalise coloured borders
+        drawFiltered(video) {
+            this.canvas.width = video.videoWidth;
+            this.canvas.height = video.videoHeight;
+            this.ctx.filter = 'grayscale(1) contrast(1.8)';
+            this.ctx.drawImage(video, 0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.filter = 'none';
         },
 
         handleDetected(raw) {
@@ -68,7 +79,13 @@
             this.scanInterval = setInterval(async () => {
                 if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
                 try {
-                    const codes = await detector.detect(video);
+                    // First try raw video (fast path)
+                    let codes = await detector.detect(video);
+                    if (codes.length === 0) {
+                        // Retry with filtered canvas for coloured borders
+                        this.drawFiltered(video);
+                        codes = await detector.detect(this.canvas);
+                    }
                     if (codes.length > 0) this.handleDetected(codes[0].rawValue);
                 } catch (e) {}
             }, 250);
@@ -78,9 +95,7 @@
             const tick = () => {
                 this.animationFrame = requestAnimationFrame(tick);
                 if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
-                this.canvas.width = video.videoWidth;
-                this.canvas.height = video.videoHeight;
-                this.ctx.drawImage(video, 0, 0, this.canvas.width, this.canvas.height);
+                this.drawFiltered(video);
                 const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
                 const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
                 if (code?.data) this.handleDetected(code.data);
