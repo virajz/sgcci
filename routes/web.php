@@ -142,6 +142,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('inquiries/{booking}', InquiriesShow::class)->name('inquiries.show');
         Route::get('inquiries/{booking}/edit', AdminEditBooking::class)->name('inquiries.edit');
         Route::get('visitors', VisitorsIndex::class)->name('visitors.index');
+        Route::get('visitors/add', \App\Livewire\Admin\Visitors\Add::class)->name('visitors.add');
         Route::get('visitors/{visitor}', VisitorsShow::class)->name('visitors.show');
         Route::get('walk-in-visitors', WalkInVisitorsIndex::class)->name('walk-in-visitors.index');
         Route::get('scans', ScansIndex::class)->name('scans.index');
