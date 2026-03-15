@@ -1,7 +1,10 @@
 <div class="space-y-6">
     <div class="flex items-center justify-between mb-6">
         <flux:heading size="xl">Visitors</flux:heading>
-        <livewire:admin.visitors.export-visitors />
+        <div class="flex items-center gap-2">
+            <flux:button icon="user-plus" href="{{ route('admin.visitors.add') }}" wire:navigate>Add Visitors</flux:button>
+            <livewire:admin.visitors.export-visitors />
+        </div>
     </div>
 
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
