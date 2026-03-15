@@ -37,11 +37,6 @@ use App\Livewire\Admin\Visitors\Show as VisitorsShow;
 use App\Livewire\Admin\WalkInVisitors\Index as WalkInVisitorsIndex;
 use App\Livewire\Admin\WhatsAppWebhookLogs\Index as WhatsAppWebhookLogsIndex;
 use App\Livewire\Dashboard;
-use App\Livewire\Exhibitions\Booking;
-use App\Livewire\Exhibitions\Confirmation;
-use App\Livewire\Exhibitions\EditBooking;
-use App\Livewire\Exhibitions\ProductProfileSelection;
-use App\Livewire\Exhibitions\ThankYou;
 use App\Livewire\Exhibitions\VisitorsRegistration;
 use App\Livewire\Exhibitions\VisitorThankYou;
 use App\Livewire\Exhibitor\Badges as ExhibitorBadges;
@@ -195,7 +190,11 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('security-desk')->name('security-desk.')->middleware('security_desk')->group(function () {
         Route::get('/', \App\Livewire\SecurityDesk\Index::class)->name('index');
     });
+
 });
+
+// Camera QR scanner — public, no login required
+Route::get('camera', \App\Livewire\Camera\Index::class)->name('camera');
 
 // Walk-in visitor badge routes (auth required, controller handles role check)
 Route::middleware(['auth'])->group(function () {
