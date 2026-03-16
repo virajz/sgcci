@@ -25,7 +25,12 @@
                         @foreach ($exhibitions as $exhibition)
                             <flux:table.row :key="$exhibition->id">
                                 <flux:table.cell>
-                                    <div class="font-semibold text-black dark:text-white">{{ $exhibition->title }}</div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-semibold text-black dark:text-white">{{ $exhibition->title }}</span>
+                                        @if ($exhibition->registration_closed)
+                                            <flux:badge color="red" size="sm">Closed</flux:badge>
+                                        @endif
+                                    </div>
                                 </flux:table.cell>
 
                                 <flux:table.cell>
@@ -48,13 +53,22 @@
                                 </flux:table.cell>
 
                                 <flux:table.cell>
-                                    <div class="flex gap-2">
+                                    <div class="flex flex-wrap gap-2">
                                         <flux:button size="sm" variant="ghost" icon="qr-code"
                                             wire:click="showQrCode({{ $exhibition->id }})">QR Code</flux:button>
                                         <flux:button size="sm" variant="ghost" icon="link"
                                             x-data="{ url: '{{ url('/' . $exhibition->slug . '/visitors-registration') }}' }"
                                             x-on:click="navigator.clipboard.writeText(url); $flux.toast('Registration link copied to clipboard')">
                                             Copy Link
+                                        </flux:button>
+                                        <flux:button
+                                            size="sm"
+                                            variant="ghost"
+                                            :icon="$exhibition->registration_closed ? 'lock-open' : 'lock-closed'"
+                                            :color="$exhibition->registration_closed ? 'green' : 'amber'"
+                                            wire:click="confirmToggleRegistration({{ $exhibition->id }})"
+                                        >
+                                            {{ $exhibition->registration_closed ? 'Open Reg.' : 'Close Reg.' }}
                                         </flux:button>
                                         <flux:button size="sm" variant="ghost" icon="pencil"
                                             wire:click="openEditModal({{ $exhibition->id }})">Edit</flux:button>
@@ -218,6 +232,32 @@
                 <flux:button variant="danger" wire:click="deleteExhibition">Delete</flux:button>
                 <flux:button variant="ghost" wire:click="$set('showDeleteModal', false)">Cancel</flux:button>
             </div>
+        </div>
+    </flux:modal>
+
+    {{-- Toggle Registration Modal --}}
+    <flux:modal wire:model="showToggleRegistrationModal">
+        @php $toggleExhibition = $exhibitionToToggleRegistration ? \App\Models\Exhibition::find($exhibitionToToggleRegistration) : null; @endphp
+        <div class="space-y-6">
+            @if ($toggleExhibition?->registration_closed)
+                <flux:heading size="lg">Re-open Visitor Registration</flux:heading>
+                <flux:text>
+                    Are you sure you want to re-open visitor registration for <strong>{{ $toggleExhibition->title }}</strong>? Visitors will be able to register again.
+                </flux:text>
+                <div class="flex gap-2">
+                    <flux:button variant="primary" wire:click="toggleRegistrationClosed">Re-open Registration</flux:button>
+                    <flux:button variant="ghost" wire:click="$set('showToggleRegistrationModal', false)">Cancel</flux:button>
+                </div>
+            @else
+                <flux:heading size="lg">Close Visitor Registration</flux:heading>
+                <flux:text>
+                    Are you sure you want to close visitor registration for <strong>{{ $toggleExhibition?->title }}</strong>? Visitors will see a "Thank You" message instead of the registration form.
+                </flux:text>
+                <div class="flex gap-2">
+                    <flux:button variant="danger" wire:click="toggleRegistrationClosed">Close Registration</flux:button>
+                    <flux:button variant="ghost" wire:click="$set('showToggleRegistrationModal', false)">Cancel</flux:button>
+                </div>
+            @endif
         </div>
     </flux:modal>
 

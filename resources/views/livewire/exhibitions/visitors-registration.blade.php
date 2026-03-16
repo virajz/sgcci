@@ -22,6 +22,24 @@
             </div>
         </section>
 
+        {{-- Registration Closed --}}
+        @if ($exhibition->registration_closed)
+            <div class="flex flex-col items-center justify-center py-12 space-y-4 text-center">
+                <div class="flex items-center justify-center w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30">
+                    <flux:icon name="heart" class="size-8 text-amber-500" />
+                </div>
+                <div class="space-y-2">
+                    <flux:heading size="lg" class="font-bold">Thank You for the Overwhelming Response!</flux:heading>
+                    <flux:text class="max-w-sm text-zinc-500 dark:text-zinc-400">
+                        Visitor registration for this exhibition is now closed. We're truly grateful for the incredible support and enthusiasm from all of you.
+                    </flux:text>
+                    <flux:text class="max-w-sm text-zinc-500 dark:text-zinc-400">
+                        We look forward to seeing you at our next exhibitions. Stay tuned!
+                    </flux:text>
+                </div>
+            </div>
+        @else
+
         {{-- Step Indicator --}}
 
         <div class="flex items-center gap-2">
@@ -294,6 +312,8 @@
             </form>
         </div>
 
+
+        @endif
 
     </flux:main>
 </div>

@@ -24,11 +24,15 @@ class Index extends Component
 
     public bool $showDeleteModal = false;
 
+    public bool $showToggleRegistrationModal = false;
+
     public bool $showQrModal = false;
 
     public ?int $exhibitionToEdit = null;
 
     public ?int $exhibitionToDelete = null;
+
+    public ?int $exhibitionToToggleRegistration = null;
 
     public string $qrCodeSvg = '';
 
@@ -131,6 +135,35 @@ class Index extends Component
 
         $this->showEditModal = false;
         $this->reset(['exhibitionToEdit', 'title', 'description', 'startDate', 'endDate', 'entryType', 'entryAmount']);
+    }
+
+    public function confirmToggleRegistration(int $exhibitionId): void
+    {
+        $this->exhibitionToToggleRegistration = $exhibitionId;
+        $this->showToggleRegistrationModal = true;
+    }
+
+    public function toggleRegistrationClosed(): void
+    {
+        if (! $this->exhibitionToToggleRegistration) {
+            return;
+        }
+
+        $exhibition = Exhibition::findOrFail($this->exhibitionToToggleRegistration);
+        $exhibition->update(['registration_closed' => ! $exhibition->registration_closed]);
+
+        $nowClosed = $exhibition->fresh()->registration_closed;
+
+        Flux::toast(
+            heading: $nowClosed ? 'Registration Closed' : 'Registration Opened',
+            variant: 'success',
+            text: $nowClosed
+                ? 'Visitor registration has been closed.'
+                : 'Visitor registration is now open.'
+        );
+
+        $this->showToggleRegistrationModal = false;
+        $this->exhibitionToToggleRegistration = null;
     }
 
     public function confirmDelete(int $exhibitionId): void

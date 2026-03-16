@@ -22,6 +22,7 @@ class Exhibition extends Model
         'end_date',
         'entry_type',
         'entry_amount',
+        'registration_closed',
         'created_by',
     ];
 
@@ -32,6 +33,7 @@ class Exhibition extends Model
             'end_date' => 'date',
             'entry_type' => EntryType::class,
             'entry_amount' => 'decimal:2',
+            'registration_closed' => 'boolean',
         ];
     }
 
