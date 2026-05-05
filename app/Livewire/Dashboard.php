@@ -4,11 +4,15 @@ namespace App\Livewire;
 
 use App\BookingStatus;
 use App\Models\Booking;
+use App\Models\Exhibition;
 use App\Models\ExhibitionVisitor;
 use App\Models\ExhibitorLead;
 use App\Models\WhatsAppInquiry;
 use App\VisitorRegistrationStatus;
+use Illuminate\Support\Collection;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 #[Layout('components.layouts.app')]
@@ -16,6 +20,9 @@ class Dashboard extends Component
 {
     // Total stalls available in the exhibition (based on the map)
     private const TOTAL_STALLS = 104;
+
+    #[Url(as: 'exhibition', except: '')]
+    public string $exhibitionId = '';
 
     public function mount(): void
     {
@@ -28,16 +35,30 @@ class Dashboard extends Component
         }
     }
 
+    /**
+     * @return Collection<int, Exhibition>
+     */
+    #[Computed]
+    public function exhibitions(): Collection
+    {
+        return Exhibition::query()->orderBy('start_date', 'desc')->get(['id', 'title']);
+    }
+
+    private function selectedExhibitionId(): ?int
+    {
+        return $this->exhibitionId !== '' ? (int) $this->exhibitionId : null;
+    }
+
     public function getAvailableStallsProperty(): int
     {
-        $exhibition = \App\Models\Exhibition::first();
+        $exhibitionId = $this->selectedExhibitionId() ?? Exhibition::query()->value('id');
 
-        if (! $exhibition) {
+        if (! $exhibitionId) {
             return self::TOTAL_STALLS;
         }
 
         // Get all stalls that are currently booked (not rejected, cancelled, or expired)
-        $bookedStallsCount = Booking::where('exhibition_id', $exhibition->id)
+        $bookedStallsCount = Booking::where('exhibition_id', $exhibitionId)
             ->whereNotIn('status', [
                 BookingStatus::Rejected->value,
                 BookingStatus::Cancelled->value,
@@ -50,7 +71,7 @@ class Dashboard extends Component
             ->count();
 
         // Also count manual blocks
-        $manualBlockCount = Booking::where('exhibition_id', $exhibition->id)
+        $manualBlockCount = Booking::where('exhibition_id', $exhibitionId)
             ->where('is_manual_block', true)
             ->get()
             ->flatMap(fn ($booking) => $booking->selected_stalls)
@@ -64,7 +85,9 @@ class Dashboard extends Component
     {
         $threeDaysFromNow = now()->addDays(3);
 
-        return Booking::where('status', BookingStatus::PaymentPending)
+        return Booking::query()
+            ->when($this->selectedExhibitionId(), fn ($q, $id) => $q->where('exhibition_id', $id))
+            ->where('status', BookingStatus::PaymentPending)
             ->where('is_manual_block', false)
             ->whereNotNull('payment_due_at')
             ->where('payment_due_at', '<=', $threeDaysFromNow)
@@ -74,13 +97,13 @@ class Dashboard extends Component
 
     public function getBookedStallsProperty(): int
     {
-        $exhibition = \App\Models\Exhibition::first();
+        $exhibitionId = $this->selectedExhibitionId() ?? Exhibition::query()->value('id');
 
-        if (! $exhibition) {
+        if (! $exhibitionId) {
             return 0;
         }
 
-        return Booking::where('exhibition_id', $exhibition->id)
+        return Booking::where('exhibition_id', $exhibitionId)
             ->where('status', BookingStatus::PaymentCompleted)
             ->where('is_manual_block', false)
             ->count();
@@ -88,26 +111,35 @@ class Dashboard extends Component
 
     public function getPendingReviewsProperty(): int
     {
-        return Booking::where('status', BookingStatus::PendingApproval)
+        return Booking::query()
+            ->when($this->selectedExhibitionId(), fn ($q, $id) => $q->where('exhibition_id', $id))
+            ->where('status', BookingStatus::PendingApproval)
             ->where('is_manual_block', false)
             ->count();
     }
 
     public function getVisitorsTodayProperty(): int
     {
-        return ExhibitionVisitor::where('status', VisitorRegistrationStatus::Confirmed)
+        return ExhibitionVisitor::query()
+            ->when($this->selectedExhibitionId(), fn ($q, $id) => $q->where('exhibition_id', $id))
+            ->where('status', VisitorRegistrationStatus::Confirmed)
             ->whereDate('created_at', today())
             ->count();
     }
 
     public function getVisitorsTotalProperty(): int
     {
-        return ExhibitionVisitor::where('status', VisitorRegistrationStatus::Confirmed)->count();
+        return ExhibitionVisitor::query()
+            ->when($this->selectedExhibitionId(), fn ($q, $id) => $q->where('exhibition_id', $id))
+            ->where('status', VisitorRegistrationStatus::Confirmed)
+            ->count();
     }
 
     public function getVisitorPaymentTodayProperty(): string
     {
-        $amount = ExhibitionVisitor::where('status', VisitorRegistrationStatus::Confirmed)
+        $amount = ExhibitionVisitor::query()
+            ->when($this->selectedExhibitionId(), fn ($q, $id) => $q->where('exhibition_id', $id))
+            ->where('status', VisitorRegistrationStatus::Confirmed)
             ->whereDate('created_at', today())
             ->sum('payment_amount');
 
@@ -116,7 +148,9 @@ class Dashboard extends Component
 
     public function getVisitorPaymentTotalProperty(): string
     {
-        $amount = ExhibitionVisitor::where('status', VisitorRegistrationStatus::Confirmed)
+        $amount = ExhibitionVisitor::query()
+            ->when($this->selectedExhibitionId(), fn ($q, $id) => $q->where('exhibition_id', $id))
+            ->where('status', VisitorRegistrationStatus::Confirmed)
             ->sum('payment_amount');
 
         return '₹'.number_format($amount, 0);
@@ -125,11 +159,16 @@ class Dashboard extends Component
     /** @return array{total_entered: int, today: int, inside: int, daily: array<string, int>} */
     public function getScanStatsProperty(): array
     {
-        $totalEntered = ExhibitionVisitor::whereNotNull('entered_at')->count();
-        $totalExited = ExhibitionVisitor::whereNotNull('exited_at')->count();
-        $today = ExhibitionVisitor::whereNotNull('entered_at')->whereDate('entered_at', today())->count();
+        $exhibitionId = $this->selectedExhibitionId();
 
-        $rows = ExhibitionVisitor::query()
+        $base = fn () => ExhibitionVisitor::query()
+            ->when($exhibitionId, fn ($q, $id) => $q->where('exhibition_id', $id));
+
+        $totalEntered = $base()->whereNotNull('entered_at')->count();
+        $totalExited = $base()->whereNotNull('exited_at')->count();
+        $today = $base()->whereNotNull('entered_at')->whereDate('entered_at', today())->count();
+
+        $rows = $base()
             ->whereNotNull('entered_at')
             ->where('entered_at', '>=', now()->subDays(6)->startOfDay())
             ->selectRaw('DATE(entered_at) as day, COUNT(*) as total')

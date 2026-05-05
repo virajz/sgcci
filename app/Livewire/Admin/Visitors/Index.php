@@ -3,10 +3,13 @@
 namespace App\Livewire\Admin\Visitors;
 
 use App\Jobs\SendWhatsAppCampaign;
+use App\Models\Exhibition;
 use App\Models\ExhibitionVisitor;
 use App\VisitorRegistrationStatus;
 use Flux\DateRange;
 use Flux\Flux;
+use Illuminate\Support\Collection;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -21,6 +24,8 @@ class Index extends Component
     public string $statusFilter = '';
 
     public string $invitedFilter = '';
+
+    public string $exhibitionFilter = '';
 
     public ?DateRange $dateRange = null;
 
@@ -52,6 +57,20 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function updatingExhibitionFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    /**
+     * @return Collection<int, Exhibition>
+     */
+    #[Computed]
+    public function exhibitions(): Collection
+    {
+        return Exhibition::query()->orderBy('start_date', 'desc')->get(['id', 'title']);
+    }
+
     public function updatingDateRange(): void
     {
         $this->resetPage();
@@ -70,6 +89,7 @@ class Index extends Component
     public function clearFilters(): void
     {
         $this->invitedFilter = '';
+        $this->exhibitionFilter = '';
         $this->dateRange = null;
         $this->entryDate = '';
         $this->resetPage();
@@ -77,7 +97,10 @@ class Index extends Component
 
     public function hasActiveFilters(): bool
     {
-        return $this->invitedFilter !== '' || $this->dateRange !== null || $this->entryDate !== '';
+        return $this->invitedFilter !== ''
+            || $this->exhibitionFilter !== ''
+            || $this->dateRange !== null
+            || $this->entryDate !== '';
     }
 
     public function confirmDelete(int $visitorId): void
@@ -221,6 +244,9 @@ class Index extends Component
             })
             ->when($this->statusFilter, function ($query) {
                 $query->where('status', $this->statusFilter);
+            })
+            ->when($this->exhibitionFilter !== '', function ($query) {
+                $query->where('exhibition_id', (int) $this->exhibitionFilter);
             })
             ->when($this->invitedFilter === 'invited', function ($query) {
                 $query->whereNotNull('invited_by_booking_id');
