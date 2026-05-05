@@ -29,9 +29,12 @@ use App\Livewire\Admin\Members\Import as MembersImport;
 use App\Livewire\Admin\Members\Index as MembersIndex;
 use App\Livewire\Admin\Members\Show as MembersShow;
 use App\Livewire\Admin\Scans\Index as ScansIndex;
+use App\Livewire\Admin\Segments\Index as SegmentsIndex;
+use App\Livewire\Admin\Segments\SubSegments as SegmentsSubSegments;
 use App\Livewire\Admin\StaffMembers\Index as StaffMembersIndex;
 use App\Livewire\Admin\SupportTickets\Index as SupportTicketsIndex;
 use App\Livewire\Admin\SupportTickets\Show as SupportTicketsShow;
+use App\Livewire\Admin\Visitors\Add;
 use App\Livewire\Admin\Visitors\Index as VisitorsIndex;
 use App\Livewire\Admin\Visitors\Show as VisitorsShow;
 use App\Livewire\Admin\WalkInVisitors\Index as WalkInVisitorsIndex;
@@ -43,6 +46,7 @@ use App\Livewire\Exhibitor\Badges as ExhibitorBadges;
 use App\Livewire\Exhibitor\CompanyProfile as ExhibitorCompanyProfile;
 use App\Livewire\Exhibitor\InvitedGuests as ExhibitorInvitedGuests;
 use App\Livewire\Exhibitor\Leads as ExhibitorLeads;
+use App\Livewire\FrontDesk\Index;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -142,11 +146,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('inquiries/{booking}', InquiriesShow::class)->name('inquiries.show');
         Route::get('inquiries/{booking}/edit', AdminEditBooking::class)->name('inquiries.edit');
         Route::get('visitors', VisitorsIndex::class)->name('visitors.index');
-        Route::get('visitors/add', \App\Livewire\Admin\Visitors\Add::class)->name('visitors.add');
+        Route::get('visitors/add', Add::class)->name('visitors.add');
         Route::get('visitors/{visitor}', VisitorsShow::class)->name('visitors.show');
         Route::get('walk-in-visitors', WalkInVisitorsIndex::class)->name('walk-in-visitors.index');
         Route::get('scans', ScansIndex::class)->name('scans.index');
         Route::get('staff-members', StaffMembersIndex::class)->name('staff-members.index');
+        Route::get('segments', SegmentsIndex::class)->name('segments.index');
+        Route::get('segments/{segment}/sub-segments', SegmentsSubSegments::class)->name('segments.sub-segments');
         Route::get('support-tickets', SupportTicketsIndex::class)->name('support-tickets.index');
         Route::get('support-tickets/{ticket}', SupportTicketsShow::class)->name('support-tickets.show');
         Route::get('analytics/exhibitor-leads', AnalyticsExhibitorLeads::class)->name('analytics.exhibitor-leads');
@@ -184,18 +190,18 @@ Route::middleware(['auth'])->group(function () {
 
     // Front desk routes
     Route::prefix('front-desk')->name('front-desk.')->middleware('front_desk')->group(function () {
-        Route::get('/', \App\Livewire\FrontDesk\Index::class)->name('index');
+        Route::get('/', Index::class)->name('index');
     });
 
     // Security desk routes
     Route::prefix('security-desk')->name('security-desk.')->middleware('security_desk')->group(function () {
-        Route::get('/', \App\Livewire\SecurityDesk\Index::class)->name('index');
+        Route::get('/', App\Livewire\SecurityDesk\Index::class)->name('index');
     });
 
 });
 
 // Camera QR scanner — public, no login required
-Route::get('camera', \App\Livewire\Camera\Index::class)->name('camera');
+Route::get('camera', App\Livewire\Camera\Index::class)->name('camera');
 
 // Walk-in visitor badge routes (auth required, controller handles role check)
 Route::middleware(['auth'])->group(function () {

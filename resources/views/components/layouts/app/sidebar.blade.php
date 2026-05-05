@@ -72,6 +72,12 @@
                     </flux:navlist.item>
                 </flux:navlist.group>
 
+                <flux:navlist.group :heading="__('Masters')" class="grid">
+                    <flux:navlist.item icon="tag" :href="route('admin.segments.index')"
+                        :current="request()->routeIs('admin.segments.*')" wire:navigate>{{ __('Segments') }}
+                    </flux:navlist.item>
+                </flux:navlist.group>
+
                 <flux:navlist.group :heading="__('Team')" class="grid">
                     <flux:navlist.item icon="users" :href="route('admin.staff-members.index')"
                         :current="request()->routeIs('admin.staff-members.*')" wire:navigate>{{ __('Staff Members') }}

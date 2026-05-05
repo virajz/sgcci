@@ -8,7 +8,11 @@ use App\Jobs\SendSmsMessage;
 use App\Jobs\SendWhatsAppCampaign;
 use App\Models\Exhibition;
 use App\Models\ExhibitionVisitor;
+use App\Models\Segment;
+use App\Models\SubSegment;
 use App\VisitorRegistrationStatus;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -39,7 +43,9 @@ class VisitorsRegistration extends Component
 
     public string $email = '';
 
-    public string $segment = '';
+    public ?int $segmentId = null;
+
+    public ?int $subSegmentId = null;
 
     /**
      * @var array<int, array{name: string, phone_number: string}>
@@ -100,6 +106,36 @@ class VisitorsRegistration extends Component
     public function updatedState(): void
     {
         $this->city = '';
+    }
+
+    public function updatedSegmentId(): void
+    {
+        $this->subSegmentId = null;
+    }
+
+    /**
+     * @return Collection<int, Segment>
+     */
+    #[Computed]
+    public function segments(): Collection
+    {
+        return Segment::active()->ordered()->get(['id', 'name']);
+    }
+
+    /**
+     * @return Collection<int, SubSegment>
+     */
+    #[Computed]
+    public function subSegments(): Collection
+    {
+        if (! $this->segmentId) {
+            return collect();
+        }
+
+        return SubSegment::active()
+            ->where('segment_id', $this->segmentId)
+            ->ordered()
+            ->get(['id', 'segment_id', 'name']);
     }
 
     /**
@@ -196,6 +232,9 @@ class VisitorsRegistration extends Component
             ->whereNull('entered_at')
             ->first();
 
+        $segmentName = $this->segmentId ? Segment::find($this->segmentId)?->name : null;
+        $subSegmentName = $this->subSegmentId ? SubSegment::find($this->subSegmentId)?->name : null;
+
         if ($existingIncomplete) {
             $existingIncomplete->update([
                 'name' => $this->name,
@@ -204,7 +243,8 @@ class VisitorsRegistration extends Component
                 'state' => $this->state,
                 'city' => $this->city,
                 'email' => $this->email ?: null,
-                'business_segment' => $this->segment ?: null,
+                'business_segment' => $segmentName,
+                'sub_business_segment' => $subSegmentName,
                 'additional_persons' => ! empty($additionalPersonsData) ? $additionalPersonsData : null,
                 'source' => $this->source,
                 'payment_amount' => $totalAmount,
@@ -229,8 +269,8 @@ class VisitorsRegistration extends Component
                 'state' => $this->state,
                 'city' => $this->city,
                 'email' => $this->email ?: null,
-                'business_segment' => $this->segment ?: null,
-                'sub_business_segment' => null,
+                'business_segment' => $segmentName,
+                'sub_business_segment' => $subSegmentName,
                 'additional_persons' => ! empty($additionalPersonsData) ? $additionalPersonsData : null,
                 'source' => $this->source,
                 'payment_amount' => $totalAmount,
@@ -308,7 +348,22 @@ class VisitorsRegistration extends Component
             'state' => ['required', 'string', 'in:'.implode(',', array_keys(static::getStateCityMap()))],
             'city' => ['required', 'string'],
             'email' => ['nullable', 'email', 'max:255'],
-            'segment' => ['nullable', 'string', 'in:Business,Job (Working Professional),Student,Housewife,Other'],
+            'segmentId' => ['nullable', 'integer', 'exists:segments,id'],
+            'subSegmentId' => [
+                'nullable',
+                'integer',
+                function (string $_attribute, mixed $value, \Closure $fail): void {
+                    if (! $value) {
+                        return;
+                    }
+                    $exists = SubSegment::where('id', $value)
+                        ->where('segment_id', $this->segmentId)
+                        ->exists();
+                    if (! $exists) {
+                        $fail('Please choose a sub-segment that belongs to the selected segment.');
+                    }
+                },
+            ],
         ], [
             'phoneNumber.required' => 'Please enter your phone number.',
             'phoneNumber.unique' => 'This phone number is already registered for this exhibition.',
@@ -353,7 +408,7 @@ class VisitorsRegistration extends Component
                         ->where('exhibition_id', $this->exhibitionId)
                         ->where('status', VisitorRegistrationStatus::Confirmed->value)
                         ->whereNull('entered_at')
-                        ->where(function (\Illuminate\Database\Eloquent\Builder $query) use ($phone): void {
+                        ->where(function (Builder $query) use ($phone): void {
                             $query->where('phone_number', $phone)
                                 ->orWhereRaw(
                                     "EXISTS (SELECT 1 FROM jsonb_array_elements(additional_persons::jsonb) AS p WHERE p->>'phone_number' = ?)",

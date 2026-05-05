@@ -118,6 +118,7 @@
                         <flux:field>
                             <flux:label>State <span class="text-red-500">*</span></flux:label>
                             <flux:select variant="listbox" searchable wire:model.live="state" placeholder="Select State">
+                                <x-slot name="empty"></x-slot>
                                 @foreach ($states as $stateOption)
                                     <flux:select.option value="{{ $stateOption }}">{{ $stateOption }}
                                     </flux:select.option>
@@ -128,7 +129,14 @@
 
                         <flux:field>
                             <flux:label>City <span class="text-red-500">*</span></flux:label>
-                            <flux:select variant="listbox" searchable wire:model="city" placeholder="Select City">
+                            <flux:select
+                                variant="listbox"
+                                searchable
+                                wire:model="city"
+                                placeholder="{{ $state ? 'Select City' : 'Choose a state first' }}"
+                                :disabled="! $state || $this->cities === []"
+                            >
+                                <x-slot name="empty"></x-slot>
                                 @foreach ($this->cities as $cityOption)
                                     <flux:select.option value="{{ $cityOption }}">{{ $cityOption }}
                                     </flux:select.option>
@@ -153,26 +161,43 @@
                         </flux:field>
                     </div>
 
-                    {{-- Segment + Email --}}
+                    {{-- Segment + Sub-segment --}}
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <flux:field>
                             <flux:label>Segment</flux:label>
-                            <flux:select variant="listbox" wire:model="segment" placeholder="Select Segment">
-                                <flux:select.option value="Business">Business</flux:select.option>
-                                <flux:select.option value="Job (Working Professional)">Job (Working Professional)</flux:select.option>
-                                <flux:select.option value="Student">Student</flux:select.option>
-                                <flux:select.option value="Housewife">Housewife</flux:select.option>
-                                <flux:select.option value="Other">Other</flux:select.option>
+                            <flux:select variant="listbox" searchable wire:model.live="segmentId" placeholder="Select Segment">
+                                <x-slot name="empty"></x-slot>
+                                @foreach ($this->segments as $segment)
+                                    <flux:select.option :value="$segment->id">{{ $segment->name }}</flux:select.option>
+                                @endforeach
                             </flux:select>
-                            <flux:error name="segment" />
+                            <flux:error name="segmentId" />
                         </flux:field>
 
                         <flux:field>
-                            <flux:label>Email</flux:label>
-                            <flux:input wire:model="email" type="email" placeholder="your@email.com (optional)" />
-                            <flux:error name="email" />
+                            <flux:label>Sub-segment</flux:label>
+                            <flux:select
+                                variant="listbox"
+                                searchable
+                                wire:model="subSegmentId"
+                                placeholder="{{ $segmentId ? 'Select Sub-segment' : 'Choose a segment first' }}"
+                                :disabled="! $segmentId || $this->subSegments->isEmpty()"
+                            >
+                                <x-slot name="empty"></x-slot>
+                                @foreach ($this->subSegments as $subSegment)
+                                    <flux:select.option :value="$subSegment->id">{{ $subSegment->name }}</flux:select.option>
+                                @endforeach
+                            </flux:select>
+                            <flux:error name="subSegmentId" />
                         </flux:field>
                     </div>
+
+                    {{-- Email --}}
+                    <flux:field>
+                        <flux:label>Email</flux:label>
+                        <flux:input wire:model="email" type="email" placeholder="your@email.com (optional)" />
+                        <flux:error name="email" />
+                    </flux:field>
                 </div>
 
                 {{-- Step 1 Footer --}}
