@@ -41,7 +41,7 @@ class VisitorPassController extends Controller
             $filename = 'visitor-pass-'.$registrationCode.'.jpg';
         }
 
-        $imageData = $this->qrCodeService->generateVisitorPassImage($qrCodeUrl, $personName);
+        $imageData = $this->qrCodeService->generateVisitorPassImage($qrCodeUrl, $personName, $exhibition);
 
         return response($imageData)
             ->header('Content-Type', 'image/jpeg')
@@ -69,7 +69,7 @@ class VisitorPassController extends Controller
             $personName = $visitor->name;
         }
 
-        $imageData = $this->qrCodeService->generateVisitorPassImage($qrCodeUrl, $personName);
+        $imageData = $this->qrCodeService->generateVisitorPassImage($qrCodeUrl, $personName, $exhibition);
 
         return response($imageData)
             ->header('Content-Type', 'image/jpeg')

@@ -3,7 +3,9 @@
         <div class="pb-6 mb-6 space-y-8 border-b border-zinc-200 dark:border-zinc-700">
             <div class="flex items-center justify-between mb-4">
                 <img src="{{ asset('brand/sgcci-logo-fixed.svg') }}" alt="SGCCI Logo" class="w-full h-auto max-w-16">
-                <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="w-full h-auto max-w-32">
+                @if ($exhibition?->logo_url)
+                    <img src="{{ $exhibition->logo_url }}" alt="{{ $exhibition->title }} Logo" class="w-full h-auto max-w-32">
+                @endif
             </div>
 
             <div class="text-center">

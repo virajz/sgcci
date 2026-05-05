@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Exhibition;
 use BaconQrCode\Renderer\Color\Rgb;
 use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
@@ -9,6 +10,7 @@ use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\Fill;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
+use Illuminate\Support\Facades\Storage;
 use Imagick;
 use ImagickDraw;
 use ImagickPixel;
@@ -146,18 +148,36 @@ class QrCodeService
     }
 
     /**
-     * Generate the full visitor pass composite: creative.jpeg with the QR code
-     * placed inside the blue box and the visitor name printed below.
+     * Generate the full visitor pass composite: pass background with the QR code
+     * placed at the configured position and the visitor name printed at the
+     * configured baseline.
+     *
+     * When the exhibition has a custom pass background and coordinates, those
+     * are used. Otherwise the default creative.jpeg + hardcoded box layout is
+     * used (legacy behaviour).
      */
-    public function generateVisitorPassImage(string $qrData, string $visitorName): string
+    public function generateVisitorPassImage(string $qrData, string $visitorName, ?Exhibition $exhibition = null): string
     {
-        /** @var Imagick $creative */
-        $creative = new Imagick(public_path('creative.jpeg'));
+        $useCustom = $exhibition !== null && $exhibition->hasCustomPass();
 
-        // --- QR code ---
-        $boxW = self::BOX_X2 - self::BOX_X1;
-        $boxH = self::BOX_Y2 - self::BOX_Y1;
-        $qrSize = min($boxW, $boxH) - (self::BOX_PADDING * 2);
+        $backgroundPath = $useCustom
+            ? Storage::disk('public')->path($exhibition->pass_background_path)
+            : public_path('creative.jpeg');
+
+        /** @var Imagick $creative */
+        $creative = new Imagick($backgroundPath);
+
+        if ($useCustom) {
+            $qrSize = (int) $exhibition->pass_qr_size;
+            $qrX = (int) $exhibition->pass_qr_x;
+            $qrY = (int) $exhibition->pass_qr_y;
+        } else {
+            $boxW = self::BOX_X2 - self::BOX_X1;
+            $boxH = self::BOX_Y2 - self::BOX_Y1;
+            $qrSize = min($boxW, $boxH) - (self::BOX_PADDING * 2);
+            $qrX = self::BOX_X1 + intval(($boxW - $qrSize) / 2);
+            $qrY = self::BOX_Y1 + intval(($boxH - $qrSize) / 2);
+        }
 
         $qrPng = (new Writer(
             new ImageRenderer(
@@ -172,28 +192,28 @@ class QrCodeService
         /** @var Imagick $qrImage */
         $qrImage = new Imagick;
         $qrImage->readImageBlob($qrPng);
-
-        // Center the QR inside the blue box
-        $qrX = self::BOX_X1 + intval(($boxW - $qrSize) / 2);
-        $qrY = self::BOX_Y1 + intval(($boxH - $qrSize) / 2);
-
         $creative->compositeImage($qrImage, Imagick::COMPOSITE_OVER, $qrX, $qrY);
 
         // --- Visitor name ---
-        $nameText = mb_strtoupper($visitorName);
-        $fontSize = $this->fitFontSize($creative, $nameText);
+        if (! $useCustom || ($exhibition->pass_name_x !== null && $exhibition->pass_name_y !== null)) {
+            $nameText = mb_strtoupper($visitorName);
+            $nameX = $useCustom ? (int) $exhibition->pass_name_x : 540;
+            $nameY = $useCustom ? (int) $exhibition->pass_name_y : self::NAME_Y;
+            $nameColor = $exhibition?->pass_name_color ?: '#39318a';
+            $fontSize = $this->fitFontSize($creative, $nameText);
 
-        /** @var ImagickDraw $draw */
-        $draw = new ImagickDraw;
-        $draw->setFont(self::fontPath());
-        $draw->setFontSize($fontSize);
-        /** @var ImagickPixel $colour */
-        $colour = new ImagickPixel('#39318a');
-        $draw->setFillColor($colour);
-        $draw->setTextAlignment(Imagick::ALIGN_CENTER);
-        $draw->setTextAntialias(true);
+            /** @var ImagickDraw $draw */
+            $draw = new ImagickDraw;
+            $draw->setFont(self::fontPath());
+            $draw->setFontSize($fontSize);
+            /** @var ImagickPixel $colour */
+            $colour = new ImagickPixel($nameColor);
+            $draw->setFillColor($colour);
+            $draw->setTextAlignment(Imagick::ALIGN_CENTER);
+            $draw->setTextAntialias(true);
 
-        $creative->annotateImage($draw, 540, self::NAME_Y, 0, $nameText);
+            $creative->annotateImage($draw, $nameX, $nameY, 0, $nameText);
+        }
 
         $creative->setImageFormat('jpeg');
         $creative->setImageCompressionQuality(92);

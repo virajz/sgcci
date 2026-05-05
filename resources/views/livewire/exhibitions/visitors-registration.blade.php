@@ -7,7 +7,9 @@
             <div class="flex items-center justify-between gap-2">
                 <img src="{{ asset('brand/sgcci-logo-fixed.svg') }}" alt="SGCCI Logo" class="h-auto w-12 shrink-0 sm:w-16">
                 <flux:heading size="xl" class="font-bold tracking-tight text-center text-base sm:text-xl">Visitor Registration</flux:heading>
-                <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="h-auto w-24 shrink-0 sm:w-32">
+                @if ($exhibition?->logo_url)
+                    <img src="{{ $exhibition->logo_url }}" alt="{{ $exhibition->title }} Logo" class="h-auto w-24 shrink-0 sm:w-32">
+                @endif
             </div>
 
             <div class="space-y-1 text-center">

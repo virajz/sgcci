@@ -3,7 +3,9 @@
         <section class="flex items-center justify-between mb-6 lg:flex-shrink-0">
             <img src="{{ asset('brand/sgcci-logo-fixed.svg') }}" alt="SGCCI Logo" class="w-full h-auto max-w-16">
             <flux:heading size="xl" class="font-bold tracking-tight">Select Product Profile</flux:heading>
-            <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="w-full h-auto max-w-32">
+            @if ($exhibition?->logo_url)
+                <img src="{{ $exhibition->logo_url }}" alt="{{ $exhibition->title }} Logo" class="w-full h-auto max-w-32">
+            @endif
         </section>
 
         <form wire:submit="continue" class="flex flex-col space-y-6 lg:flex-1 lg:overflow-hidden">

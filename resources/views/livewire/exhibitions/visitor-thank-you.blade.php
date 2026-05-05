@@ -2,7 +2,9 @@
     <flux:main class="w-full max-w-3xl mx-auto space-y-8">
         <section class="flex items-center justify-between">
             <img src="{{ asset('brand/sgcci-logo-fixed.svg') }}" alt="SGCCI Logo" class="w-full h-auto max-w-16">
-            <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="w-full h-auto max-w-32">
+            @if ($exhibition?->logo_url)
+                <img src="{{ $exhibition->logo_url }}" alt="{{ $exhibition->title }} Logo" class="w-full h-auto max-w-32">
+            @endif
         </section>
 
         <div class="text-center">

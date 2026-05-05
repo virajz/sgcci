@@ -3,21 +3,32 @@
 namespace App\Models;
 
 use App\EntryType;
+use Database\Factories\ExhibitionFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Exhibition extends Model
 {
-    /** @use HasFactory<\Database\Factories\ExhibitionFactory> */
+    /** @use HasFactory<ExhibitionFactory> */
     use HasFactory;
 
     protected $fillable = [
         'title',
         'slug',
         'description',
+        'logo_path',
+        'pass_background_path',
+        'pass_qr_x',
+        'pass_qr_y',
+        'pass_qr_size',
+        'pass_name_x',
+        'pass_name_y',
+        'pass_name_color',
         'start_date',
         'end_date',
         'entry_type',
@@ -34,7 +45,34 @@ class Exhibition extends Model
             'entry_type' => EntryType::class,
             'entry_amount' => 'decimal:2',
             'registration_closed' => 'boolean',
+            'pass_qr_x' => 'integer',
+            'pass_qr_y' => 'integer',
+            'pass_qr_size' => 'integer',
+            'pass_name_x' => 'integer',
+            'pass_name_y' => 'integer',
         ];
+    }
+
+    protected function logoUrl(): Attribute
+    {
+        return Attribute::get(
+            fn (): ?string => $this->logo_path ? Storage::disk('public')->url($this->logo_path) : null,
+        );
+    }
+
+    protected function passBackgroundUrl(): Attribute
+    {
+        return Attribute::get(
+            fn (): ?string => $this->pass_background_path ? Storage::disk('public')->url($this->pass_background_path) : null,
+        );
+    }
+
+    public function hasCustomPass(): bool
+    {
+        return $this->pass_background_path !== null
+            && $this->pass_qr_x !== null
+            && $this->pass_qr_y !== null
+            && $this->pass_qr_size !== null;
     }
 
     public function isPaidEntry(): bool

@@ -107,7 +107,7 @@
     </flux:card>
 
     {{-- Add Exhibition Modal --}}
-    <flux:modal wire:model="showAddModal" variant="flyout">
+    <flux:modal wire:model="showAddModal" variant="flyout" class="md:w-[800px]">
         <form wire:submit="addExhibition" class="space-y-6">
             <flux:heading size="lg">Add Exhibition</flux:heading>
 
@@ -126,13 +126,13 @@
             <div class="grid grid-cols-2 gap-4">
                 <flux:field>
                     <flux:label>Start Date</flux:label>
-                    <flux:input wire:model="startDate" type="date" />
+                    <flux:date-picker wire:model="startDate" />
                     <flux:error name="startDate" />
                 </flux:field>
 
                 <flux:field>
                     <flux:label>End Date</flux:label>
-                    <flux:input wire:model="endDate" type="date" />
+                    <flux:date-picker wire:model="endDate" />
                     <flux:error name="endDate" />
                 </flux:field>
             </div>
@@ -155,6 +155,8 @@
                 </flux:field>
             @endif
 
+            @include('livewire.admin.exhibitions.partials.asset-fields')
+
             <div class="flex gap-2">
                 <flux:button type="submit" variant="primary">Add Exhibition</flux:button>
                 <flux:button type="button" variant="ghost" wire:click="$set('showAddModal', false)">Cancel
@@ -164,7 +166,7 @@
     </flux:modal>
 
     {{-- Edit Exhibition Modal --}}
-    <flux:modal wire:model="showEditModal" variant="flyout">
+    <flux:modal wire:model="showEditModal" variant="flyout" class="md:w-[800px]">
         <form wire:submit="updateExhibition" class="space-y-6">
             <flux:heading size="lg">Edit Exhibition</flux:heading>
 
@@ -183,13 +185,13 @@
             <div class="grid grid-cols-2 gap-4">
                 <flux:field>
                     <flux:label>Start Date</flux:label>
-                    <flux:input wire:model="startDate" type="date" />
+                    <flux:date-picker wire:model="startDate" />
                     <flux:error name="startDate" />
                 </flux:field>
 
                 <flux:field>
                     <flux:label>End Date</flux:label>
-                    <flux:input wire:model="endDate" type="date" />
+                    <flux:date-picker wire:model="endDate" />
                     <flux:error name="endDate" />
                 </flux:field>
             </div>
@@ -211,6 +213,8 @@
                     <flux:error name="entryAmount" />
                 </flux:field>
             @endif
+
+            @include('livewire.admin.exhibitions.partials.asset-fields')
 
             <div class="flex gap-2">
                 <flux:button type="submit" variant="primary">Update Exhibition</flux:button>

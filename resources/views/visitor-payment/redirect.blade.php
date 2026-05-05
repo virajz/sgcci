@@ -11,7 +11,9 @@
             {{-- Header Logos --}}
             <div class="flex items-center justify-between mb-8">
                 <img src="{{ asset('brand/sgcci-logo-fixed.svg') }}" alt="SGCCI Logo" class="h-auto max-w-12">
-                <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="h-auto max-w-24">
+                @if ($visitor?->exhibition?->logo_url)
+                    <img src="{{ $visitor->exhibition->logo_url }}" alt="{{ $visitor->exhibition->title }} Logo" class="h-auto max-w-24">
+                @endif
             </div>
 
             {{-- Loading Spinner --}}

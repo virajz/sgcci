@@ -3,7 +3,9 @@
         <section class="flex items-center justify-between mb-6">
             <img src="{{ asset('brand/sgcci-logo-fixed.svg') }}" alt="SGCCI Logo" class="w-full h-auto max-w-16">
             <flux:heading size="xl" class="font-bold tracking-tight">Edit Booking</flux:heading>
-            <img src="{{ asset('brand/auto-expo-logo.png') }}" alt="Auto Expo Logo" class="w-full h-auto max-w-32">
+            @if ($booking?->exhibition?->logo_url)
+                <img src="{{ $booking->exhibition->logo_url }}" alt="{{ $booking->exhibition->title }} Logo" class="w-full h-auto max-w-32">
+            @endif
         </section>
 
         @if (!$bookingFound)

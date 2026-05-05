@@ -13,7 +13,7 @@ class TicketThankYou extends Component
 
     public function mount(string $ticketNumber): void
     {
-        $this->ticket = SupportTicket::with('booking')
+        $this->ticket = SupportTicket::with('booking.exhibition')
             ->where('ticket_number', $ticketNumber)
             ->firstOrFail();
     }
