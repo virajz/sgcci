@@ -160,12 +160,16 @@ class QrCodeService
     {
         $useCustom = $exhibition !== null && $exhibition->hasCustomPass();
 
-        $backgroundPath = $useCustom
-            ? Storage::disk('public')->path($exhibition->pass_background_path)
-            : public_path('creative.jpeg');
-
         /** @var Imagick $creative */
-        $creative = new Imagick($backgroundPath);
+        $creative = new Imagick;
+
+        if ($useCustom) {
+            // Read via Storage so it works on any disk (local, S3, etc.) — Imagick can't
+            // open S3 keys directly, so we feed it the bytes.
+            $creative->readImageBlob(Storage::disk('public')->get($exhibition->pass_background_path));
+        } else {
+            $creative->readImage(public_path('creative.jpeg'));
+        }
 
         if ($useCustom) {
             $qrSize = (int) $exhibition->pass_qr_size;
