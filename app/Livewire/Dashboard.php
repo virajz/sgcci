@@ -4,15 +4,12 @@ namespace App\Livewire;
 
 use App\BookingStatus;
 use App\Models\Booking;
-use App\Models\Exhibition;
 use App\Models\ExhibitionVisitor;
 use App\Models\ExhibitorLead;
 use App\Models\WhatsAppInquiry;
+use App\Services\CurrentExhibition;
 use App\VisitorRegistrationStatus;
-use Illuminate\Support\Collection;
-use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 
 #[Layout('components.layouts.app')]
@@ -20,9 +17,6 @@ class Dashboard extends Component
 {
     // Total stalls available in the exhibition (based on the map)
     private const TOTAL_STALLS = 104;
-
-    #[Url(as: 'exhibition', except: '')]
-    public string $exhibitionId = '';
 
     public function mount(): void
     {
@@ -35,23 +29,14 @@ class Dashboard extends Component
         }
     }
 
-    /**
-     * @return Collection<int, Exhibition>
-     */
-    #[Computed]
-    public function exhibitions(): Collection
-    {
-        return Exhibition::query()->orderBy('start_date', 'desc')->get(['id', 'title']);
-    }
-
     private function selectedExhibitionId(): ?int
     {
-        return $this->exhibitionId !== '' ? (int) $this->exhibitionId : null;
+        return CurrentExhibition::id();
     }
 
     public function getAvailableStallsProperty(): int
     {
-        $exhibitionId = $this->selectedExhibitionId() ?? Exhibition::query()->value('id');
+        $exhibitionId = $this->selectedExhibitionId();
 
         if (! $exhibitionId) {
             return self::TOTAL_STALLS;
@@ -97,7 +82,7 @@ class Dashboard extends Component
 
     public function getBookedStallsProperty(): int
     {
-        $exhibitionId = $this->selectedExhibitionId() ?? Exhibition::query()->value('id');
+        $exhibitionId = $this->selectedExhibitionId();
 
         if (! $exhibitionId) {
             return 0;

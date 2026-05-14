@@ -7,9 +7,11 @@ namespace App\Livewire\Admin\Visitors;
 use App\Jobs\SendWhatsAppCampaign;
 use App\Models\Exhibition;
 use App\Models\ExhibitionVisitor;
+use App\Services\CurrentExhibition;
 use App\VisitorRegistrationStatus;
 use App\VisitorType;
 use Flux\Flux;
+use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -51,7 +53,7 @@ class Add extends Component
             return;
         }
 
-        $exhibition = Exhibition::latest()->firstOrFail();
+        $exhibition = CurrentExhibition::model() ?? Exhibition::latest()->firstOrFail();
         $validTypes = array_column(VisitorType::cases(), 'value');
 
         $this->addedCount = 0;
@@ -148,7 +150,7 @@ class Add extends Component
         return array_fill(0, $count, ['name' => '', 'phone_number' => '', 'visitor_type' => '']);
     }
 
-    public function render(): \Illuminate\View\View
+    public function render(): View
     {
         return view('livewire.admin.visitors.add');
     }

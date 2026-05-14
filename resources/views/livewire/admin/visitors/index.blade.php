@@ -201,18 +201,6 @@
 
             <div class="flex flex-col flex-1 gap-6">
                 <flux:field>
-                    <flux:label>Exhibition</flux:label>
-                    <flux:select wire:model.live="exhibitionFilter" variant="listbox" searchable>
-                        <x-slot name="empty"></x-slot>
-                        <flux:select.option value="">All Exhibitions</flux:select.option>
-                        @foreach ($this->exhibitions as $exhibitionOption)
-                            <flux:select.option :value="(string) $exhibitionOption->id">{{ $exhibitionOption->title }}</flux:select.option>
-                        @endforeach
-                    </flux:select>
-                    <flux:description>Show visitors for a specific exhibition.</flux:description>
-                </flux:field>
-
-                <flux:field>
                     <flux:label>Visitor Type</flux:label>
                     <flux:select wire:model.live="invitedFilter" variant="listbox">
                         <flux:select.option value="">All Visitors</flux:select.option>

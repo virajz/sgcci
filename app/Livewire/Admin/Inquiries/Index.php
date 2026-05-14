@@ -5,6 +5,7 @@ namespace App\Livewire\Admin\Inquiries;
 use App\Jobs\SendSmsMessage;
 use App\Models\Booking;
 use App\Models\User;
+use App\Services\CurrentExhibition;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -299,6 +300,7 @@ class Index extends Component
 
         $bookings = Booking::query()
             ->with(['exhibition', 'adminApprovedBy', 'superAdminApprovedBy', 'rejectedBy', 'blockedBy'])
+            ->when(CurrentExhibition::id(), fn ($query, $id) => $query->where('exhibition_id', $id))
             ->when($this->search, function ($query) use ($search, $phoneSearch) {
                 $query->where(function ($q) use ($search, $phoneSearch) {
                     $q->whereRaw('LOWER(booking_code) LIKE ?', ["%{$search}%"])

@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Livewire\Admin\WalkInVisitors;
 
-use App\Models\Exhibition;
 use App\Models\ExhibitionVisitor;
+use App\Services\CurrentExhibition;
 use Flux\Flux;
+use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -75,9 +76,9 @@ class Index extends Component
         $this->visitorToDelete = null;
     }
 
-    public function render(): \Illuminate\View\View
+    public function render(): View
     {
-        $exhibition = Exhibition::latest()->first();
+        $exhibition = CurrentExhibition::model();
 
         $baseQuery = ExhibitionVisitor::query()
             ->where('source', 'front_desk')

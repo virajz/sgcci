@@ -7,6 +7,7 @@ use App\Jobs\SendSmsMessage;
 use App\Models\Booking;
 use App\Models\Exhibition;
 use App\Models\User;
+use App\Services\CurrentExhibition;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -483,7 +484,7 @@ class Index extends Component
         $this->addExhibitorPhoneCode = '+91';
         $this->addExhibitorPhoneNumber = '';
         $this->addExhibitorStalls = '';
-        $this->addExhibitorExhibitionId = Exhibition::latest()->value('id');
+        $this->addExhibitorExhibitionId = CurrentExhibition::id() ?? Exhibition::latest()->value('id');
         $this->showAddExhibitorModal = true;
     }
 
@@ -666,6 +667,7 @@ class Index extends Component
                     });
             })
             ->where('is_manual_block', false)
+            ->when(CurrentExhibition::id(), fn ($q, $id) => $q->where('exhibition_id', $id))
             ->with(['exhibition', 'exhibitorUser', 'badgeMembers', 'invitedGuests', 'leads', 'memberLeads', 'whatsAppInquiries'])
             ->when($this->search, function ($query) use ($search, $phoneSearch) {
                 $query->where(function ($q) use ($search, $phoneSearch) {

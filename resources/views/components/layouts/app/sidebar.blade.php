@@ -164,6 +164,10 @@
     <flux:header class="lg:hidden">
         <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
+        @if(auth()->user()->isAdmin())
+            <livewire:exhibition-selector />
+        @endif
+
         <flux:spacer />
 
         <flux:dropdown position="top" align="end">
@@ -206,6 +210,19 @@
             </flux:menu>
         </flux:dropdown>
     </flux:header>
+
+    @if(auth()->user()->isAdmin())
+        <flux:header class="hidden lg:flex bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700">
+            <div class="flex items-center gap-2">
+                <flux:text class="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                    {{ __('Exhibition') }}
+                </flux:text>
+                <livewire:exhibition-selector />
+            </div>
+        </flux:header>
+
+        <livewire:exhibition-splash />
+    @endif
 
     {{ $slot }}
 

@@ -1,22 +1,6 @@
 <div class="space-y-6">
     <div class="flex items-center justify-between gap-4">
         <flux:heading size="xl">Dashboard</flux:heading>
-
-        @if (! auth()->user()->isExhibitor() && $this->exhibitions->isNotEmpty())
-            <flux:select
-                wire:model.live="exhibitionId"
-                variant="listbox"
-                searchable
-                placeholder="All Exhibitions"
-                class="md:max-w-xs"
-            >
-                <x-slot name="empty"></x-slot>
-                <flux:select.option value="">All Exhibitions</flux:select.option>
-                @foreach ($this->exhibitions as $exhibitionOption)
-                    <flux:select.option :value="(string) $exhibitionOption->id">{{ $exhibitionOption->title }}</flux:select.option>
-                @endforeach
-            </flux:select>
-        @endif
     </div>
 
     {{-- Stats Grid --}}

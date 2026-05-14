@@ -6,6 +6,8 @@ namespace App\Livewire\Admin\Scans;
 
 use App\Models\ExhibitionVisitor;
 use App\Models\MemberScan;
+use App\Services\CurrentExhibition;
+use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -66,6 +68,7 @@ class Index extends Component
     public function getDailyScansProperty(): array
     {
         $rows = ExhibitionVisitor::query()
+            ->when(CurrentExhibition::id(), fn ($q, $id) => $q->where('exhibition_id', $id))
             ->whereNotNull('entered_at')
             ->where('entered_at', '>=', now()->subDays(13)->startOfDay())
             ->selectRaw('DATE(entered_at) as day, COUNT(*) as total')
@@ -86,16 +89,20 @@ class Index extends Component
     /** @return array{total_entered: int, today: int, out_of_city: int, sgcci_members: int, committee_members: int} */
     public function getScanStatsProperty(): array
     {
+        $base = fn () => ExhibitionVisitor::query()
+            ->when(CurrentExhibition::id(), fn ($q, $id) => $q->where('exhibition_id', $id))
+            ->whereNotNull('entered_at');
+
         return [
-            'total_entered' => ExhibitionVisitor::whereNotNull('entered_at')->count(),
-            'today' => ExhibitionVisitor::whereNotNull('entered_at')->whereDate('entered_at', today())->count(),
-            'out_of_city' => ExhibitionVisitor::whereNotNull('entered_at')->whereRaw('LOWER(city) != ?', ['surat'])->count(),
+            'total_entered' => $base()->count(),
+            'today' => $base()->whereDate('entered_at', today())->count(),
+            'out_of_city' => $base()->whereRaw('LOWER(city) != ?', ['surat'])->count(),
             'sgcci_members' => MemberScan::where('member_type', 'sgcci')->count(),
             'committee_members' => MemberScan::where('member_type', 'committee')->count(),
         ];
     }
 
-    public function render(): \Illuminate\View\View
+    public function render(): View
     {
         if (in_array($this->entryFilter, ['sgcci', 'committee'], true)) {
             $memberScans = MemberScan::query()
@@ -121,6 +128,7 @@ class Index extends Component
         }
 
         $query = ExhibitionVisitor::query()
+            ->when(CurrentExhibition::id(), fn ($q, $id) => $q->where('exhibition_id', $id))
             ->whereNotNull('entered_at')
             ->with('exhibition')
             ->when($this->search, function ($q) {
