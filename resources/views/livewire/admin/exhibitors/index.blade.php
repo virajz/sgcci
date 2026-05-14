@@ -526,9 +526,25 @@
 
             <flux:field>
                 <flux:label>Exhibition</flux:label>
-                <flux:select wire:model="addExhibitorExhibitionId">
+                <flux:select
+                    wire:model="addExhibitorExhibitionId"
+                    variant="listbox"
+                    searchable
+                    placeholder="Select exhibition..."
+                >
+                    <x-slot name="empty"></x-slot>
                     @foreach ($exhibitions as $exhibition)
-                        <flux:select.option :value="$exhibition->id">{{ $exhibition->title }}</flux:select.option>
+                        <flux:select.option :value="$exhibition->id">
+                            <div class="flex items-center gap-2 whitespace-nowrap">
+                                <flux:avatar
+                                    circle
+                                    size="xs"
+                                    :src="$exhibition->logo_url"
+                                    :name="$exhibition->title"
+                                />
+                                {{ $exhibition->title }}
+                            </div>
+                        </flux:select.option>
                     @endforeach
                 </flux:select>
                 <flux:error name="addExhibitorExhibitionId" />

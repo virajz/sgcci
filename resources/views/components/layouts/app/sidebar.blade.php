@@ -213,9 +213,9 @@
 
     @if(auth()->user()->isAdmin())
         <flux:header class="hidden lg:flex bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-3">
                 <flux:text class="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                    {{ __('Exhibition') }}
+                    {{ __('Select Exhibition') }}
                 </flux:text>
                 <livewire:exhibition-selector />
             </div>

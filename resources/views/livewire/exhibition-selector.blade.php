@@ -5,7 +5,7 @@
             variant="listbox"
             searchable
             placeholder="Select exhibition..."
-            class="min-w-[220px]"
+            class="min-w-[360px]"
         >
             <x-slot name="empty"></x-slot>
             @foreach ($this->exhibitions as $exhibition)
