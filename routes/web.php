@@ -149,6 +149,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('visitors/add', Add::class)->name('visitors.add');
         Route::get('visitors/{visitor}', VisitorsShow::class)->name('visitors.show');
         Route::get('walk-in-visitors', WalkInVisitorsIndex::class)->name('walk-in-visitors.index');
+        Route::get('walk-in-visitors/print-badges', [VisitorPassController::class, 'printMultiple'])->name('walk-in-visitors.print-badges');
         Route::get('scans', ScansIndex::class)->name('scans.index');
         Route::get('staff-members', StaffMembersIndex::class)->name('staff-members.index');
         Route::get('segments', SegmentsIndex::class)->name('segments.index');

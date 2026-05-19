@@ -9,10 +9,13 @@ use App\Models\CommitteeMember;
 use App\Models\Exhibition;
 use App\Models\ExhibitionVisitor;
 use App\Models\Member;
+use App\Services\CurrentExhibition;
 use App\VisitorRegistrationStatus;
 use App\VisitorType;
 use Flux\Flux;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -66,7 +69,7 @@ class Index extends Component
 
     // ─────────────────────────────────────────────────────────────────────────
 
-    public function mount(\Illuminate\Http\Request $request): void
+    public function mount(Request $request): void
     {
         if ($request->query('lookup')) {
             $personIndex = $request->filled('person') ? (int) $request->query('person') : null;
@@ -76,7 +79,7 @@ class Index extends Component
 
     private function activeExhibition(): Exhibition
     {
-        return Exhibition::latest()->firstOrFail();
+        return CurrentExhibition::model() ?? Exhibition::latest()->firstOrFail();
     }
 
     public function updatedState(): void
@@ -426,7 +429,7 @@ class Index extends Component
         ];
     }
 
-    public function render(): \Illuminate\View\View
+    public function render(): View
     {
         $states = array_keys(VisitorsRegistration::getStateCityMap());
         $cities = $this->getCitiesProperty();

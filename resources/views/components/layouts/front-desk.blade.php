@@ -14,14 +14,19 @@
             <flux:icon name="building-storefront" class="size-4 text-zinc-400" />
             <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 tracking-tight">Front Desk</span>
         </div>
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors">
-                <flux:icon name="arrow-right-start-on-rectangle" class="size-3.5" />
-                Sign out
-            </button>
-        </form>
+        <div class="flex items-center gap-4">
+            <livewire:exhibition-selector />
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors">
+                    <flux:icon name="arrow-right-start-on-rectangle" class="size-3.5" />
+                    Sign out
+                </button>
+            </form>
+        </div>
     </header>
+
+    <livewire:exhibition-splash />
 
     <div class="flex-1 overflow-hidden">
         {{ $slot }}

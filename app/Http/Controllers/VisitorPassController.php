@@ -141,6 +141,26 @@ class VisitorPassController extends Controller
             ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
     }
 
+    public function printMultiple(Request $request): View
+    {
+        $user = Auth::user();
+        abort_unless($user && ($user->isAdmin() || $user->isFrontDesk()), 403);
+
+        $codes = array_filter(array_map('trim', explode(',', (string) $request->query('codes', ''))));
+        abort_if(empty($codes), 404);
+
+        $visitors = ExhibitionVisitor::whereIn('registration_code', $codes)->get();
+
+        $badges = $visitors->map(fn (ExhibitionVisitor $visitor): array => [
+            'name' => $visitor->name !== '' ? $visitor->name : $visitor->registration_code,
+            'url' => route('front-desk.visitor.badge.inline', ['registrationCode' => $visitor->registration_code]),
+        ])->all();
+
+        abort_if(empty($badges), 404);
+
+        return view('front-desk.print-badge', compact('badges'));
+    }
+
     public function printBadge(string $registrationCode, Request $request): View
     {
         $user = Auth::user();

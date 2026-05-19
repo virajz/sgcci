@@ -1,10 +1,26 @@
-<div class="space-y-6">
+<div class="space-y-6"
+    x-data
+    x-on:open-print-window.window="window.open($event.detail.url, '_blank')"
+>
     <div class="flex items-center justify-between mb-6">
         <div>
             <flux:heading size="xl">Walk-in Visitors</flux:heading>
             @if ($exhibition)
                 <flux:text class="text-zinc-500">{{ $exhibition->title }}</flux:text>
             @endif
+        </div>
+        <div class="flex items-center gap-2">
+            @if (count($selectedIds) > 0)
+                <flux:button variant="primary" icon="printer" iconVariant="outline" wire:click="printSelected">
+                    Print Selected ({{ count($selectedIds) }})
+                </flux:button>
+            @endif
+            <flux:button variant="filled" icon="plus" iconVariant="outline" wire:click="createPressVisitor">
+                Press Visitor
+            </flux:button>
+            <flux:button variant="filled" icon="plus" iconVariant="outline" wire:click="createVipVisitor">
+                VIP
+            </flux:button>
         </div>
     </div>
 
@@ -25,8 +41,10 @@
     <flux:card class="overflow-hidden">
         @if ($visitors->count() > 0)
             <div class="overflow-x-auto">
+                <flux:checkbox.group wire:model.live="selectedIds">
                 <flux:table>
                     <flux:table.columns>
+                        <flux:table.column class="w-10"><flux:checkbox.all /></flux:table.column>
                         <flux:table.column>Reg. Code</flux:table.column>
                         <flux:table.column>Name</flux:table.column>
                         <flux:table.column>Company</flux:table.column>
@@ -41,6 +59,10 @@
                     <flux:table.rows>
                         @foreach ($visitors as $visitor)
                             <flux:table.row :key="$visitor->id">
+                                <flux:table.cell>
+                                    <flux:checkbox :value="$visitor->id" />
+                                </flux:table.cell>
+
                                 <flux:table.cell>
                                     <span class="font-mono text-sm">{{ $visitor->registration_code }}</span>
                                 </flux:table.cell>
@@ -114,6 +136,7 @@
                         @endforeach
                     </flux:table.rows>
                 </flux:table>
+                </flux:checkbox.group>
             </div>
 
             <div class="px-6 py-4 border-t border-zinc-200 dark:border-zinc-700">

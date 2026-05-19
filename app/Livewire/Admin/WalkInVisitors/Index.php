@@ -6,6 +6,8 @@ namespace App\Livewire\Admin\WalkInVisitors;
 
 use App\Models\ExhibitionVisitor;
 use App\Services\CurrentExhibition;
+use App\VisitorRegistrationStatus;
+use App\VisitorType;
 use Flux\Flux;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
@@ -32,9 +34,76 @@ class Index extends Component
     /** @var array<int, array{name: string}> */
     public array $selectedPersons = [];
 
+    /** @var array<int, int> */
+    public array $selectedIds = [];
+
     public function updatingSearch(): void
     {
         $this->resetPage();
+    }
+
+    public function createPressVisitor(): void
+    {
+        $this->createQuickWalkIn(VisitorType::Press);
+    }
+
+    public function createVipVisitor(): void
+    {
+        $this->createQuickWalkIn(VisitorType::Vip);
+    }
+
+    private function createQuickWalkIn(VisitorType $type): void
+    {
+        $exhibition = CurrentExhibition::model();
+
+        if (! $exhibition) {
+            Flux::toast(
+                heading: 'Select an exhibition',
+                variant: 'warning',
+                text: 'Please select an exhibition before adding a quick pass.'
+            );
+
+            return;
+        }
+
+        $visitor = ExhibitionVisitor::create([
+            'exhibition_id' => $exhibition->id,
+            'phone_number' => '',
+            'name' => '',
+            'state' => '',
+            'city' => '',
+            'source' => 'front_desk',
+            'visitor_type' => $type,
+            'with_invitation_pass' => false,
+            'status' => VisitorRegistrationStatus::Confirmed,
+        ]);
+
+        Flux::toast(
+            heading: $type->badgeLabel().' pass created',
+            variant: 'success',
+            text: $visitor->registration_code.' is ready to print.'
+        );
+    }
+
+    public function printSelected(): void
+    {
+        if (empty($this->selectedIds)) {
+            return;
+        }
+
+        $codes = ExhibitionVisitor::query()
+            ->whereIn('id', $this->selectedIds)
+            ->pluck('registration_code')
+            ->all();
+
+        if (empty($codes)) {
+            return;
+        }
+
+        $this->dispatch(
+            'open-print-window',
+            url: route('admin.walk-in-visitors.print-badges', ['codes' => implode(',', $codes)]),
+        );
     }
 
     public function updatingVisitorTypeFilter(): void

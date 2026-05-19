@@ -25,12 +25,20 @@ it('stays closed for an admin once an exhibition is selected', function () {
         ->assertSet('open', false);
 });
 
-it('stays closed for non-admin users', function () {
+it('stays closed for non-admin, non-front-desk users', function () {
     Exhibition::factory()->create();
 
     Livewire::actingAs(User::factory()->create(['role' => 'exhibitor']))
         ->test(ExhibitionSplash::class)
         ->assertSet('open', false);
+});
+
+it('opens for a front-desk user when no exhibition has been selected', function () {
+    Exhibition::factory()->create();
+
+    Livewire::actingAs(User::factory()->create(['role' => 'front_desk']))
+        ->test(ExhibitionSplash::class)
+        ->assertSet('open', true);
 });
 
 it('stays closed when no exhibitions exist', function () {

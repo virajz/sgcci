@@ -40,7 +40,9 @@ class ExhibitionSplash extends Component
 
     public function shouldShow(): bool
     {
-        if (! auth()->check() || ! auth()->user()->isAdmin()) {
+        $user = auth()->user();
+
+        if (! $user || ! ($user->isAdmin() || $user->isFrontDesk())) {
             return false;
         }
 
