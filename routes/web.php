@@ -59,9 +59,16 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
 Route::get('/', function () {
-    $exhibition = Exhibition::first();
+    $today = now()->toDateString();
 
-    return view('welcome', compact('exhibition'));
+    $exhibitions = Exhibition::query()
+        ->where('registration_closed', false)
+        ->whereDate('end_date', '>=', $today)
+        ->whereDate('end_date', '<=', now()->addMonth()->toDateString())
+        ->orderBy('start_date')
+        ->get();
+
+    return view('welcome', compact('exhibitions'));
 })->name('welcome');
 
 Route::redirect('/home', '/')->name('home');
