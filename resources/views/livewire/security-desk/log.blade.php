@@ -86,6 +86,14 @@
                 <div class="flex-1 min-w-0">
                     <p class="font-bold text-xl truncate {{ $s['heading'] }}">{{ $s['label'] }}</p>
                     <p class="text-base truncate mt-1 {{ $s['sub'] }}">{{ $entry['name'] }}</p>
+                    @if(!empty($entry['exhibition_title']))
+                        <div class="flex items-center gap-1.5 mt-1 {{ $s['sub'] }} opacity-90">
+                            @if(!empty($entry['exhibition_logo_url']))
+                                <img src="{{ $entry['exhibition_logo_url'] }}" alt="" class="object-contain h-4 w-4 rounded-sm bg-white/30 p-px">
+                            @endif
+                            <span class="text-sm truncate">{{ $entry['exhibition_title'] }}</span>
+                        </div>
+                    @endif
                     @if(!empty($entry['sub']))
                         <p class="text-sm truncate mt-0.5 {{ $s['sub'] }} opacity-90">{{ $entry['sub'] }}</p>
                     @endif

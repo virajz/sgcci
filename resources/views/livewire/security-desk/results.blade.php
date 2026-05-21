@@ -1,6 +1,23 @@
 @if ($lookupPerformed)
     @if ($foundVisitor)
 
+        @if (!empty($foundVisitor['exhibition_title']))
+            <div class="flex items-center gap-3 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800">
+                @if ($foundVisitor['exhibition_logo_url'])
+                    <img src="{{ $foundVisitor['exhibition_logo_url'] }}" alt="{{ $foundVisitor['exhibition_title'] }}"
+                        class="object-contain h-10 w-14 shrink-0">
+                @else
+                    <div class="flex items-center justify-center rounded-md size-10 bg-zinc-100 dark:bg-zinc-700 shrink-0">
+                        <flux:icon name="building-storefront" class="size-5 text-zinc-500" />
+                    </div>
+                @endif
+                <div class="min-w-0">
+                    <p class="text-[10px] uppercase tracking-wide text-zinc-500">Exhibition</p>
+                    <p class="text-sm font-semibold truncate">{{ $foundVisitor['exhibition_title'] }}</p>
+                </div>
+            </div>
+        @endif
+
         {{-- Visitor card --}}
         <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
             <div class="p-4 bg-white dark:bg-zinc-800 flex items-center gap-3">
@@ -177,6 +194,9 @@
                         </div>
                         <div class="flex flex-col items-end gap-1 shrink-0">
                             <flux:badge color="{{ $match['status_color'] }}" size="sm">{{ $match['status_label'] }}</flux:badge>
+                            @if (!empty($match['exhibition_title']))
+                                <span class="text-xs font-medium text-zinc-500 truncate max-w-[10rem]">{{ $match['exhibition_title'] }}</span>
+                            @endif
                             <span class="text-xs text-zinc-400">{{ $match['city'] }}</span>
                         </div>
                     </div>

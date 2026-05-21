@@ -49,6 +49,12 @@
             <div x-html="iconHtml" class="flex justify-center mb-4"></div>
             <p class="text-4xl font-black tracking-tight mb-2" x-text="label"></p>
             <p class="text-xl font-medium opacity-90" x-text="name"></p>
+            <div class="flex items-center justify-center gap-2 mt-2" x-show="exhibitionTitle">
+                <template x-if="exhibitionLogoUrl">
+                    <img :src="exhibitionLogoUrl" alt="" class="object-contain h-6 w-8 rounded-sm bg-white/20 p-0.5">
+                </template>
+                <p class="text-base font-semibold opacity-90" x-text="exhibitionTitle"></p>
+            </div>
             <p class="text-base opacity-80 mt-1" x-show="sub" x-text="sub"></p>
             <p class="text-sm font-mono opacity-70 mt-1" x-show="enteredAt" x-text="'Entered ' + enteredAt"></p>
             {{-- Progress bar --}}
@@ -87,6 +93,8 @@
                 name: '',
                 sub: '',
                 enteredAt: '',
+                exhibitionTitle: '',
+                exhibitionLogoUrl: '',
                 bgClass: '',
                 iconHtml: '',
                 progress: 100,
@@ -107,6 +115,8 @@
                     this.name = entry.name;
                     this.sub = entry.sub ?? '';
                     this.enteredAt = (!isMember && entry.entered_at) ? entry.entered_at : '';
+                    this.exhibitionTitle = entry.exhibition_title ?? '';
+                    this.exhibitionLogoUrl = entry.exhibition_logo_url ?? '';
                     this.bgClass = scanResultBg[bgKey] ?? 'bg-red-500';
                     this.iconHtml = scanResultIcons[bgKey] ?? scanResultIcons.not_found;
                     this.progress = 100;

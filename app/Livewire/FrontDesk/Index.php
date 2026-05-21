@@ -9,13 +9,14 @@ use App\Models\CommitteeMember;
 use App\Models\Exhibition;
 use App\Models\ExhibitionVisitor;
 use App\Models\Member;
-use App\Services\CurrentExhibition;
 use App\VisitorRegistrationStatus;
 use App\VisitorType;
 use Flux\Flux;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -30,10 +31,10 @@ class Index extends Component
 
     public bool $lookupPerformed = false;
 
-    /** @var array{registration_code: string, name: string, phone_number: string, company_name: string|null, designation: string|null, city: string, state: string, status_label: string, status_color: string, additional_persons: array<int, array{name: string, phone_number: string}>, scanned_person_index: int|null}|null */
+    /** @var array{registration_code: string, name: string, phone_number: string, company_name: string|null, designation: string|null, city: string, state: string, status_label: string, status_color: string, additional_persons: array<int, array{name: string, phone_number: string}>, scanned_person_index: int|null, exhibition_title: string, exhibition_logo_url: string|null}|null */
     public ?array $foundVisitor = null;
 
-    /** @var array<int, array{registration_code: string, name: string, phone_number: string, company_name: string|null, city: string, state: string, status_label: string, status_color: string}> */
+    /** @var array<int, array{registration_code: string, name: string, phone_number: string, company_name: string|null, city: string, state: string, status_label: string, status_color: string, exhibition_title: string, exhibition_logo_url: string|null}> */
     public array $matchedVisitors = [];
 
     /** @var array{membership_number: string, name: string, type: string, badge_url: string}|null */
@@ -60,6 +61,8 @@ class Index extends Component
 
     public bool $withInvitationPass = false;
 
+    public string $walkInExhibitionId = '';
+
     /** @var array<int, array{name: string, phone_number: string}> */
     public array $additionalPersons = [];
 
@@ -71,15 +74,24 @@ class Index extends Component
 
     public function mount(Request $request): void
     {
+        $this->walkInExhibitionId = (string) ($this->openExhibitions->first()?->id ?? '');
+
         if ($request->query('lookup')) {
             $personIndex = $request->filled('person') ? (int) $request->query('person') : null;
             $this->setLookupCode((string) $request->query('lookup'), $personIndex);
         }
     }
 
-    private function activeExhibition(): Exhibition
+    /**
+     * @return Collection<int, Exhibition>
+     */
+    #[Computed]
+    public function openExhibitions(): Collection
     {
-        return CurrentExhibition::model() ?? Exhibition::latest()->firstOrFail();
+        return Exhibition::query()
+            ->where('registration_closed', false)
+            ->orderBy('start_date')
+            ->get();
     }
 
     public function updatedState(): void
@@ -155,9 +167,10 @@ class Index extends Component
 
         $code = strtoupper($term);
 
-        $exhibition = $this->activeExhibition();
+        $openExhibitionIds = $this->openExhibitions->pluck('id');
 
-        $visitors = ExhibitionVisitor::where('exhibition_id', $exhibition->id)
+        $visitors = ExhibitionVisitor::with('exhibition')
+            ->whereIn('exhibition_id', $openExhibitionIds)
             ->where(function ($q) use ($term, $code): void {
                 $q->where('registration_code', $code)
                     ->orWhereRaw('REPLACE(phone_number, \' \', \'\') LIKE ?', ['%'.str_replace(' ', '', $term).'%'])
@@ -182,6 +195,8 @@ class Index extends Component
                 'state' => $v->state,
                 'status_label' => $v->status->label(),
                 'status_color' => $v->status->color(),
+                'exhibition_title' => $v->exhibition?->title ?? '',
+                'exhibition_logo_url' => $v->exhibition?->logo_url,
             ])->values()->all();
         } else {
             // No visitor found — try members
@@ -195,9 +210,10 @@ class Index extends Component
 
     public function selectVisitor(string $registrationCode): void
     {
-        $exhibition = $this->activeExhibition();
+        $openExhibitionIds = $this->openExhibitions->pluck('id');
 
-        $visitor = ExhibitionVisitor::where('exhibition_id', $exhibition->id)
+        $visitor = ExhibitionVisitor::with('exhibition')
+            ->whereIn('exhibition_id', $openExhibitionIds)
             ->where('registration_code', $registrationCode)
             ->firstOrFail();
 
@@ -207,6 +223,8 @@ class Index extends Component
 
     private function setFoundVisitor(ExhibitionVisitor $visitor, ?int $personIndex = null): void
     {
+        $visitor->loadMissing('exhibition');
+
         $this->foundVisitor = [
             'registration_code' => $visitor->registration_code,
             'name' => $visitor->name,
@@ -219,6 +237,8 @@ class Index extends Component
             'status_color' => $visitor->status->color(),
             'additional_persons' => is_array($visitor->additional_persons) ? $visitor->additional_persons : [],
             'scanned_person_index' => $personIndex,
+            'exhibition_title' => $visitor->exhibition?->title ?? '',
+            'exhibition_logo_url' => $visitor->exhibition?->logo_url,
         ];
     }
 
@@ -286,7 +306,13 @@ class Index extends Component
 
     public function registerWalkIn(): void
     {
-        $exhibition = $this->activeExhibition();
+        $this->validate(
+            ['walkInExhibitionId' => ['required', 'integer', Rule::in($this->openExhibitions->pluck('id')->all())]],
+            ['walkInExhibitionId.required' => 'Please select an exhibition.', 'walkInExhibitionId.in' => 'Please select a valid exhibition.']
+        );
+
+        /** @var Exhibition $exhibition */
+        $exhibition = $this->openExhibitions->firstWhere('id', (int) $this->walkInExhibitionId);
 
         $this->validate($this->addRules($exhibition->id), $this->addMessages());
 

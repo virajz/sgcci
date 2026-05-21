@@ -10,7 +10,11 @@ use App\Models\ExhibitionVisitor;
 use App\Models\Member;
 use App\Models\MemberScan;
 use App\VisitorRegistrationStatus;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\View\View;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -21,10 +25,10 @@ class Index extends Component
 
     public bool $lookupPerformed = false;
 
-    /** @var array{registration_code: string, name: string, phone_number: string, company_name: string|null, designation: string|null, city: string, state: string, status_label: string, status_color: string, is_paid: bool, is_invited_guest: bool, entered_at: string|null, exited_at: string|null, additional_persons: array<int, array{name: string, phone_number: string, entered_at: string|null, exited_at: string|null}>}|null */
+    /** @var array{registration_code: string, name: string, phone_number: string, company_name: string|null, designation: string|null, city: string, state: string, status_label: string, status_color: string, is_paid: bool, is_invited_guest: bool, entered_at: string|null, exited_at: string|null, additional_persons: array<int, array{name: string, phone_number: string, entered_at: string|null, exited_at: string|null}>, exhibition_title: string, exhibition_logo_url: string|null}|null */
     public ?array $foundVisitor = null;
 
-    /** @var array<int, array{registration_code: string, name: string, phone_number: string, company_name: string|null, city: string, state: string, status_label: string, status_color: string}> */
+    /** @var array<int, array{registration_code: string, name: string, phone_number: string, company_name: string|null, city: string, state: string, status_label: string, status_color: string, exhibition_title: string, exhibition_logo_url: string|null}> */
     public array $matchedVisitors = [];
 
     /**
@@ -34,7 +38,7 @@ class Index extends Component
      */
     public array $scanLog = [];
 
-    public function mount(\Illuminate\Http\Request $request): void
+    public function mount(Request $request): void
     {
         if ($request->query('lookup')) {
             $personIndex = $request->filled('person') ? (int) $request->query('person') : null;
@@ -42,9 +46,24 @@ class Index extends Component
         }
     }
 
-    private function activeExhibition(): Exhibition
+    /**
+     * @return Collection<int, Exhibition>
+     */
+    #[Computed(persist: true)]
+    public function openExhibitions(): Collection
     {
-        return Exhibition::latest()->firstOrFail();
+        return Exhibition::query()
+            ->where('registration_closed', false)
+            ->orderBy('start_date')
+            ->get();
+    }
+
+    /**
+     * @return Collection<int, int>
+     */
+    private function openExhibitionIds(): Collection
+    {
+        return $this->openExhibitions->pluck('id');
     }
 
     public function setLookupCode(string $code, ?int $personIndex = null): void
@@ -86,9 +105,9 @@ class Index extends Component
         $this->validate(['lookupCode' => ['required', 'string']]);
 
         $code = trim($this->lookupCode);
-        $exhibition = $this->activeExhibition();
 
-        $visitor = ExhibitionVisitor::where('exhibition_id', $exhibition->id)
+        $visitor = ExhibitionVisitor::with('exhibition')
+            ->whereIn('exhibition_id', $this->openExhibitionIds())
             ->where('registration_code', $code)
             ->first();
 
@@ -104,7 +123,7 @@ class Index extends Component
             && $visitor->invited_by_booking_id === null;
 
         if (! $isPaidVisitor) {
-            $this->addScanLog('not_found', $visitor->name, $code, 5);
+            $this->addScanLog('not_found', $visitor->name, $code, 5, null, null, false, $visitor->exhibition?->title, $visitor->exhibition?->logo_url);
             $this->resetForNextScan();
 
             return;
@@ -195,19 +214,21 @@ class Index extends Component
     private function attemptEntry(ExhibitionVisitor $visitor, ?int $personIndex): void
     {
         $persons = is_array($visitor->additional_persons) ? $visitor->additional_persons : [];
+        $exhibitionTitle = $visitor->exhibition?->title;
+        $exhibitionLogoUrl = $visitor->exhibition?->logo_url;
 
         if ($personIndex === null) {
             // ── Primary visitor ────────────────────────────────────────────────
             $displayName = $visitor->name;
 
             if ($visitor->entered_at) {
-                $this->addScanLog('already_entered', $displayName, $visitor->registration_code, 30, $visitor->entered_at->format('d M Y, h:i A'));
+                $this->addScanLog('already_entered', $displayName, $visitor->registration_code, 30, $visitor->entered_at->format('d M Y, h:i A'), null, false, $exhibitionTitle, $exhibitionLogoUrl);
 
                 return;
             }
 
             $visitor->update(['entered_at' => now(), 'exited_at' => null]);
-            $this->addScanLog('entered', $displayName, $visitor->registration_code, 5);
+            $this->addScanLog('entered', $displayName, $visitor->registration_code, 5, null, null, false, $exhibitionTitle, $exhibitionLogoUrl);
 
         } else {
             // ── Additional person (1-based index) ──────────────────────────────
@@ -215,7 +236,7 @@ class Index extends Component
             $person = $persons[$arrayIndex] ?? null;
 
             if (! $person) {
-                $this->addScanLog('not_found', "Person #{$personIndex} of {$visitor->name}", $visitor->registration_code, 5);
+                $this->addScanLog('not_found', "Person #{$personIndex} of {$visitor->name}", $visitor->registration_code, 5, null, null, false, $exhibitionTitle, $exhibitionLogoUrl);
 
                 return;
             }
@@ -225,7 +246,7 @@ class Index extends Component
             $personEnteredAt = isset($person['entered_at']) ? Carbon::parse($person['entered_at']) : null;
 
             if ($personEnteredAt) {
-                $this->addScanLog('already_entered', $displayName, $visitor->registration_code, 30, $personEnteredAt->format('d M Y, h:i A'));
+                $this->addScanLog('already_entered', $displayName, $visitor->registration_code, 30, $personEnteredAt->format('d M Y, h:i A'), null, false, $exhibitionTitle, $exhibitionLogoUrl);
 
                 return;
             }
@@ -234,7 +255,7 @@ class Index extends Component
             $persons[$arrayIndex]['exited_at'] = null;
             $visitor->update(['additional_persons' => $persons]);
 
-            $this->addScanLog('entered', $displayName, $visitor->registration_code, 5);
+            $this->addScanLog('entered', $displayName, $visitor->registration_code, 5, null, null, false, $exhibitionTitle, $exhibitionLogoUrl);
         }
     }
 
@@ -254,9 +275,8 @@ class Index extends Component
 
         $code = strtoupper($term);
 
-        $exhibition = $this->activeExhibition();
-
-        $visitors = ExhibitionVisitor::where('exhibition_id', $exhibition->id)
+        $visitors = ExhibitionVisitor::with('exhibition')
+            ->whereIn('exhibition_id', $this->openExhibitionIds())
             ->where(function ($q) use ($term, $code): void {
                 $q->where('registration_code', $code)
                     ->orWhere('phone_number', 'like', "%{$term}%")
@@ -268,7 +288,7 @@ class Index extends Component
         if ($visitors->count() === 1) {
             $visitor = $visitors->first();
             $this->maybeEnterOnLookup($visitor);
-            $this->setFoundVisitor($visitor->fresh());
+            $this->setFoundVisitor($visitor->fresh()->load('exhibition'));
             $this->matchedVisitors = [];
         } elseif ($visitors->count() > 1) {
             $this->foundVisitor = null;
@@ -281,6 +301,8 @@ class Index extends Component
                 'state' => $v->state,
                 'status_label' => $v->status->label(),
                 'status_color' => $v->status->color(),
+                'exhibition_title' => $v->exhibition?->title ?? '',
+                'exhibition_logo_url' => $v->exhibition?->logo_url,
             ])->values()->all();
         } else {
             // No visitor found — try members (marks entry and logs result)
@@ -296,19 +318,20 @@ class Index extends Component
 
     public function selectVisitor(string $registrationCode): void
     {
-        $exhibition = $this->activeExhibition();
-
-        $visitor = ExhibitionVisitor::where('exhibition_id', $exhibition->id)
+        $visitor = ExhibitionVisitor::with('exhibition')
+            ->whereIn('exhibition_id', $this->openExhibitionIds())
             ->where('registration_code', $registrationCode)
             ->firstOrFail();
 
         $this->maybeEnterOnLookup($visitor);
-        $this->setFoundVisitor($visitor->fresh());
+        $this->setFoundVisitor($visitor->fresh()->load('exhibition'));
         $this->matchedVisitors = [];
     }
 
     private function setFoundVisitor(ExhibitionVisitor $visitor): void
     {
+        $visitor->loadMissing('exhibition');
+
         $isPaidVisitor = $visitor->status === VisitorRegistrationStatus::Confirmed
             && preg_match('/^(VIS|PRESS|VIP|VENDOR)-/', $visitor->registration_code)
             && $visitor->invited_by_booking_id === null;
@@ -341,6 +364,8 @@ class Index extends Component
             'entered_at' => $visitor->entered_at?->format('d M Y, h:i A'),
             'exited_at' => $visitor->exited_at?->format('d M Y, h:i A'),
             'additional_persons' => $additionalPersons,
+            'exhibition_title' => $visitor->exhibition?->title ?? '',
+            'exhibition_logo_url' => $visitor->exhibition?->logo_url,
         ];
     }
 
@@ -350,15 +375,13 @@ class Index extends Component
             return;
         }
 
-        $exhibition = $this->activeExhibition();
-
-        $visitor = ExhibitionVisitor::where('exhibition_id', $exhibition->id)
+        $visitor = ExhibitionVisitor::whereIn('exhibition_id', $this->openExhibitionIds())
             ->where('registration_code', $this->foundVisitor['registration_code'])
             ->firstOrFail();
 
         $visitor->update(['exited_at' => now()]);
 
-        $this->setFoundVisitor($visitor->fresh());
+        $this->setFoundVisitor($visitor->fresh()->load('exhibition'));
     }
 
     public function markPersonExited(int $personIndex): void
@@ -367,9 +390,7 @@ class Index extends Component
             return;
         }
 
-        $exhibition = $this->activeExhibition();
-
-        $visitor = ExhibitionVisitor::where('exhibition_id', $exhibition->id)
+        $visitor = ExhibitionVisitor::whereIn('exhibition_id', $this->openExhibitionIds())
             ->where('registration_code', $this->foundVisitor['registration_code'])
             ->firstOrFail();
 
@@ -383,7 +404,7 @@ class Index extends Component
         $persons[$arrayIndex]['exited_at'] = now()->toIso8601String();
         $visitor->update(['additional_persons' => $persons]);
 
-        $this->setFoundVisitor($visitor->fresh());
+        $this->setFoundVisitor($visitor->fresh()->load('exhibition'));
     }
 
     public function dismissLog(string $id): void
@@ -410,7 +431,7 @@ class Index extends Component
         $this->dispatch('refocus-search');
     }
 
-    private function addScanLog(string $type, string $name, string $code, int $duration, ?string $enteredAt = null, ?string $sub = null, bool $isMember = false): void
+    private function addScanLog(string $type, string $name, string $code, int $duration, ?string $enteredAt = null, ?string $sub = null, bool $isMember = false, ?string $exhibitionTitle = null, ?string $exhibitionLogoUrl = null): void
     {
         $entry = [
             'id' => uniqid(),
@@ -422,6 +443,8 @@ class Index extends Component
             'time' => now()->format('h:i:s A'),
             'entered_at' => $enteredAt,
             'duration' => $duration,
+            'exhibition_title' => $exhibitionTitle,
+            'exhibition_logo_url' => $exhibitionLogoUrl,
         ];
 
         array_unshift($this->scanLog, $entry);
@@ -431,7 +454,7 @@ class Index extends Component
         $this->scanLog = array_slice($this->scanLog, 0, 20);
     }
 
-    public function render(): \Illuminate\View\View
+    public function render(): View
     {
         return view('livewire.security-desk.index');
     }

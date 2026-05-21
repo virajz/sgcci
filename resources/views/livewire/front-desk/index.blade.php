@@ -106,6 +106,24 @@
                         Search Again
                     </flux:button>
                 @elseif ($foundVisitor)
+                    {{-- Exhibition banner --}}
+                    @if (!empty($foundVisitor['exhibition_title']))
+                        <div class="flex items-center gap-3 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/50">
+                            @if ($foundVisitor['exhibition_logo_url'])
+                                <img src="{{ $foundVisitor['exhibition_logo_url'] }}" alt="{{ $foundVisitor['exhibition_title'] }}"
+                                    class="object-contain h-8 w-12 shrink-0">
+                            @else
+                                <div class="flex items-center justify-center rounded-md size-8 bg-zinc-200 dark:bg-zinc-700 shrink-0">
+                                    <flux:icon name="building-storefront" class="size-4 text-zinc-500" />
+                                </div>
+                            @endif
+                            <div class="min-w-0">
+                                <p class="text-[10px] uppercase tracking-wide text-zinc-500">Exhibition</p>
+                                <p class="text-sm font-semibold truncate">{{ $foundVisitor['exhibition_title'] }}</p>
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- Primary visitor --}}
                     <div class="overflow-hidden border rounded-xl border-zinc-200 dark:border-zinc-700">
                         <div class="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-900/50">
@@ -222,6 +240,9 @@
                                     <div class="flex flex-col items-end gap-1 shrink-0">
                                         <flux:badge color="{{ $match['status_color'] }}" size="sm">
                                             {{ $match['status_label'] }}</flux:badge>
+                                        @if (!empty($match['exhibition_title']))
+                                            <span class="text-xs font-medium text-zinc-500 truncate max-w-[10rem]">{{ $match['exhibition_title'] }}</span>
+                                        @endif
                                         <span class="text-xs text-zinc-400">{{ $match['city'] }},
                                             {{ $match['state'] }}</span>
                                     </div>
@@ -280,6 +301,23 @@
                 </div>
             @else
                 <form wire:submit="registerWalkIn" class="space-y-3">
+                    @if ($this->openExhibitions->count() > 1)
+                        <flux:field>
+                            <flux:label class="text-xs">Exhibition <span class="text-red-500">*</span></flux:label>
+                            <flux:select variant="listbox" wire:model="walkInExhibitionId" placeholder="Select exhibition" size="sm">
+                                @foreach ($this->openExhibitions as $option)
+                                    <flux:select.option :value="(string) $option->id">
+                                        <div class="flex items-center gap-2 whitespace-nowrap">
+                                            <flux:avatar circle size="xs" :src="$option->logo_url" :name="$option->title" />
+                                            {{ $option->title }}
+                                        </div>
+                                    </flux:select.option>
+                                @endforeach
+                            </flux:select>
+                            <flux:error name="walkInExhibitionId" />
+                        </flux:field>
+                    @endif
+
                     <div class="grid grid-cols-2 gap-3">
                         <flux:field>
                             <flux:label class="text-xs">Phone <span class="text-red-500">*</span></flux:label>
