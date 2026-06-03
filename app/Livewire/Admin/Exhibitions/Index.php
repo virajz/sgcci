@@ -54,6 +54,9 @@ class Index extends Component
     #[Validate('nullable|string')]
     public string $description = '';
 
+    #[Validate('nullable|url|max:2048')]
+    public ?string $redirectUrl = null;
+
     #[Validate('required|date')]
     public string $startDate = '';
 
@@ -112,6 +115,7 @@ class Index extends Component
         $exhibition = Exhibition::create([
             'title' => $this->title,
             'description' => $this->description,
+            'redirect_url' => $this->redirectUrl ?: null,
             'start_date' => $this->startDate,
             'end_date' => $this->endDate,
             'entry_type' => $this->entryType,
@@ -141,6 +145,7 @@ class Index extends Component
         $this->exhibitionToEdit = $exhibitionId;
         $this->title = $exhibition->title;
         $this->description = $exhibition->description ?? '';
+        $this->redirectUrl = $exhibition->redirect_url;
         $this->startDate = $exhibition->start_date->format('Y-m-d');
         $this->endDate = $exhibition->end_date->format('Y-m-d');
         $this->entryType = $exhibition->entry_type?->value ?? 'free';
@@ -167,6 +172,7 @@ class Index extends Component
         $exhibition->fill([
             'title' => $this->title,
             'description' => $this->description,
+            'redirect_url' => $this->redirectUrl ?: null,
             'start_date' => $this->startDate,
             'end_date' => $this->endDate,
             'entry_type' => $this->entryType,
@@ -361,6 +367,7 @@ class Index extends Component
             'exhibitionToEdit',
             'title',
             'description',
+            'redirectUrl',
             'startDate',
             'endDate',
             'entryType',

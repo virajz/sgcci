@@ -20,6 +20,7 @@ class Exhibition extends Model
     protected $fillable = [
         'title',
         'slug',
+        'redirect_url',
         'description',
         'logo_path',
         'pass_background_path',

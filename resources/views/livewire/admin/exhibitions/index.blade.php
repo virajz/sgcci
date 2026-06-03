@@ -123,6 +123,13 @@
                 <flux:error name="description" />
             </flux:field>
 
+            <flux:field>
+                <flux:label badge="Optional">Redirect URL</flux:label>
+                <flux:input wire:model="redirectUrl" type="url" placeholder="https://example.com" />
+                <flux:description>If set, visitors opening this exhibition's registration link are redirected here.</flux:description>
+                <flux:error name="redirectUrl" />
+            </flux:field>
+
             <div class="grid grid-cols-2 gap-4">
                 <flux:field>
                     <flux:label>Start Date</flux:label>
@@ -180,6 +187,13 @@
                 <flux:label>Description</flux:label>
                 <flux:textarea wire:model="description" placeholder="Exhibition description" rows="3" />
                 <flux:error name="description" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label badge="Optional">Redirect URL</flux:label>
+                <flux:input wire:model="redirectUrl" type="url" placeholder="https://example.com" />
+                <flux:description>If set, visitors opening this exhibition's registration link are redirected here.</flux:description>
+                <flux:error name="redirectUrl" />
             </flux:field>
 
             <div class="grid grid-cols-2 gap-4">

@@ -99,6 +99,12 @@ class VisitorsRegistration extends Component
 
     public function mount(Exhibition $exhibition): void
     {
+        if (! empty($exhibition->redirect_url)) {
+            $this->redirect($exhibition->redirect_url);
+
+            return;
+        }
+
         $this->exhibitionId = $exhibition->id;
         $this->source = request()->query('source');
     }

@@ -119,3 +119,18 @@ test('confirmed visitor cannot register again for the same exhibition', function
     $component = Livewire::test(VisitorsRegistration::class, ['exhibition' => $exhibition]);
     setStep1Fields($component, '9825145600')->call('nextStep')->assertHasErrors(['phoneNumber']);
 });
+
+test('exhibition with a redirect url redirects visitors away from registration', function () {
+    $exhibition = Exhibition::factory()->create(['redirect_url' => 'https://example.com/new-event']);
+
+    Livewire::test(VisitorsRegistration::class, ['exhibition' => $exhibition])
+        ->assertRedirect('https://example.com/new-event');
+});
+
+test('exhibition without a redirect url renders the registration form', function () {
+    $exhibition = Exhibition::factory()->create(['redirect_url' => null]);
+
+    Livewire::test(VisitorsRegistration::class, ['exhibition' => $exhibition])
+        ->assertNoRedirect()
+        ->assertSet('exhibitionId', $exhibition->id);
+});
