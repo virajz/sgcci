@@ -24,7 +24,7 @@ class CloseEndedRegistrations extends Command
 
         $exhibitions = Exhibition::query()
             ->where('registration_closed', false)
-            ->whereDate('end_date', '<==', now()->toDateString())
+            ->whereDate('end_date', '<=', now()->toDateString())
             ->get();
 
         if ($exhibitions->isEmpty()) {

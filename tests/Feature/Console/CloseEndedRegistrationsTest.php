@@ -15,12 +15,18 @@ test('it closes registration for exhibitions that have ended', function () {
     expect($ended->fresh()->registration_closed)->toBeTrue();
 });
 
-test('it leaves ongoing and future exhibitions open', function () {
+test('it closes registration for exhibitions ending today', function () {
     $today = Exhibition::factory()->create([
         'end_date' => now(),
         'registration_closed' => false,
     ]);
 
+    $this->artisan('exhibitions:close-ended-registrations')->assertSuccessful();
+
+    expect($today->fresh()->registration_closed)->toBeTrue();
+});
+
+test('it leaves future exhibitions open', function () {
     $future = Exhibition::factory()->create([
         'end_date' => now()->addWeek(),
         'registration_closed' => false,
@@ -28,8 +34,7 @@ test('it leaves ongoing and future exhibitions open', function () {
 
     $this->artisan('exhibitions:close-ended-registrations')->assertSuccessful();
 
-    expect($today->fresh()->registration_closed)->toBeFalse()
-        ->and($future->fresh()->registration_closed)->toBeFalse();
+    expect($future->fresh()->registration_closed)->toBeFalse();
 });
 
 test('dry run reports without persisting changes', function () {
