@@ -24,6 +24,9 @@ Schedule::command('app:purge-whatsapp-webhook-logs')->daily();
 // Mark all inside visitors as exited at end of day.
 Schedule::command('visitors:mark-all-exited')->dailyAt('23:55');
 
+// Close visitor registration for exhibitions whose end date has passed.
+Schedule::command('exhibitions:close-ended-registrations')->dailyAt('23:00');
+
 // Poll CCAvenue for visitor payments that never returned from the gateway.
 // --limit=50 clears the existing backlog within a few cycles.
 // --expire-hours=24 auto-fails anything CCAvenue still shows as Awaited/Unknown after 24h.
