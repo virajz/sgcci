@@ -11,6 +11,7 @@ use App\Services\QrCodeService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
 use ZipArchive;
 
 class ExhibitorBadgeController extends Controller
@@ -125,7 +126,7 @@ class ExhibitorBadgeController extends Controller
         return response($contents)->header('Content-Type', $mime);
     }
 
-    public function printAll(Booking $booking): \Illuminate\View\View
+    public function printAll(Booking $booking): View
     {
         abort_unless(Auth::user()?->isAdmin(), 403);
 
@@ -163,6 +164,55 @@ class ExhibitorBadgeController extends Controller
         return response($zipData)
             ->header('Content-Type', 'application/zip')
             ->header('Content-Disposition', 'attachment; filename="'.$zipFilename.'"');
+    }
+
+    public function invitationPassInline(Booking $booking): Response
+    {
+        $this->authorizeBookingAccess($booking);
+
+        $imageData = $this->buildInvitationPassImage($booking);
+
+        return response($imageData)
+            ->header('Content-Type', 'image/jpeg')
+            ->header('Content-Disposition', 'inline');
+    }
+
+    public function invitationPassDownload(Booking $booking): Response
+    {
+        $this->authorizeBookingAccess($booking);
+
+        $imageData = $this->buildInvitationPassImage($booking);
+        $filename = 'invitation-pass-'.str($booking->brand_name)->slug().'.jpg';
+
+        return response($imageData)
+            ->header('Content-Type', 'image/jpeg')
+            ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
+    }
+
+    private function buildInvitationPassImage(Booking $booking): string
+    {
+        $exhibition = $booking->exhibition;
+
+        abort_unless($exhibition && $exhibition->hasCustomInvitationPass(), 404);
+
+        $tmpLogoPath = null;
+        if ($booking->invitation_logo_path && Storage::disk('public')->exists($booking->invitation_logo_path)) {
+            $tmpLogoPath = tempnam(sys_get_temp_dir(), 'invitation_logo_');
+            file_put_contents($tmpLogoPath, Storage::disk('public')->get($booking->invitation_logo_path));
+        }
+
+        try {
+            return $this->qrCodeService->generateInvitationPassImage(
+                exhibition: $exhibition,
+                stallNo: (string) ($booking->invitation_stall_no ?? ''),
+                companyName: (string) ($booking->invitation_company_name ?? ''),
+                logoPath: $tmpLogoPath,
+            );
+        } finally {
+            if ($tmpLogoPath && file_exists($tmpLogoPath)) {
+                unlink($tmpLogoPath);
+            }
+        }
     }
 
     private function buildBadgeImage(Booking $booking, ExhibitorBadgeMember $member): string

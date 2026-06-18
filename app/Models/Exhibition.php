@@ -30,6 +30,15 @@ class Exhibition extends Model
         'pass_name_x',
         'pass_name_y',
         'pass_name_color',
+        'invitation_background_path',
+        'invitation_stall_x',
+        'invitation_stall_y',
+        'invitation_company_x',
+        'invitation_company_y',
+        'invitation_logo_x',
+        'invitation_logo_y',
+        'invitation_logo_size',
+        'invitation_text_color',
         'start_date',
         'end_date',
         'entry_type',
@@ -51,6 +60,13 @@ class Exhibition extends Model
             'pass_qr_size' => 'integer',
             'pass_name_x' => 'integer',
             'pass_name_y' => 'integer',
+            'invitation_stall_x' => 'integer',
+            'invitation_stall_y' => 'integer',
+            'invitation_company_x' => 'integer',
+            'invitation_company_y' => 'integer',
+            'invitation_logo_x' => 'integer',
+            'invitation_logo_y' => 'integer',
+            'invitation_logo_size' => 'integer',
         ];
     }
 
@@ -68,12 +84,27 @@ class Exhibition extends Model
         );
     }
 
+    protected function invitationBackgroundUrl(): Attribute
+    {
+        return Attribute::get(
+            fn (): ?string => $this->invitation_background_path ? Storage::disk('public')->url($this->invitation_background_path) : null,
+        );
+    }
+
     public function hasCustomPass(): bool
     {
         return $this->pass_background_path !== null
             && $this->pass_qr_x !== null
             && $this->pass_qr_y !== null
             && $this->pass_qr_size !== null;
+    }
+
+    public function hasCustomInvitationPass(): bool
+    {
+        return $this->invitation_background_path !== null
+            && $this->invitation_logo_x !== null
+            && $this->invitation_logo_y !== null
+            && $this->invitation_logo_size !== null;
     }
 
     public function isPaidEntry(): bool

@@ -3,15 +3,17 @@
 namespace App\Models;
 
 use App\BookingStatus;
+use Database\Factories\BookingFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class Booking extends Model
 {
-    /** @use HasFactory<\Database\Factories\BookingFactory> */
+    /** @use HasFactory<BookingFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -23,6 +25,9 @@ class Booking extends Model
         'company_profile',
         'company_logo',
         'company_logo_original_name',
+        'invitation_logo_path',
+        'invitation_stall_no',
+        'invitation_company_name',
         'profile_message_type',
         'profile_message_text',
         'profile_message_media',
@@ -138,6 +143,13 @@ class Booking extends Model
             'last_payment_reminder_sent_at' => 'datetime',
             'last_partial_reminder_sent_at' => 'datetime',
         ];
+    }
+
+    public function getInvitationLogoUrlAttribute(): ?string
+    {
+        return $this->invitation_logo_path
+            ? Storage::disk('public')->url($this->invitation_logo_path)
+            : null;
     }
 
     /**

@@ -226,6 +226,99 @@ class QrCodeService
     }
 
     /**
+     * Generate the exhibitor invitation pass composite: the exhibition's invitation
+     * background with the exhibitor's logo placed in the configured square and the
+     * stall number and company name drawn at their configured positions.
+     */
+    public function generateInvitationPassImage(
+        Exhibition $exhibition,
+        string $stallNo,
+        string $companyName,
+        ?string $logoPath = null,
+    ): string {
+        /** @var Imagick $canvas */
+        $canvas = new Imagick;
+        $canvas->readImageBlob(Storage::disk('public')->get($exhibition->invitation_background_path));
+
+        $srcW = $canvas->getImageWidth();
+        $srcH = $canvas->getImageHeight();
+
+        // --- Logo ---
+        if ($logoPath && file_exists($logoPath) && $exhibition->invitation_logo_size) {
+            $size = (int) $exhibition->invitation_logo_size;
+            $boxX = (int) $exhibition->invitation_logo_x;
+            $boxY = (int) $exhibition->invitation_logo_y;
+
+            /** @var Imagick $logo */
+            $logo = new Imagick($logoPath);
+            $logo->setImageFormat('png');
+            $logo->thumbnailImage($size, $size, bestfit: true);
+
+            $offsetX = $boxX + intdiv($size - (int) $logo->getImageWidth(), 2);
+            $offsetY = $boxY + intdiv($size - (int) $logo->getImageHeight(), 2);
+
+            $canvas->compositeImage($logo, Imagick::COMPOSITE_OVER, $offsetX, $offsetY);
+        }
+
+        $textColor = $exhibition->invitation_text_color ?: '#39318a';
+        $maxFont = max(28, (int) round($srcH * 0.04));
+        $minFont = max(14, (int) round($maxFont * 0.5));
+        $maxWidth = (int) round($srcW * 0.6);
+
+        // --- Stall number ---
+        if ($stallNo !== '' && $exhibition->invitation_stall_x !== null && $exhibition->invitation_stall_y !== null) {
+            $this->drawCenteredText(
+                $canvas,
+                $stallNo,
+                (int) $exhibition->invitation_stall_x,
+                (int) $exhibition->invitation_stall_y,
+                $textColor,
+                $maxFont,
+                $minFont,
+                $maxWidth,
+            );
+        }
+
+        // --- Company name ---
+        if ($companyName !== '' && $exhibition->invitation_company_x !== null && $exhibition->invitation_company_y !== null) {
+            $this->drawCenteredText(
+                $canvas,
+                $companyName,
+                (int) $exhibition->invitation_company_x,
+                (int) $exhibition->invitation_company_y,
+                $textColor,
+                $maxFont,
+                $minFont,
+                $maxWidth,
+            );
+        }
+
+        $canvas->setImageFormat('jpeg');
+        $canvas->setImageCompressionQuality(92);
+
+        return $canvas->getImageBlob();
+    }
+
+    /**
+     * Draw centre-aligned text at the given baseline point, shrinking the font
+     * until it fits within $maxWidth pixels.
+     */
+    private function drawCenteredText(Imagick $img, string $text, int $x, int $y, string $color, int $maxFont, int $minFont, int $maxWidth): void
+    {
+        $fontSize = $this->fitTextToWidth($img, $text, $maxFont, $minFont, $maxWidth);
+
+        /** @var ImagickDraw $draw */
+        $draw = new ImagickDraw;
+        $draw->setFont(self::fontPath());
+        $draw->setFontSize($fontSize);
+        $draw->setFillColor(new ImagickPixel($color));
+        $draw->setTextAlignment(Imagick::ALIGN_CENTER);
+        $draw->setTextAntialias(true);
+
+        $img->annotateImage($draw, $x, $y, 0, $text);
+    }
+
+    /**
      * Generate the exhibitor badge composite: badge.jpg with photo, name,
      * company, stall number(s), and the QR code placed on the left white panel.
      *

@@ -27,6 +27,11 @@
                     <flux:navlist.item icon="building-storefront" :href="route('exhibitor.company-profile')"
                         :current="request()->routeIs('exhibitor.company-profile')" wire:navigate>{{ __('Company Profile') }}
                     </flux:navlist.item>
+                    @if(auth()->user()->booking?->exhibition?->hasCustomInvitationPass())
+                        <flux:navlist.item icon="ticket" :href="route('exhibitor.invitation-pass')"
+                            :current="request()->routeIs('exhibitor.invitation-pass')" wire:navigate>{{ __('Invitation Pass') }}
+                        </flux:navlist.item>
+                    @endif
                     @if(auth()->user()->booking?->invited_guests_limit > 0)
                         <flux:navlist.item icon="user-plus" :href="route('exhibitor.invited-guests')"
                             :current="request()->routeIs('exhibitor.invited-guests')" wire:navigate>{{ __('Invited Guests') }}

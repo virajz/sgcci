@@ -126,3 +126,91 @@ it('reports hasCustomPass() correctly', function () {
 
     expect($exhibition->fresh()->hasCustomPass())->toBeTrue();
 });
+
+it('saves the invitation pass background and coordinates when adding an exhibition', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    $background = UploadedFile::fake()->image('invitation.jpg', 1672, 941);
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->call('openAddModal')
+        ->set('title', 'Jewellery Expo 2027')
+        ->set('startDate', '2027-02-01')
+        ->set('endDate', '2027-02-05')
+        ->set('entryType', 'free')
+        ->set('invitationBackgroundUpload', $background)
+        ->set('invitationStallX', 120)
+        ->set('invitationStallY', 600)
+        ->set('invitationCompanyX', 130)
+        ->set('invitationCompanyY', 700)
+        ->set('invitationLogoX', 91)
+        ->set('invitationLogoY', 73)
+        ->set('invitationLogoSize', 376)
+        ->set('invitationTextColor', '#39318a')
+        ->call('addExhibition')
+        ->assertHasNoErrors();
+
+    $exhibition = Exhibition::where('title', 'Jewellery Expo 2027')->firstOrFail();
+
+    expect($exhibition->invitation_background_path)->not->toBeNull();
+    expect($exhibition->invitation_stall_x)->toBe(120);
+    expect($exhibition->invitation_stall_y)->toBe(600);
+    expect($exhibition->invitation_company_x)->toBe(130);
+    expect($exhibition->invitation_company_y)->toBe(700);
+    expect($exhibition->invitation_logo_x)->toBe(91);
+    expect($exhibition->invitation_logo_y)->toBe(73);
+    expect($exhibition->invitation_logo_size)->toBe(376);
+    expect($exhibition->invitation_text_color)->toBe('#39318a');
+    expect($exhibition->hasCustomInvitationPass())->toBeTrue();
+
+    Storage::disk('public')->assertExists($exhibition->invitation_background_path);
+});
+
+it('removes the invitation background and clears coordinates', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    $bg = UploadedFile::fake()->image('invitation.jpg');
+    $path = $bg->storeAs('exhibitions/seed', 'invitation.jpg', 'public');
+
+    $exhibition = Exhibition::factory()->create([
+        'invitation_background_path' => $path,
+        'invitation_stall_x' => 120,
+        'invitation_stall_y' => 600,
+        'invitation_company_x' => 130,
+        'invitation_company_y' => 700,
+        'invitation_logo_x' => 91,
+        'invitation_logo_y' => 73,
+        'invitation_logo_size' => 376,
+        'invitation_text_color' => '#39318a',
+    ]);
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->call('openEditModal', $exhibition->id)
+        ->call('removeInvitationBackground');
+
+    $exhibition->refresh();
+
+    expect($exhibition->invitation_background_path)->toBeNull();
+    expect($exhibition->invitation_stall_x)->toBeNull();
+    expect($exhibition->invitation_company_x)->toBeNull();
+    expect($exhibition->invitation_logo_x)->toBeNull();
+    expect($exhibition->invitation_logo_size)->toBeNull();
+    expect($exhibition->invitation_text_color)->toBeNull();
+    Storage::disk('public')->assertMissing($path);
+});
+
+it('reports hasCustomInvitationPass() correctly', function () {
+    $exhibition = Exhibition::factory()->create();
+    expect($exhibition->hasCustomInvitationPass())->toBeFalse();
+
+    $exhibition->update([
+        'invitation_background_path' => 'invitation.jpg',
+        'invitation_logo_x' => 10,
+        'invitation_logo_y' => 10,
+        'invitation_logo_size' => 100,
+    ]);
+
+    expect($exhibition->fresh()->hasCustomInvitationPass())->toBeTrue();
+});

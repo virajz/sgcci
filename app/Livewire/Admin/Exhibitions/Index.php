@@ -93,9 +93,38 @@ class Index extends Component
     #[Validate(['nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$/'])]
     public ?string $passNameColor = null;
 
+    #[Validate('nullable|image|max:10240')]
+    public $invitationBackgroundUpload = null;
+
+    #[Validate('nullable|integer|min:0')]
+    public ?int $invitationStallX = null;
+
+    #[Validate('nullable|integer|min:0')]
+    public ?int $invitationStallY = null;
+
+    #[Validate('nullable|integer|min:0')]
+    public ?int $invitationCompanyX = null;
+
+    #[Validate('nullable|integer|min:0')]
+    public ?int $invitationCompanyY = null;
+
+    #[Validate('nullable|integer|min:0')]
+    public ?int $invitationLogoX = null;
+
+    #[Validate('nullable|integer|min:0')]
+    public ?int $invitationLogoY = null;
+
+    #[Validate('nullable|integer|min:1')]
+    public ?int $invitationLogoSize = null;
+
+    #[Validate(['nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$/'])]
+    public ?string $invitationTextColor = null;
+
     public ?string $existingLogoUrl = null;
 
     public ?string $existingPassBackgroundUrl = null;
+
+    public ?string $existingInvitationBackgroundUrl = null;
 
     public function updatingSearch(): void
     {
@@ -159,6 +188,16 @@ class Index extends Component
         $this->passNameX = $exhibition->pass_name_x;
         $this->passNameY = $exhibition->pass_name_y;
         $this->passNameColor = $exhibition->pass_name_color;
+
+        $this->existingInvitationBackgroundUrl = $exhibition->invitation_background_url;
+        $this->invitationStallX = $exhibition->invitation_stall_x;
+        $this->invitationStallY = $exhibition->invitation_stall_y;
+        $this->invitationCompanyX = $exhibition->invitation_company_x;
+        $this->invitationCompanyY = $exhibition->invitation_company_y;
+        $this->invitationLogoX = $exhibition->invitation_logo_x;
+        $this->invitationLogoY = $exhibition->invitation_logo_y;
+        $this->invitationLogoSize = $exhibition->invitation_logo_size;
+        $this->invitationTextColor = $exhibition->invitation_text_color;
 
         $this->showEditModal = true;
     }
@@ -240,6 +279,39 @@ class Index extends Component
         $this->passNameColor = null;
     }
 
+    public function removeInvitationBackground(): void
+    {
+        if ($this->exhibitionToEdit) {
+            $exhibition = Exhibition::findOrFail($this->exhibitionToEdit);
+
+            if ($exhibition->invitation_background_path) {
+                Storage::disk('public')->delete($exhibition->invitation_background_path);
+                $exhibition->update([
+                    'invitation_background_path' => null,
+                    'invitation_stall_x' => null,
+                    'invitation_stall_y' => null,
+                    'invitation_company_x' => null,
+                    'invitation_company_y' => null,
+                    'invitation_logo_x' => null,
+                    'invitation_logo_y' => null,
+                    'invitation_logo_size' => null,
+                    'invitation_text_color' => null,
+                ]);
+            }
+        }
+
+        $this->existingInvitationBackgroundUrl = null;
+        $this->invitationBackgroundUpload = null;
+        $this->invitationStallX = null;
+        $this->invitationStallY = null;
+        $this->invitationCompanyX = null;
+        $this->invitationCompanyY = null;
+        $this->invitationLogoX = null;
+        $this->invitationLogoY = null;
+        $this->invitationLogoSize = null;
+        $this->invitationTextColor = null;
+    }
+
     public function confirmToggleRegistration(int $exhibitionId): void
     {
         $this->exhibitionToToggleRegistration = $exhibitionId;
@@ -288,6 +360,9 @@ class Index extends Component
         }
         if ($exhibition->pass_background_path) {
             Storage::disk('public')->delete($exhibition->pass_background_path);
+        }
+        if ($exhibition->invitation_background_path) {
+            Storage::disk('public')->delete($exhibition->invitation_background_path);
         }
 
         $exhibition->delete();
@@ -353,12 +428,29 @@ class Index extends Component
             $exhibition->pass_background_path = $path;
         }
 
+        if ($this->invitationBackgroundUpload instanceof TemporaryUploadedFile) {
+            if ($exhibition->invitation_background_path) {
+                Storage::disk('public')->delete($exhibition->invitation_background_path);
+            }
+            $path = $this->invitationBackgroundUpload->store("exhibitions/{$exhibition->id}", 'public');
+            $exhibition->invitation_background_path = $path;
+        }
+
         $exhibition->pass_qr_x = $this->passQrX;
         $exhibition->pass_qr_y = $this->passQrY;
         $exhibition->pass_qr_size = $this->passQrSize;
         $exhibition->pass_name_x = $this->passNameX;
         $exhibition->pass_name_y = $this->passNameY;
         $exhibition->pass_name_color = $this->passNameColor;
+
+        $exhibition->invitation_stall_x = $this->invitationStallX;
+        $exhibition->invitation_stall_y = $this->invitationStallY;
+        $exhibition->invitation_company_x = $this->invitationCompanyX;
+        $exhibition->invitation_company_y = $this->invitationCompanyY;
+        $exhibition->invitation_logo_x = $this->invitationLogoX;
+        $exhibition->invitation_logo_y = $this->invitationLogoY;
+        $exhibition->invitation_logo_size = $this->invitationLogoSize;
+        $exhibition->invitation_text_color = $this->invitationTextColor;
     }
 
     private function resetExhibitionForm(): void
@@ -380,8 +472,18 @@ class Index extends Component
             'passNameX',
             'passNameY',
             'passNameColor',
+            'invitationBackgroundUpload',
+            'invitationStallX',
+            'invitationStallY',
+            'invitationCompanyX',
+            'invitationCompanyY',
+            'invitationLogoX',
+            'invitationLogoY',
+            'invitationLogoSize',
+            'invitationTextColor',
             'existingLogoUrl',
             'existingPassBackgroundUrl',
+            'existingInvitationBackgroundUrl',
         ]);
 
         $this->entryType = 'free';
