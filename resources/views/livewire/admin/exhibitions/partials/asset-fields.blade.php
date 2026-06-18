@@ -217,7 +217,7 @@
                     <div
                         x-show="stallX !== null && stallY !== null && srcW > 0"
                         @pointerdown="startDrag('stall', $event)"
-                        :style="`position:absolute; left:${stallX * scale}px; top:${stallY * scale}px; transform:translate(-50%,-50%); padding:2px 6px; background:rgba(255,255,255,0.85); color:${textColor || '#39318a'}; border:1px dashed #ea580c; border-radius:6px; cursor:move; font-size:${(textSize > 0 ? textSize : 16) * scale}px; line-height:1.1; font-weight:700; white-space:nowrap;`"
+                        :style="`position:absolute; left:${stallX * scale}px; top:${stallY * scale}px; padding:0; background:rgba(255,255,255,0.85); color:${textColor || '#39318a'}; box-shadow:0 0 0 1px #ea580c; border-radius:3px; cursor:move; font-size:${(textSize > 0 ? textSize : 16) * scale}px; line-height:1; font-weight:700; white-space:nowrap;`"
                     >
                         STALL NO
                     </div>
@@ -225,7 +225,7 @@
                     <div
                         x-show="companyX !== null && companyY !== null && srcW > 0"
                         @pointerdown="startDrag('company', $event)"
-                        :style="`position:absolute; left:${companyX * scale}px; top:${companyY * scale}px; transform:translate(-50%,-50%); padding:2px 6px; background:rgba(255,255,255,0.85); color:${textColor || '#39318a'}; border:1px dashed #16a34a; border-radius:6px; cursor:move; font-size:${(textSize > 0 ? textSize : 16) * scale}px; line-height:1.1; font-weight:700; white-space:nowrap;`"
+                        :style="`position:absolute; left:${companyX * scale}px; top:${companyY * scale}px; padding:0; background:rgba(255,255,255,0.85); color:${textColor || '#39318a'}; box-shadow:0 0 0 1px #16a34a; border-radius:3px; cursor:move; font-size:${(textSize > 0 ? textSize : 16) * scale}px; line-height:1; font-weight:700; white-space:nowrap;`"
                     >
                         COMPANY NAME
                     </div>
@@ -268,7 +268,7 @@
 
                 <flux:field>
                     <flux:label size="sm">Text Colour</flux:label>
-                    <flux:description>Colour and size are shared by the stall number and company name. Drag the pills to position; the preview reflects the chosen size.</flux:description>
+                    <flux:description>Colour and size are shared by the stall number and company name. Text is left-aligned — each X/Y marks the top-left corner where the text begins. Drag the pills to position; the preview reflects the chosen size.</flux:description>
                     <flux:color-picker wire:model.live="invitationTextColor" format="hex" placeholder="#39318a" />
                 </flux:field>
             </div>
@@ -469,13 +469,16 @@
                         evt.preventDefault();
                         this.dragging = target;
                         const rect = this.$refs.canvas.getBoundingClientRect();
+                        let anchorX = 0, anchorY = 0;
                         if (target === 'logo') {
-                            this.pointerOffsetX = evt.clientX - rect.left - (this.logoX * this.scale);
-                            this.pointerOffsetY = evt.clientY - rect.top - (this.logoY * this.scale);
-                        } else {
-                            this.pointerOffsetX = 0;
-                            this.pointerOffsetY = 0;
+                            anchorX = this.logoX; anchorY = this.logoY;
+                        } else if (target === 'stall') {
+                            anchorX = this.stallX; anchorY = this.stallY;
+                        } else if (target === 'company') {
+                            anchorX = this.companyX; anchorY = this.companyY;
                         }
+                        this.pointerOffsetX = evt.clientX - rect.left - (anchorX * this.scale);
+                        this.pointerOffsetY = evt.clientY - rect.top - (anchorY * this.scale);
                         window.addEventListener('pointermove', this.boundMove);
                         window.addEventListener('pointerup', this.boundUp);
                     },
@@ -485,16 +488,14 @@
                         const rect = this.$refs.canvas.getBoundingClientRect();
                         const dx = evt.clientX - rect.left;
                         const dy = evt.clientY - rect.top;
+                        let sx = Math.round((dx - this.pointerOffsetX) / this.scale);
+                        let sy = Math.round((dy - this.pointerOffsetY) / this.scale);
                         if (this.dragging === 'logo') {
-                            let sx = Math.round((dx - this.pointerOffsetX) / this.scale);
-                            let sy = Math.round((dy - this.pointerOffsetY) / this.scale);
                             sx = Math.max(0, Math.min(this.srcW - this.logoSize, sx));
                             sy = Math.max(0, Math.min(this.srcH - this.logoSize, sy));
                             this.logoX = sx;
                             this.logoY = sy;
                         } else {
-                            let sx = Math.round(dx / this.scale);
-                            let sy = Math.round(dy / this.scale);
                             sx = Math.max(0, Math.min(this.srcW, sx));
                             sy = Math.max(0, Math.min(this.srcH, sy));
                             if (this.dragging === 'stall') {

@@ -265,7 +265,7 @@ class QrCodeService
 
         // --- Stall number ---
         if ($stallNo !== '' && $exhibition->invitation_stall_x !== null && $exhibition->invitation_stall_y !== null) {
-            $this->drawCenteredText(
+            $this->drawText(
                 $canvas,
                 $stallNo,
                 (int) $exhibition->invitation_stall_x,
@@ -277,7 +277,7 @@ class QrCodeService
 
         // --- Company name ---
         if ($companyName !== '' && $exhibition->invitation_company_x !== null && $exhibition->invitation_company_y !== null) {
-            $this->drawCenteredText(
+            $this->drawText(
                 $canvas,
                 $companyName,
                 (int) $exhibition->invitation_company_x,
@@ -294,19 +294,26 @@ class QrCodeService
     }
 
     /**
-     * Draw centre-aligned text at the given baseline point using the given font size.
+     * Draw left-aligned text anchored by its top-left corner at ($x, $y).
+     *
+     * Imagick draws from the text baseline, so we shift down by the font
+     * ascender to make $y the top edge of the text — matching the admin
+     * preview, where the marker's top-left sits at the same point.
      */
-    private function drawCenteredText(Imagick $img, string $text, int $x, int $y, string $color, int $fontSize): void
+    private function drawText(Imagick $img, string $text, int $x, int $y, string $color, int $fontSize): void
     {
         /** @var ImagickDraw $draw */
         $draw = new ImagickDraw;
         $draw->setFont(self::fontPath());
         $draw->setFontSize($fontSize);
         $draw->setFillColor(new ImagickPixel($color));
-        $draw->setTextAlignment(Imagick::ALIGN_CENTER);
+        $draw->setTextAlignment(Imagick::ALIGN_LEFT);
         $draw->setTextAntialias(true);
 
-        $img->annotateImage($draw, $x, $y, 0, $text);
+        $metrics = $img->queryFontMetrics($draw, $text);
+        $baselineY = $y + (int) round($metrics['ascender']);
+
+        $img->annotateImage($draw, $x, $baselineY, 0, $text);
     }
 
     /**
