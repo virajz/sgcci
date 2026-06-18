@@ -26,6 +26,7 @@ beforeEach(function () {
         'invitation_logo_y' => 73,
         'invitation_logo_size' => 376,
         'invitation_text_color' => '#39318a',
+        'invitation_text_size' => 48,
     ]);
 
     $this->exhibitorUser = User::factory()->create(['role' => 'exhibitor']);

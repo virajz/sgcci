@@ -120,6 +120,9 @@ class Index extends Component
     #[Validate(['nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$/'])]
     public ?string $invitationTextColor = null;
 
+    #[Validate('nullable|integer|min:1')]
+    public ?int $invitationTextSize = null;
+
     public ?string $existingLogoUrl = null;
 
     public ?string $existingPassBackgroundUrl = null;
@@ -198,6 +201,7 @@ class Index extends Component
         $this->invitationLogoY = $exhibition->invitation_logo_y;
         $this->invitationLogoSize = $exhibition->invitation_logo_size;
         $this->invitationTextColor = $exhibition->invitation_text_color;
+        $this->invitationTextSize = $exhibition->invitation_text_size;
 
         $this->showEditModal = true;
     }
@@ -296,6 +300,7 @@ class Index extends Component
                     'invitation_logo_y' => null,
                     'invitation_logo_size' => null,
                     'invitation_text_color' => null,
+                    'invitation_text_size' => null,
                 ]);
             }
         }
@@ -310,6 +315,7 @@ class Index extends Component
         $this->invitationLogoY = null;
         $this->invitationLogoSize = null;
         $this->invitationTextColor = null;
+        $this->invitationTextSize = null;
     }
 
     public function confirmToggleRegistration(int $exhibitionId): void
@@ -451,6 +457,7 @@ class Index extends Component
         $exhibition->invitation_logo_y = $this->invitationLogoY;
         $exhibition->invitation_logo_size = $this->invitationLogoSize;
         $exhibition->invitation_text_color = $this->invitationTextColor;
+        $exhibition->invitation_text_size = $this->invitationTextSize;
     }
 
     private function resetExhibitionForm(): void
@@ -481,6 +488,7 @@ class Index extends Component
             'invitationLogoY',
             'invitationLogoSize',
             'invitationTextColor',
+            'invitationTextSize',
             'existingLogoUrl',
             'existingPassBackgroundUrl',
             'existingInvitationBackgroundUrl',

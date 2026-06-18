@@ -39,6 +39,7 @@ class Exhibition extends Model
         'invitation_logo_y',
         'invitation_logo_size',
         'invitation_text_color',
+        'invitation_text_size',
         'start_date',
         'end_date',
         'entry_type',
@@ -67,6 +68,7 @@ class Exhibition extends Model
             'invitation_logo_x' => 'integer',
             'invitation_logo_y' => 'integer',
             'invitation_logo_size' => 'integer',
+            'invitation_text_size' => 'integer',
         ];
     }
 

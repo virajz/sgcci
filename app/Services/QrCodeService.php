@@ -261,9 +261,7 @@ class QrCodeService
         }
 
         $textColor = $exhibition->invitation_text_color ?: '#39318a';
-        $maxFont = max(28, (int) round($srcH * 0.04));
-        $minFont = max(14, (int) round($maxFont * 0.5));
-        $maxWidth = (int) round($srcW * 0.6);
+        $fontSize = $exhibition->invitation_text_size ?: max(28, (int) round($srcH * 0.04));
 
         // --- Stall number ---
         if ($stallNo !== '' && $exhibition->invitation_stall_x !== null && $exhibition->invitation_stall_y !== null) {
@@ -273,9 +271,7 @@ class QrCodeService
                 (int) $exhibition->invitation_stall_x,
                 (int) $exhibition->invitation_stall_y,
                 $textColor,
-                $maxFont,
-                $minFont,
-                $maxWidth,
+                $fontSize,
             );
         }
 
@@ -287,9 +283,7 @@ class QrCodeService
                 (int) $exhibition->invitation_company_x,
                 (int) $exhibition->invitation_company_y,
                 $textColor,
-                $maxFont,
-                $minFont,
-                $maxWidth,
+                $fontSize,
             );
         }
 
@@ -300,13 +294,10 @@ class QrCodeService
     }
 
     /**
-     * Draw centre-aligned text at the given baseline point, shrinking the font
-     * until it fits within $maxWidth pixels.
+     * Draw centre-aligned text at the given baseline point using the given font size.
      */
-    private function drawCenteredText(Imagick $img, string $text, int $x, int $y, string $color, int $maxFont, int $minFont, int $maxWidth): void
+    private function drawCenteredText(Imagick $img, string $text, int $x, int $y, string $color, int $fontSize): void
     {
-        $fontSize = $this->fitTextToWidth($img, $text, $maxFont, $minFont, $maxWidth);
-
         /** @var ImagickDraw $draw */
         $draw = new ImagickDraw;
         $draw->setFont(self::fontPath());

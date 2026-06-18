@@ -148,6 +148,7 @@ it('saves the invitation pass background and coordinates when adding an exhibiti
         ->set('invitationLogoY', 73)
         ->set('invitationLogoSize', 376)
         ->set('invitationTextColor', '#39318a')
+        ->set('invitationTextSize', 48)
         ->call('addExhibition')
         ->assertHasNoErrors();
 
@@ -162,6 +163,7 @@ it('saves the invitation pass background and coordinates when adding an exhibiti
     expect($exhibition->invitation_logo_y)->toBe(73);
     expect($exhibition->invitation_logo_size)->toBe(376);
     expect($exhibition->invitation_text_color)->toBe('#39318a');
+    expect($exhibition->invitation_text_size)->toBe(48);
     expect($exhibition->hasCustomInvitationPass())->toBeTrue();
 
     Storage::disk('public')->assertExists($exhibition->invitation_background_path);
@@ -183,6 +185,7 @@ it('removes the invitation background and clears coordinates', function () {
         'invitation_logo_y' => 73,
         'invitation_logo_size' => 376,
         'invitation_text_color' => '#39318a',
+        'invitation_text_size' => 48,
     ]);
 
     Livewire::actingAs($admin)
@@ -198,6 +201,7 @@ it('removes the invitation background and clears coordinates', function () {
     expect($exhibition->invitation_logo_x)->toBeNull();
     expect($exhibition->invitation_logo_size)->toBeNull();
     expect($exhibition->invitation_text_color)->toBeNull();
+    expect($exhibition->invitation_text_size)->toBeNull();
     Storage::disk('public')->assertMissing($path);
 });
 

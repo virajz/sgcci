@@ -176,6 +176,7 @@
                     logoY: @entangle('invitationLogoY'),
                     logoSize: @entangle('invitationLogoSize'),
                     textColor: @entangle('invitationTextColor'),
+                    textSize: @entangle('invitationTextSize'),
                 })"
                 class="mt-4 space-y-3"
             >
@@ -216,7 +217,7 @@
                     <div
                         x-show="stallX !== null && stallY !== null && srcW > 0"
                         @pointerdown="startDrag('stall', $event)"
-                        :style="`position:absolute; left:${stallX * scale}px; top:${stallY * scale}px; transform:translate(-50%,-50%); padding:2px 12px; background:rgba(255,255,255,0.85); color:${textColor || '#39318a'}; border:1px dashed #ea580c; border-radius:6px; cursor:move; font-size:13px; font-weight:700; white-space:nowrap;`"
+                        :style="`position:absolute; left:${stallX * scale}px; top:${stallY * scale}px; transform:translate(-50%,-50%); padding:2px 6px; background:rgba(255,255,255,0.85); color:${textColor || '#39318a'}; border:1px dashed #ea580c; border-radius:6px; cursor:move; font-size:${(textSize > 0 ? textSize : 16) * scale}px; line-height:1.1; font-weight:700; white-space:nowrap;`"
                     >
                         STALL NO
                     </div>
@@ -224,7 +225,7 @@
                     <div
                         x-show="companyX !== null && companyY !== null && srcW > 0"
                         @pointerdown="startDrag('company', $event)"
-                        :style="`position:absolute; left:${companyX * scale}px; top:${companyY * scale}px; transform:translate(-50%,-50%); padding:2px 12px; background:rgba(255,255,255,0.85); color:${textColor || '#39318a'}; border:1px dashed #16a34a; border-radius:6px; cursor:move; font-size:13px; font-weight:700; white-space:nowrap;`"
+                        :style="`position:absolute; left:${companyX * scale}px; top:${companyY * scale}px; transform:translate(-50%,-50%); padding:2px 6px; background:rgba(255,255,255,0.85); color:${textColor || '#39318a'}; border:1px dashed #16a34a; border-radius:6px; cursor:move; font-size:${(textSize > 0 ? textSize : 16) * scale}px; line-height:1.1; font-weight:700; white-space:nowrap;`"
                     >
                         COMPANY NAME
                     </div>
@@ -259,11 +260,15 @@
                         <flux:label size="sm">Logo Size</flux:label>
                         <flux:input type="number" min="1" wire:model.live="invitationLogoSize" />
                     </flux:field>
+                    <flux:field>
+                        <flux:label size="sm">Text Size</flux:label>
+                        <flux:input type="number" min="1" wire:model.live="invitationTextSize" />
+                    </flux:field>
                 </div>
 
                 <flux:field>
                     <flux:label size="sm">Text Colour</flux:label>
-                    <flux:description>Colour used to draw the stall number and company name on the pass.</flux:description>
+                    <flux:description>Colour and size are shared by the stall number and company name. Drag the pills to position; the preview reflects the chosen size.</flux:description>
                     <flux:color-picker wire:model.live="invitationTextColor" format="hex" placeholder="#39318a" />
                 </flux:field>
             </div>
@@ -277,6 +282,7 @@
         <flux:error name="invitationLogoY" />
         <flux:error name="invitationLogoSize" />
         <flux:error name="invitationTextColor" />
+        <flux:error name="invitationTextSize" />
     </flux:field>
 </div>
 
@@ -397,6 +403,7 @@
                     logoY: initial.logoY,
                     logoSize: initial.logoSize,
                     textColor: initial.textColor,
+                    textSize: initial.textSize,
                     srcW: 0,
                     srcH: 0,
                     displayW: 0,
@@ -452,6 +459,9 @@
                         }
                         if (this.companyY === null || this.companyY === undefined || this.companyY === '') {
                             this.companyY = Math.round(this.srcH * 0.75);
+                        }
+                        if (!this.textSize || this.textSize < 1) {
+                            this.textSize = Math.max(28, Math.round(this.srcH * 0.04));
                         }
                     },
 
