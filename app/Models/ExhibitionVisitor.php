@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\VisitorRegistrationStatus;
 use App\VisitorType;
+use Database\Factories\ExhibitionVisitorFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ExhibitionVisitor extends Model
 {
-    /** @use HasFactory<\Database\Factories\ExhibitionVisitorFactory> */
+    /** @use HasFactory<ExhibitionVisitorFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -115,6 +116,19 @@ class ExhibitionVisitor extends Model
         } while (static::where('registration_code', $code)->exists());
 
         return $code;
+    }
+
+    /**
+     * Category label printed below the name on the pass, derived from how the
+     * registration was created. Standard visitors have no label.
+     */
+    public function passLabel(): ?string
+    {
+        return match ($this->source) {
+            'committee_member' => 'Managing Committee',
+            'member' => 'SGCCI Member',
+            default => null,
+        };
     }
 
     public function exhibition(): BelongsTo

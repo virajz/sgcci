@@ -44,7 +44,7 @@ class VisitorThankYou extends Component
             'registrationCode' => $registrationCode,
         ]);
         $this->passImageDataUri = 'data:image/jpeg;base64,'.base64_encode(
-            $qrService->generateVisitorPassImage($primaryQrUrl, $visitor->name, $exhibition)
+            $qrService->generateVisitorPassImage($primaryQrUrl, $visitor->name, $exhibition, $visitor->passLabel())
         );
 
         // Additional persons
@@ -60,7 +60,7 @@ class VisitorThankYou extends Component
                 $this->additionalPersonPasses[] = [
                     'name' => $person['name'],
                     'passImageDataUri' => 'data:image/jpeg;base64,'.base64_encode(
-                        $qrService->generateVisitorPassImage($personQrUrl, $person['name'], $exhibition)
+                        $qrService->generateVisitorPassImage($personQrUrl, $person['name'], $exhibition, $visitor->passLabel())
                     ),
                     'downloadUrl' => route('visitor-pass.download', [
                         'exhibition' => $exhibition->slug,

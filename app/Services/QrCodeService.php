@@ -97,6 +97,14 @@ class QrCodeService
     /** Usable width for the name text (box width). */
     private const NAME_MAX_WIDTH = 450;
 
+    /** Font sizing for the optional category label drawn below the name. */
+    private const LABEL_FONT_MAX = 38;
+
+    private const LABEL_FONT_MIN = 22;
+
+    /** Gap (px) between the name baseline and the label baseline. */
+    private const LABEL_GAP = 20;
+
     /**
      * Font file for the visitor name, bundled with the project so it is
      * available on every server regardless of installed system fonts.
@@ -156,7 +164,7 @@ class QrCodeService
      * are used. Otherwise the default creative.jpeg + hardcoded box layout is
      * used (legacy behaviour).
      */
-    public function generateVisitorPassImage(string $qrData, string $visitorName, ?Exhibition $exhibition = null): string
+    public function generateVisitorPassImage(string $qrData, string $visitorName, ?Exhibition $exhibition = null, ?string $label = null): string
     {
         $useCustom = $exhibition !== null && $exhibition->hasCustomPass();
 
@@ -217,6 +225,26 @@ class QrCodeService
             $draw->setTextAntialias(true);
 
             $creative->annotateImage($draw, $nameX, $nameY, 0, $nameText);
+
+            // --- Optional category label below the name (e.g. Managing Committee) ---
+            if ($label !== null && $label !== '') {
+                $labelText = mb_strtoupper($label);
+                $labelColor = $exhibition?->pass_name_color ?: '#39318a';
+                $labelFontSize = $this->fitLabelFontSize($creative, $labelText);
+                $labelY = $nameY + $labelFontSize + self::LABEL_GAP;
+
+                /** @var ImagickDraw $labelDraw */
+                $labelDraw = new ImagickDraw;
+                $labelDraw->setFont(self::fontPath());
+                $labelDraw->setFontSize($labelFontSize);
+                /** @var ImagickPixel $labelColour */
+                $labelColour = new ImagickPixel($labelColor);
+                $labelDraw->setFillColor($labelColour);
+                $labelDraw->setTextAlignment(Imagick::ALIGN_CENTER);
+                $labelDraw->setTextAntialias(true);
+
+                $creative->annotateImage($labelDraw, $nameX, $labelY, 0, $labelText);
+            }
         }
 
         $creative->setImageFormat('jpeg');
@@ -753,6 +781,23 @@ class QrCodeService
         }
 
         return self::NAME_FONT_MIN;
+    }
+
+    private function fitLabelFontSize(Imagick $img, string $text): int
+    {
+        /** @var ImagickDraw $draw */
+        $draw = new ImagickDraw;
+        $draw->setFont(self::fontPath());
+
+        for ($size = self::LABEL_FONT_MAX; $size >= self::LABEL_FONT_MIN; $size -= 2) {
+            $draw->setFontSize($size);
+            $metrics = $img->queryFontMetrics($draw, $text);
+            if ($metrics['textWidth'] <= self::NAME_MAX_WIDTH) {
+                return $size;
+            }
+        }
+
+        return self::LABEL_FONT_MIN;
     }
 
     /**
