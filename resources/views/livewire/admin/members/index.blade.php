@@ -2,6 +2,9 @@
     <div class="flex items-center justify-between mb-6">
         <flux:heading size="xl">SGCCI Members</flux:heading>
         <div class="flex gap-2">
+            @if ($exhibitionSelected)
+                <flux:button wire:click="confirmSendAll" variant="primary" color="green" icon="chat-bubble-left-right">Send WhatsApp</flux:button>
+            @endif
             <flux:button :href="route('admin.members.import')" variant="ghost" icon="arrow-up-tray" wire:navigate>Import CSV</flux:button>
             <flux:button :href="route('admin.members.create')" icon="plus" wire:navigate>Add Member</flux:button>
         </div>
@@ -59,6 +62,11 @@
 
                                 <flux:table.cell>
                                     <div class="flex gap-2">
+                                        @if ($exhibitionSelected)
+                                            <flux:button size="sm" variant="ghost" icon="chat-bubble-left-right" color="green"
+                                                wire:click="sendWhatsApp({{ $member->id }})"
+                                                wire:confirm="Send the exhibition pass to {{ $member->contact_name }} on WhatsApp?">WhatsApp</flux:button>
+                                        @endif
                                         <flux:button size="sm" variant="ghost" icon="printer"
                                             :href="route('admin.members.badge.print', $member)" target="_blank">Print Badge</flux:button>
                                         <flux:button size="sm" variant="ghost" icon="pencil"
@@ -94,4 +102,21 @@
             </div>
         @endif
     </flux:card>
+
+    {{-- Send WhatsApp to All Confirmation Modal --}}
+    <flux:modal wire:model="showSendAllModal">
+        <div class="space-y-6">
+            <flux:heading size="lg">Send WhatsApp to All</flux:heading>
+            <flux:text>This will register every member for the selected exhibition and send each one their entry pass on WhatsApp. Members without a cell number are skipped.</flux:text>
+
+            <div class="flex gap-2">
+                <flux:button variant="primary" color="green" icon="chat-bubble-left-right"
+                    wire:click="sendWhatsAppToAll" wire:loading.attr="disabled" wire:target="sendWhatsAppToAll">
+                    <span wire:loading.remove wire:target="sendWhatsAppToAll">Send to All</span>
+                    <span wire:loading wire:target="sendWhatsAppToAll">Sending...</span>
+                </flux:button>
+                <flux:button variant="ghost" wire:click="$set('showSendAllModal', false)">Cancel</flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </div>

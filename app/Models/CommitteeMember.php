@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+use Database\Factories\CommitteeMemberFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class CommitteeMember extends Model
 {
+    /** @use HasFactory<CommitteeMemberFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'sort_order',
         'membership_number',

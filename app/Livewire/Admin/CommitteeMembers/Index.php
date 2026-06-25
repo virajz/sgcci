@@ -3,7 +3,10 @@
 namespace App\Livewire\Admin\CommitteeMembers;
 
 use App\Models\CommitteeMember;
+use App\Services\CurrentExhibition;
+use App\Services\ExhibitionPassSender;
 use Flux\Flux;
+use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -21,6 +24,8 @@ class Index extends Component
     public bool $showEditModal = false;
 
     public bool $showDeleteModal = false;
+
+    public bool $showSendAllModal = false;
 
     public ?int $memberToDelete = null;
 
@@ -130,7 +135,76 @@ class Index extends Component
         $this->memberToDelete = null;
     }
 
-    public function render(): \Illuminate\View\View
+    public function sendWhatsApp(int $id): void
+    {
+        $exhibition = CurrentExhibition::model();
+
+        if (! $exhibition) {
+            Flux::toast(heading: 'Select an exhibition', variant: 'warning', text: 'Please select an exhibition before sending a pass.');
+
+            return;
+        }
+
+        $member = CommitteeMember::findOrFail($id);
+
+        $sent = (new ExhibitionPassSender($exhibition))
+            ->sendToContact($member->name, $member->mobile, null, null, 'committee_member');
+
+        if (! $sent) {
+            Flux::toast(heading: 'No mobile number', variant: 'warning', text: "No mobile number on file for {$member->name}.");
+
+            return;
+        }
+
+        Flux::toast(heading: 'WhatsApp Sent!', variant: 'success', text: "Pass sent to {$member->name}.");
+    }
+
+    public function confirmSendAll(): void
+    {
+        if (! CurrentExhibition::isSelected()) {
+            Flux::toast(heading: 'Select an exhibition', variant: 'warning', text: 'Please select an exhibition before sending passes.');
+
+            return;
+        }
+
+        $this->showSendAllModal = true;
+    }
+
+    public function sendWhatsAppToAll(): void
+    {
+        $exhibition = CurrentExhibition::model();
+
+        if (! $exhibition) {
+            $this->showSendAllModal = false;
+            Flux::toast(heading: 'Select an exhibition', variant: 'warning', text: 'Please select an exhibition before sending passes.');
+
+            return;
+        }
+
+        $sender = new ExhibitionPassSender($exhibition);
+        $sent = 0;
+        $skipped = 0;
+
+        CommitteeMember::query()->chunkById(200, function ($members) use ($sender, &$sent, &$skipped): void {
+            foreach ($members as $member) {
+                $sender->sendToContact($member->name, $member->mobile, null, null, 'committee_member')
+                    ? $sent++
+                    : $skipped++;
+            }
+        });
+
+        $this->showSendAllModal = false;
+
+        Flux::toast(
+            heading: 'WhatsApp Sent!',
+            variant: $sent > 0 ? 'success' : 'warning',
+            text: $skipped > 0
+                ? "Sent {$sent} passes. Skipped {$skipped} (no mobile number)."
+                : "Sent {$sent} passes."
+        );
+    }
+
+    public function render(): View
     {
         $members = CommitteeMember::query()
             ->when($this->search, function ($query) {
@@ -147,6 +221,7 @@ class Index extends Component
 
         return view('livewire.admin.committee-members.index', [
             'members' => $members,
+            'exhibitionSelected' => CurrentExhibition::isSelected(),
         ]);
     }
 }

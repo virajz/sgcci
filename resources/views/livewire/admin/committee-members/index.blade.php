@@ -2,6 +2,9 @@
     <div class="flex items-center justify-between mb-6">
         <flux:heading size="xl">Managing Committee</flux:heading>
         <div class="flex gap-2">
+            @if ($exhibitionSelected)
+                <flux:button wire:click="confirmSendAll" variant="primary" color="green" icon="chat-bubble-left-right">Send WhatsApp</flux:button>
+            @endif
             <flux:button :href="route('admin.committee-members.import')" variant="ghost" icon="arrow-up-tray" wire:navigate>Import CSV</flux:button>
             <flux:button :href="route('admin.committee-members.import-photos')" variant="ghost" icon="photo" wire:navigate>Import Photos</flux:button>
             <flux:button wire:click="openAddModal" icon="plus">Add Member</flux:button>
@@ -73,6 +76,11 @@
 
                                 <flux:table.cell>
                                     <div class="flex gap-2">
+                                        @if ($exhibitionSelected)
+                                            <flux:button size="sm" variant="ghost" icon="chat-bubble-left-right" color="green"
+                                                wire:click="sendWhatsApp({{ $member->id }})"
+                                                wire:confirm="Send the exhibition pass to {{ $member->name }} on WhatsApp?">WhatsApp</flux:button>
+                                        @endif
                                         <flux:button size="sm" variant="ghost" icon="printer"
                                             :href="route('admin.committee-members.badge.print', $member)" target="_blank">Print Badge</flux:button>
                                         <flux:button size="sm" variant="ghost" icon="pencil"
@@ -220,6 +228,23 @@
             <div class="flex gap-2">
                 <flux:button variant="danger" wire:click="deleteMember">Delete</flux:button>
                 <flux:button variant="ghost" wire:click="$set('showDeleteModal', false)">Cancel</flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    {{-- Send WhatsApp to All Confirmation Modal --}}
+    <flux:modal wire:model="showSendAllModal">
+        <div class="space-y-6">
+            <flux:heading size="lg">Send WhatsApp to All</flux:heading>
+            <flux:text>This will register every committee member for the selected exhibition and send each one their entry pass on WhatsApp. Members without a mobile number are skipped.</flux:text>
+
+            <div class="flex gap-2">
+                <flux:button variant="primary" color="green" icon="chat-bubble-left-right"
+                    wire:click="sendWhatsAppToAll" wire:loading.attr="disabled" wire:target="sendWhatsAppToAll">
+                    <span wire:loading.remove wire:target="sendWhatsAppToAll">Send to All</span>
+                    <span wire:loading wire:target="sendWhatsAppToAll">Sending...</span>
+                </flux:button>
+                <flux:button variant="ghost" wire:click="$set('showSendAllModal', false)">Cancel</flux:button>
             </div>
         </div>
     </flux:modal>
