@@ -97,13 +97,13 @@ class QrCodeService
     /** Usable width for the name text (box width). */
     private const NAME_MAX_WIDTH = 450;
 
-    /** Font sizing for the optional category label drawn below the name. */
-    private const LABEL_FONT_MAX = 38;
+    /** Font sizing for the optional category label drawn above the QR. */
+    private const LABEL_FONT_MAX = 32;
 
     private const LABEL_FONT_MIN = 22;
 
-    /** Gap (px) between the name baseline and the label baseline. */
-    private const LABEL_GAP = 20;
+    /** Gap (px) between the label baseline and the top of the QR. */
+    private const LABEL_GAP = 30;
 
     /**
      * Font file for the visitor name, bundled with the project so it is
@@ -206,6 +206,27 @@ class QrCodeService
         $qrImage->readImageBlob($qrPng);
         $creative->compositeImage($qrImage, Imagick::COMPOSITE_OVER, $qrX, $qrY);
 
+        // --- Optional category label above the QR (e.g. Managing Committee) ---
+        if ($label !== null && $label !== '') {
+            $labelText = mb_strtoupper($label);
+            $labelColor = $exhibition?->pass_name_color ?: '#39318a';
+            $labelFontSize = $this->fitLabelFontSize($creative, $labelText);
+            $labelX = $qrX + intval($qrSize / 2);
+            $labelY = $qrY - self::LABEL_GAP;
+
+            /** @var ImagickDraw $labelDraw */
+            $labelDraw = new ImagickDraw;
+            $labelDraw->setFont(self::fontPath());
+            $labelDraw->setFontSize($labelFontSize);
+            /** @var ImagickPixel $labelColour */
+            $labelColour = new ImagickPixel($labelColor);
+            $labelDraw->setFillColor($labelColour);
+            $labelDraw->setTextAlignment(Imagick::ALIGN_CENTER);
+            $labelDraw->setTextAntialias(true);
+
+            $creative->annotateImage($labelDraw, $labelX, $labelY, 0, $labelText);
+        }
+
         // --- Visitor name ---
         if (! $useCustom || ($exhibition->pass_name_x !== null && $exhibition->pass_name_y !== null)) {
             $nameText = mb_strtoupper($visitorName);
@@ -225,26 +246,6 @@ class QrCodeService
             $draw->setTextAntialias(true);
 
             $creative->annotateImage($draw, $nameX, $nameY, 0, $nameText);
-
-            // --- Optional category label below the name (e.g. Managing Committee) ---
-            if ($label !== null && $label !== '') {
-                $labelText = mb_strtoupper($label);
-                $labelColor = $exhibition?->pass_name_color ?: '#39318a';
-                $labelFontSize = $this->fitLabelFontSize($creative, $labelText);
-                $labelY = $nameY + $labelFontSize + self::LABEL_GAP;
-
-                /** @var ImagickDraw $labelDraw */
-                $labelDraw = new ImagickDraw;
-                $labelDraw->setFont(self::fontPath());
-                $labelDraw->setFontSize($labelFontSize);
-                /** @var ImagickPixel $labelColour */
-                $labelColour = new ImagickPixel($labelColor);
-                $labelDraw->setFillColor($labelColour);
-                $labelDraw->setTextAlignment(Imagick::ALIGN_CENTER);
-                $labelDraw->setTextAntialias(true);
-
-                $creative->annotateImage($labelDraw, $nameX, $labelY, 0, $labelText);
-            }
         }
 
         $creative->setImageFormat('jpeg');
