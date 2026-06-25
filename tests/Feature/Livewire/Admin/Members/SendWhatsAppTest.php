@@ -49,6 +49,30 @@ it('registers a member and sends the pass over WhatsApp', function () {
     });
 });
 
+it('opens the confirmation modal naming the member', function () {
+    $member = Member::factory()->create(['contact_name' => 'Ravi Shah', 'cell_no' => '9876543210']);
+
+    Livewire::actingAs($this->admin)
+        ->test(Index::class)
+        ->call('confirmSend', $member->id)
+        ->assertSet('showSendModal', true)
+        ->assertSet('memberToSend', $member->id)
+        ->assertSet('memberToSendName', 'Ravi Shah');
+
+    expect(ExhibitionVisitor::count())->toBe(0);
+    Queue::assertNothingPushed();
+});
+
+it('does not open the confirmation modal when no exhibition is selected', function () {
+    CurrentExhibition::clear();
+    $member = Member::factory()->create(['cell_no' => '9876543210']);
+
+    Livewire::actingAs($this->admin)
+        ->test(Index::class)
+        ->call('confirmSend', $member->id)
+        ->assertSet('showSendModal', false);
+});
+
 it('skips a member without a cell number', function () {
     $member = Member::factory()->withoutCell()->create();
 

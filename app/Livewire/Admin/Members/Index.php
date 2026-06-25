@@ -20,9 +20,30 @@ class Index extends Component
 
     public bool $showSendAllModal = false;
 
+    public bool $showSendModal = false;
+
+    public ?int $memberToSend = null;
+
+    public string $memberToSendName = '';
+
     public function updatingSearch(): void
     {
         $this->resetPage();
+    }
+
+    public function confirmSend(int $id): void
+    {
+        if (! CurrentExhibition::isSelected()) {
+            Flux::toast(heading: 'Select an exhibition', variant: 'warning', text: 'Please select an exhibition before sending a pass.');
+
+            return;
+        }
+
+        $member = Member::findOrFail($id);
+
+        $this->memberToSend = $id;
+        $this->memberToSendName = $member->contact_name;
+        $this->showSendModal = true;
     }
 
     public function sendWhatsApp(int $id): void
@@ -30,6 +51,7 @@ class Index extends Component
         $exhibition = CurrentExhibition::model();
 
         if (! $exhibition) {
+            $this->showSendModal = false;
             Flux::toast(heading: 'Select an exhibition', variant: 'warning', text: 'Please select an exhibition before sending a pass.');
 
             return;
@@ -39,6 +61,9 @@ class Index extends Component
 
         $sent = (new ExhibitionPassSender($exhibition))
             ->sendToContact($member->contact_name, $member->cell_no, $member->company, $member->city_a, 'member');
+
+        $this->showSendModal = false;
+        $this->reset(['memberToSend', 'memberToSendName']);
 
         if (! $sent) {
             Flux::toast(heading: 'No mobile number', variant: 'warning', text: "No cell number on file for {$member->contact_name}.");

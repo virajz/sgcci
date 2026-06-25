@@ -78,8 +78,7 @@
                                     <div class="flex gap-2">
                                         @if ($exhibitionSelected)
                                             <flux:button size="sm" variant="ghost" icon="chat-bubble-left-right" color="green"
-                                                wire:click="sendWhatsApp({{ $member->id }})"
-                                                wire:confirm="Send the exhibition pass to {{ $member->name }} on WhatsApp?">WhatsApp</flux:button>
+                                                wire:click="confirmSend({{ $member->id }})">WhatsApp</flux:button>
                                         @endif
                                         <flux:button size="sm" variant="ghost" icon="printer"
                                             :href="route('admin.committee-members.badge.print', $member)" target="_blank">Print Badge</flux:button>
@@ -228,6 +227,23 @@
             <div class="flex gap-2">
                 <flux:button variant="danger" wire:click="deleteMember">Delete</flux:button>
                 <flux:button variant="ghost" wire:click="$set('showDeleteModal', false)">Cancel</flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    {{-- Send WhatsApp (single) Confirmation Modal --}}
+    <flux:modal wire:model="showSendModal">
+        <div class="space-y-6">
+            <flux:heading size="lg">Send WhatsApp Pass</flux:heading>
+            <flux:text>Register <strong>{{ $memberToSendName }}</strong> for the selected exhibition and send their entry pass on WhatsApp?</flux:text>
+
+            <div class="flex gap-2">
+                <flux:button variant="primary" color="green" icon="chat-bubble-left-right"
+                    wire:click="sendWhatsApp({{ $memberToSend }})" wire:loading.attr="disabled" wire:target="sendWhatsApp">
+                    <span wire:loading.remove wire:target="sendWhatsApp">Send</span>
+                    <span wire:loading wire:target="sendWhatsApp">Sending...</span>
+                </flux:button>
+                <flux:button variant="ghost" wire:click="$set('showSendModal', false)">Cancel</flux:button>
             </div>
         </div>
     </flux:modal>

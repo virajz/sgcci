@@ -27,6 +27,12 @@ class Index extends Component
 
     public bool $showSendAllModal = false;
 
+    public bool $showSendModal = false;
+
+    public ?int $memberToSend = null;
+
+    public string $memberToSendName = '';
+
     public ?int $memberToDelete = null;
 
     public ?int $memberToEdit = null;
@@ -135,11 +141,27 @@ class Index extends Component
         $this->memberToDelete = null;
     }
 
+    public function confirmSend(int $id): void
+    {
+        if (! CurrentExhibition::isSelected()) {
+            Flux::toast(heading: 'Select an exhibition', variant: 'warning', text: 'Please select an exhibition before sending a pass.');
+
+            return;
+        }
+
+        $member = CommitteeMember::findOrFail($id);
+
+        $this->memberToSend = $id;
+        $this->memberToSendName = $member->name;
+        $this->showSendModal = true;
+    }
+
     public function sendWhatsApp(int $id): void
     {
         $exhibition = CurrentExhibition::model();
 
         if (! $exhibition) {
+            $this->showSendModal = false;
             Flux::toast(heading: 'Select an exhibition', variant: 'warning', text: 'Please select an exhibition before sending a pass.');
 
             return;
@@ -149,6 +171,9 @@ class Index extends Component
 
         $sent = (new ExhibitionPassSender($exhibition))
             ->sendToContact($member->name, $member->mobile, null, null, 'committee_member');
+
+        $this->showSendModal = false;
+        $this->reset(['memberToSend', 'memberToSendName']);
 
         if (! $sent) {
             Flux::toast(heading: 'No mobile number', variant: 'warning', text: "No mobile number on file for {$member->name}.");

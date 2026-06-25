@@ -44,6 +44,30 @@ it('registers a committee member and sends the pass over WhatsApp', function () 
     });
 });
 
+it('opens the confirmation modal naming the member', function () {
+    $member = CommitteeMember::factory()->create(['name' => 'Asha Patel', 'mobile' => '9876543210']);
+
+    Livewire::actingAs($this->admin)
+        ->test(Index::class)
+        ->call('confirmSend', $member->id)
+        ->assertSet('showSendModal', true)
+        ->assertSet('memberToSend', $member->id)
+        ->assertSet('memberToSendName', 'Asha Patel');
+
+    expect(ExhibitionVisitor::count())->toBe(0);
+    Queue::assertNothingPushed();
+});
+
+it('does not open the confirmation modal when no exhibition is selected', function () {
+    CurrentExhibition::clear();
+    $member = CommitteeMember::factory()->create(['mobile' => '9876543210']);
+
+    Livewire::actingAs($this->admin)
+        ->test(Index::class)
+        ->call('confirmSend', $member->id)
+        ->assertSet('showSendModal', false);
+});
+
 it('skips a committee member without a mobile number', function () {
     $member = CommitteeMember::factory()->withoutMobile()->create();
 
