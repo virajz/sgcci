@@ -47,6 +47,10 @@ class ExhibitionPassSender
         $visitor->status = VisitorRegistrationStatus::Confirmed;
         $visitor->save();
 
+        // Advance updated_at so the pass image URL changes on every send,
+        // forcing WhatsApp to fetch a fresh image instead of a cached one.
+        $visitor->touch();
+
         if (config('services.whatsapp.enabled')) {
             $this->dispatchPass($visitor);
         }
@@ -58,7 +62,7 @@ class ExhibitionPassSender
     {
         $exhibitionDates = $this->exhibition->start_date->format('d M Y').' to '.$this->exhibition->end_date->format('d M Y');
         $firstName = explode(' ', trim($visitor->name))[0];
-        $imageUrl = config('app.url').'/'.$this->exhibition->slug.'/visitor-pass/'.$visitor->registration_code.'/image';
+        $imageUrl = config('app.url').'/'.$this->exhibition->slug.'/visitor-pass/'.$visitor->registration_code.'/image?v='.$visitor->updated_at->timestamp;
 
         SendWhatsAppCampaign::dispatch(
             campaignName: 'Paidregistration1',
