@@ -18,27 +18,29 @@
     </div>
 
     <form wire:submit="save">
-        <flux:tabs variant="pills">
-            {{-- Basic Info Tab --}}
-            <flux:tab name="basic" icon="identification">Basic Info</flux:tab>
+        <flux:tab.group>
+            <flux:tabs variant="pills">
+                {{-- Basic Info Tab --}}
+                <flux:tab name="basic" icon="identification">Basic Info</flux:tab>
 
-            {{-- Addresses Tab --}}
-            <flux:tab name="addresses" icon="map-pin">Addresses</flux:tab>
+                {{-- Addresses Tab --}}
+                <flux:tab name="addresses" icon="map-pin">Addresses</flux:tab>
 
-            {{-- Contact Tab --}}
-            <flux:tab name="contact" icon="phone">Contact</flux:tab>
+                {{-- Contact Tab --}}
+                <flux:tab name="contact" icon="phone">Contact</flux:tab>
 
-            {{-- Membership Tab --}}
-            <flux:tab name="membership" icon="identification">Membership</flux:tab>
+                {{-- Membership Tab --}}
+                <flux:tab name="membership" icon="identification">Membership</flux:tab>
 
-            {{-- Personal Tab --}}
-            <flux:tab name="personal" icon="user">Personal</flux:tab>
+                {{-- Personal Tab --}}
+                <flux:tab name="personal" icon="user">Personal</flux:tab>
 
-            {{-- Business Tab --}}
-            <flux:tab name="business" icon="building-office-2">Business</flux:tab>
+                {{-- Business Tab --}}
+                <flux:tab name="business" icon="building-office-2">Business</flux:tab>
 
-            {{-- Family Tab --}}
-            <flux:tab name="family" icon="heart">Family</flux:tab>
+                {{-- Family Tab --}}
+                <flux:tab name="family" icon="heart">Family</flux:tab>
+            </flux:tabs>
 
             {{-- Basic Info Panel --}}
             <flux:tab.panel name="basic">
@@ -318,7 +320,7 @@
                     </div>
                 </flux:card>
             </flux:tab.panel>
-        </flux:tabs>
+        </flux:tab.group>
 
         {{-- Sticky save bar --}}
         <div class="flex justify-end gap-2 mt-6">
